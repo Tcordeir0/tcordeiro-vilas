@@ -56,8 +56,17 @@ dependencies {
 	// Só para compilar compat/CubCoinPay, que só é carregada se o CubCoin existir.
 	def cubcoin = siblingJar("cubcoin", "cubcoin")
 	compileOnly cubcoin
-	// ./gradlew runGametest -PnoCubcoin : os mesmos testes sem o CubCoin (só esmeraldas)
-	if (!project.hasProperty('noCubcoin')) gametestRuntimeOnly cubcoin
+	// Testes de servidor com os mods opcionais (0.2.0: vendedores, móveis nas estruturas, iluminação):
+	//   ./gradlew runGametest              com CubCoin, Industrial, Forja e Móveis
+	//   ./gradlew runGametest -PnoCubcoin  sem o CubCoin (só esmeraldas), com os outros
+	//   ./gradlew runGametest -PnoMods     sem nenhum mod opcional (só vanilla)
+	boolean noMods = project.hasProperty('noMods')
+	if (!project.hasProperty('noCubcoin') && !noMods) gametestRuntimeOnly cubcoin
+	if (!noMods) {
+		gametestRuntimeOnly siblingJar("tcordeiro-industrial", "tcordeiro-industrial") // 0.11+: postes e fio aéreo
+		gametestRuntimeOnly siblingJar("tcordeiro-forja", "tcordeiro-forja")
+		gametestRuntimeOnly siblingJar("tcordeiro-moveis", "tcordeiro-moveis")
+	}
 
 	// Lógica pura (níveis, preços, lotes, alarme, missões): JUnit, sem servidor.
 	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"

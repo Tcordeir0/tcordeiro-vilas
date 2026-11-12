@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/mechanic/level_1",
+  "trades": [
+    "tvilas:mechanic/1/copper_ingot_emerald",
+    "tvilas:mechanic/1/emerald_copper_wire",
+    "tvilas:mechanic/1/emerald_copper_cable"
+  ]
+}

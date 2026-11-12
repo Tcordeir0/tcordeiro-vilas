@@ -30,7 +30,15 @@ MOD = "tvilas"
 written = set()
 
 
-def write(rel, data):
+def cond(data, mod):
+    """Só carrega com o mod instalado (condições de recurso da Fabric API: receitas, conquistas, trocas, loot)."""
+    if mod:
+        data = {"fabric:load_conditions": [{"condition": "fabric:all_mods_loaded", "values": [mod]}]} | data
+    return data
+
+
+def write(rel, data, mod=None):
+    data = cond(data, mod)
     path = os.path.join(RES, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
@@ -48,13 +56,27 @@ def jar_json(path):
 
 def item_exists(i):
     ns, path = i.split(":")
-    if ns != "minecraft":
+    if ns == MOD:
         return True
+    if ns != "minecraft":
+        return mod_item_exists(i)
     try:
         zjar.getinfo(f"assets/minecraft/items/{path}.json")
         return True
     except KeyError:
         return False
+
+
+SIBLINGS = {"tindustrial": "tcordeiro-industrial", "tforja": "tcordeiro-forja", "tmoveis": "tcordeiro-moveis", "cubcoin": "cubcoin"}
+_MOD_LANG = {}
+
+
+def mod_item_exists(i):
+    """Um item de um mod irmão existe? (pela definição de item em assets/<mod>/items do código dele)"""
+    ns, path = i.split(":")
+    repo = SIBLINGS.get(ns)
+    assert repo, f"mod desconhecido: {i}"
+    return os.path.exists(os.path.join(HOME, "Cods", repo, "src", "main", "resources", "assets", ns, "items", path + ".json"))
 
 
 def asset_lang(code):
@@ -80,7 +102,16 @@ BLOCKS = {
     "flower_stall": ("Banca de Flores", "Banca de Flores", "Flower Stall", "stall", "axe"),
     "tavern_counter": ("Balcão da Taverna", "Balcão da Taberna", "Tavern Counter", "orientable", "axe"),
     "apiary_bench": ("Bancada do Apicultor", "Bancada do Apicultor", "Beekeeper's Bench", "bench", "axe"),
+    # 0.2.0 — postos dos vendedores dos mods irmãos (só existem com o mod: MOD_OF)
+    "mechanic_bench": ("Bancada do Mecânico", "Bancada do Mecânico", "Mechanic's Bench", "orientable", "pickaxe"),
+    "alloy_anvil": ("Bigorna de Ligas", "Bigorna de Ligas", "Alloy Anvil", "bench", "pickaxe"),
+    "carpenter_bench": ("Bancada do Marceneiro", "Bancada do Marceneiro", "Carpenter's Bench", "bench", "axe"),
+    "changer_counter": ("Balcão do Cambista", "Balcão do Cambista", "Changer's Counter", "orientable", "axe"),
 }
+
+# bloco/profissão → mod de que depende
+MOD_OF = {"mechanic_bench": "tindustrial", "alloy_anvil": "tforja", "carpenter_bench": "tmoveis", "changer_counter": "cubcoin",
+          "mechanic": "tindustrial", "alloy_smith": "tforja", "carpenter": "tmoveis", "money_changer": "cubcoin"}
 
 # profissão: (pt_br, pt_pt, en, posto)
 PROFESSIONS = {
@@ -89,6 +120,10 @@ PROFESSIONS = {
     "florist": ("Florista", "Florista", "Florist", "flower_stall"),
     "innkeeper": ("Taberneiro", "Taberneiro", "Innkeeper", "tavern_counter"),
     "beekeeper": ("Apicultor", "Apicultor", "Beekeeper", "apiary_bench"),
+    "mechanic": ("Mecânico", "Mecânico", "Mechanic", "mechanic_bench"),
+    "alloy_smith": ("Ferreiro de Ligas", "Ferreiro de Ligas", "Alloy Smith", "alloy_anvil"),
+    "carpenter": ("Marceneiro", "Marceneiro", "Carpenter", "carpenter_bench"),
+    "money_changer": ("Cambista", "Cambista", "Money Changer", "changer_counter"),
 }
 
 
@@ -149,12 +184,17 @@ def gen_models():
         write(f"data/{MOD}/loot_table/blocks/{bid}.json", {
             "type": "minecraft:block", "pools": [{"rolls": 1, "condition": {"type": "minecraft:survives_explosion"},
                                                   "entries": [{"type": "minecraft:item", "name": f"{MOD}:{bid}"}]}],
-            "random_sequence": f"{MOD}:blocks/{bid}"})
+            "random_sequence": f"{MOD}:blocks/{bid}"}, MOD_OF.get(bid))
     for tool in ("axe", "pickaxe"):
         write(f"data/minecraft/tags/block/mineable/{tool}.json",
-              {"replace": False, "values": [f"{MOD}:{b}" for b, v in BLOCKS.items() if v[4] == tool]})
+              {"replace": False, "values": [tag_entry(b) for b, v in BLOCKS.items() if v[4] == tool]})
     write("data/minecraft/tags/point_of_interest_type/acquirable_job_site.json",
-          {"replace": False, "values": [f"{MOD}:{p}" for p in PROFESSIONS]})
+          {"replace": False, "values": [tag_entry(p) for p in PROFESSIONS]})
+
+
+def tag_entry(name):
+    """Entrada de tag: os blocos/profissões dos mods irmãos são opcionais (não existem sem o mod)."""
+    return {"id": f"{MOD}:{name}", "required": False} if name in MOD_OF else f"{MOD}:{name}"
 
 
 # ------------------------------------------------------------------ receitas
@@ -162,12 +202,12 @@ def gen_models():
 RECIPES = {}
 
 
-def advancement(recipe, items):
+def advancement(recipe, items, mod=None):
     crit = {"has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {"recipes": f"{MOD}:{recipe}"}}}
     for i, it in enumerate(items):
         crit[f"has_item_{i}"] = {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": it}]}}
     write(f"data/{MOD}/advancement/recipes/{recipe}.json", {"parent": "minecraft:recipes/root", "criteria": crit,
-                                                            "requirements": [list(crit)], "rewards": {"recipes": [f"{MOD}:{recipe}"]}})
+                                                            "requirements": [list(crit)], "rewards": {"recipes": [f"{MOD}:{recipe}"]}}, mod)
 
 
 def shaped(name, pattern, key, count=1, unlock=None):
@@ -176,9 +216,10 @@ def shaped(name, pattern, key, count=1, unlock=None):
         r["result"]["count"] = count
     for v in key.values():
         assert v.startswith("#") or item_exists(v), v
-    write(f"data/{MOD}/recipe/{name}.json", r)
+    mod = MOD_OF.get(name)
+    write(f"data/{MOD}/recipe/{name}.json", r, mod)
     RECIPES[name] = r
-    advancement(name, unlock or sorted(set(key.values())))
+    advancement(name, unlock or sorted(set(key.values())), mod)
 
 
 def gen_recipes():
@@ -191,6 +232,14 @@ def gen_recipes():
            unlock=["minecraft:barrel"])
     shaped("apiary_bench", ["HHH", "PCP"], {"H": "minecraft:honeycomb", "P": "#minecraft:planks", "C": "minecraft:glass_bottle"},
            unlock=["minecraft:honeycomb"])
+    # 0.2.0 — só com o mod (receita e conquista com condição)
+    shaped("mechanic_bench", ["WWW", "IPI"], {"W": "tindustrial:copper_wire", "I": "minecraft:iron_ingot", "P": "#minecraft:planks"},
+           unlock=["tindustrial:copper_wire"])
+    shaped("alloy_anvil", ["BBB", " I ", "III"], {"B": "tforja:bronze_ingot", "I": "minecraft:iron_ingot"}, unlock=["tforja:bronze_ingot"])
+    shaped("carpenter_bench", ["SSS", "PCP"], {"S": "#minecraft:wooden_slabs", "P": "#minecraft:planks", "C": "tmoveis:oak_chair"},
+           unlock=["tmoveis:oak_chair"])
+    shaped("changer_counter", ["NNN", "PEP"], {"N": "cubcoin:note_1", "P": "#minecraft:planks", "E": "minecraft:emerald"},
+           unlock=["cubcoin:note_1"])
 
 
 # ------------------------------------------------------------------ trocas (data-driven, 26.3)
@@ -241,12 +290,127 @@ TRADES = {
 }
 
 
+def sellc(emeralds, item, count, components, uses=12, name=None):
+    """Como sell, com componentes no item (verniz dos móveis, tipo e material das peças da Forja)."""
+    return ("sellc", item, count, emeralds, uses, components, name)
+
+
+# Preço de uma esmeralda no Balcão de Câmbio do CubCoin (o Cambista troca ao mesmo preço, sem margem).
+def balcao_emerald():
+    f = os.path.join(HOME, "Cods", "cubcoin", "src", "main", "resources", "data", "cubcoin", "cubcoin_exchange", "default.json")
+    try:
+        return json.load(open(f))["minecraft:emerald"]
+    except (OSError, KeyError):
+        return 4000
+
+
+EMERALD_CB = balcao_emerald()
+NOTE = {"cubcoin:note_1": 100, "cubcoin:note_2": 200, "cubcoin:note_5": 500, "cubcoin:note_10": 1000, "cubcoin:note_20": 2000,
+        "cubcoin:note_50": 5000, "cubcoin:note_100": 10000}
+
+
+def change(gives_count, gives, wants, wants_count, uses=32, additional=None, name=None):
+    """Troca do Cambista: SEM desconto (reputation_discount 0) e com «wants» de 1 só item, para nenhum desconto (gossip, procura,
+    herói da aldeia) mexer no câmbio."""
+    return ("change", gives, gives_count, wants, wants_count, uses, additional, name)
+
+
+def cambista():
+    e = EMERALD_CB
+    assert e % 2000 == 0 and e % 500 == 0, e
+    block = e * 9
+    return {
+        # esmeralda → notas (1 esmeralda em «wants»)
+        1: [change(e // 2000, "cubcoin:note_20", "minecraft:emerald", 1, name="emerald_note_20"),
+            # notas → esmeralda: 1 nota de 20 em «wants» + o resto em «additional_wants» (este não tem desconto)
+            change(1, "minecraft:emerald", "cubcoin:note_20", 1, additional=("cubcoin:note_20", e // 2000 - 1), name="note_20_emerald")],
+        2: [change(e // 1000, "cubcoin:note_10", "minecraft:emerald", 1, name="emerald_note_10"),
+            change(1, "minecraft:emerald", "cubcoin:note_10", 1, additional=("cubcoin:note_10", e // 1000 - 1), name="note_10_emerald")],
+        3: [change(block // 2000, "cubcoin:note_20", "minecraft:emerald_block", 1, 16, name="emerald_block_note_20"),
+            change(1, "minecraft:emerald_block", "cubcoin:note_100", 1, 16, additional=("cubcoin:note_20", (block - 10000) // 2000),
+                   name="note_100_emerald_block")],
+        4: [change(e // 500, "cubcoin:note_5", "minecraft:emerald", 1, name="emerald_note_5"),
+            change(1, "minecraft:emerald", "cubcoin:note_5", 1, additional=("cubcoin:note_5", e // 500 - 1), name="note_5_emerald")],
+        5: [change(block // 10000 if block % 10000 == 0 else block // 2000, "cubcoin:note_100" if block % 10000 == 0 else "cubcoin:note_20",
+                   "minecraft:emerald_block", 1, 16, name="emerald_block_notes"),
+            change(e // 2000, "cubcoin:note_20", "minecraft:emerald", 1, 64, name="emerald_note_20_bulk")],
+    }
+
+
+VARNISHED = {"minecraft:block_state": {"finish": "natural"}}
+
+
+def part(kind, material):
+    return {"tforja:part_kind": kind, "tforja:parts": [material], "minecraft:custom_model_data": {"strings": [kind, material]}}
+
+
+MOD_TRADES = {
+    # Mecânico (Industrial): fio de cobre, cabos, canos, conectores, chave, melhorias e placa de expansão — barato mas nunca
+    # abaixo do custo dos materiais
+    "mechanic": {
+        1: [buy("minecraft:copper_ingot", 10), sell(1, "tindustrial:copper_wire", 16, 16), sell(2, "tindustrial:copper_cable", 6, 16)],
+        2: [buy("minecraft:redstone", 16), sell(3, "tindustrial:item_pipe", 8), sell(3, "tindustrial:fluid_pipe", 8)],
+        3: [sell(3, "tindustrial:pipe_wrench", 1, 4), sell(4, "tindustrial:extraction_connector", 2), sell(6, "tindustrial:gold_cable", 8)],
+        4: [sell(8, "tindustrial:speed_upgrade", 1, 6), sell(8, "tindustrial:capacity_upgrade", 1, 6), sell(10, "tindustrial:efficiency_upgrade", 1, 6)],
+        5: [sell(16, "tindustrial:expansion_plate", 1, 3), sell(10, "tindustrial:range_upgrade", 1, 4)],
+    },
+    # Ferreiro de Ligas (Forja): lingotes de liga, minérios da 1.9 e peças de aço/bronze (nada de adamantite, ferro-noite,
+    # diapasão nem materiais lendários)
+    "alloy_smith": {
+        1: [buy("minecraft:coal", 15), sell(3, "tforja:bronze_ingot", 4)],
+        2: [sell(4, "tforja:steel_ingot", 3), sell(3, "tforja:chromium_ingot", 2), buy("tforja:raw_chromite", 6)],
+        3: [sell(5, "tforja:titanium_ingot", 2), sell(4, "tforja:steel_cable", 2), buy("tforja:raw_titanium", 6)],
+        4: [sell(9, "tforja:stainless_steel_ingot", 2, 6), sell(7, "tforja:red_steel_ingot", 2, 6)],
+        5: [sellc(6, "tforja:part", 1, part("pickaxe_head", "alloy_steel"), 3, "steel_pickaxe_head"),
+            sellc(3, "tforja:part", 1, part("binding", "alloy_bronze"), 6, "bronze_binding"),
+            sellc(3, "tforja:part", 1, part("handle", "alloy_steel"), 6, "steel_handle")],
+    },
+    # Marceneiro (Móveis): móveis envernizados (verniz natural: não envelhecem à chuva) e pincéis de verniz
+    "carpenter": {
+        1: [buy("minecraft:oak_planks", 24), sellc(1, "tmoveis:oak_chair", 2, VARNISHED, 12), sellc(1, "tmoveis:oak_stool", 2, VARNISHED, 12)],
+        2: [sellc(2, "tmoveis:oak_table", 1, VARNISHED, 12), sellc(2, "tmoveis:oak_nightstand", 1, VARNISHED, 8)],
+        3: [sell(3, "tmoveis:varnish_brush_natural", 1, 6), sell(3, "tmoveis:varnish_brush_honey", 1, 6), sellc(3, "tmoveis:oak_coffee_table", 1, VARNISHED, 8)],
+        4: [sell(4, "tmoveis:chandelier", 1, 6), sell(4, "tmoveis:red_sofa", 2, 6)],
+        5: [sell(7, "tmoveis:red_double_bed", 1, 4), sellc(6, "tmoveis:oak_wardrobe", 1, VARNISHED, 4)],
+    },
+    # Cambista (CubCoin): esmeraldas ↔ notas ao preço do Balcão de Câmbio
+    "money_changer": cambista(),
+}
+
+
 def gen_trades():
-    for prof, levels in TRADES.items():
+    all_trades = dict(TRADES) | MOD_TRADES
+    for prof, levels in all_trades.items():
+        mod = MOD_OF.get(prof)
         for lvl, trades in levels.items():
             ids = []
-            for kind, item, count, emeralds, uses in trades:
-                assert item_exists(item), f"item inexistente no 26.3: {item}"
+            for tr_ in trades:
+                kind = tr_[0]
+                if kind == "change":
+                    _, gives, gcount, wants, wcount, uses, additional, name = tr_
+                    for it in (gives, wants) + ((additional[0],) if additional else ()):
+                        assert item_exists(it), f"item inexistente: {it}"
+                    t = {"wants": {"id": wants} | ({"count": wcount} if wcount > 1 else {}),
+                         "gives": {"id": gives} | ({"count": gcount} if gcount > 1 else {}),
+                         "max_uses": uses, "xp": XP_SELL[lvl], "reputation_discount": 0.0}
+                    if additional and additional[1] > 0:
+                        t["additional_wants"] = {"id": additional[0]} | ({"count": additional[1]} if additional[1] > 1 else {})
+                    rel = f"{prof}/{lvl}/{name}"
+                    write(f"data/{MOD}/villager_trade/{rel}.json", t, mod)
+                    ids.append(f"{MOD}:{rel}")
+                    continue
+                if kind == "sellc":
+                    _, item, count, emeralds, uses, comps, name = tr_
+                    assert item_exists(item), f"item inexistente: {item}"
+                    t = {"wants": {"id": "minecraft:emerald", "count": emeralds} if emeralds > 1 else {"id": "minecraft:emerald"},
+                         "gives": {"id": item, "components": comps} | ({"count": count} if count > 1 else {}), "max_uses": uses,
+                         "xp": XP_SELL[lvl], "reputation_discount": 0.05}
+                    rel = f"{prof}/{lvl}/emerald_{name or item.split(':')[1]}"
+                    write(f"data/{MOD}/villager_trade/{rel}.json", t, mod)
+                    ids.append(f"{MOD}:{rel}")
+                    continue
+                kind, item, count, emeralds, uses = tr_
+                assert item_exists(item), f"item inexistente: {item}"
                 name = f"{item.split(':')[1]}_emerald" if kind == "buy" else f"emerald_{item.split(':')[1]}"
                 rel = f"{prof}/{lvl}/{name}"
                 if kind == "buy":
@@ -256,10 +420,10 @@ def gen_trades():
                     t = {"wants": {"id": "minecraft:emerald", "count": emeralds} if emeralds > 1 else {"id": "minecraft:emerald"},
                          "gives": {"id": item, "count": count} if count > 1 else {"id": item}, "max_uses": uses,
                          "xp": XP_SELL[lvl], "reputation_discount": 0.05}
-                write(f"data/{MOD}/villager_trade/{rel}.json", t)
+                write(f"data/{MOD}/villager_trade/{rel}.json", t, mod)
                 ids.append(f"{MOD}:{rel}")
             write(f"data/{MOD}/trade_set/{prof}/level_{lvl}.json",
-                  {"amount": 2, "random_sequence": f"{MOD}:trade_set/{prof}/level_{lvl}", "trades": ids})
+                  {"amount": 2, "random_sequence": f"{MOD}:trade_set/{prof}/level_{lvl}", "trades": ids}, mod)
 
 
 # ------------------------------------------------------------------ traduções
@@ -280,7 +444,7 @@ def gen_lang_names():
         ("tvilas.desk.duplicate", "Esta vila já tem Prefeitura: só pode haver uma Mesa do Prefeito por vila.",
          "Esta povoação já tem Câmara: só pode haver uma Mesa da Câmara por povoação.",
          "This village already has a Town Hall: only one Mayor's Desk per village."),
-        ("tvilas.mayor.no_desk", "O Prefeito perdeu a Prefeitura: ponha uma Mesa do Prefeito perto.",
+        ("tvilas.mayor.no_desk", "O Prefeito perdeu a Prefeitura: coloque uma Mesa do Prefeito por perto.",
          "O Presidente da Câmara perdeu a Câmara: põe uma Mesa da Câmara perto.",
          "The Mayor lost the Town Hall: place a Mayor's Desk nearby."),
         ("tvilas.alarm.on", "⚠ ALARME! O Prefeito toca o sino e chama os golens.",
@@ -329,7 +493,7 @@ def gen_lang_names():
         ("tvilas.mission.paid_cubcoin", "Missão cumprida! +%s esmeraldas, +%s, +%s de reputação.",
          "Missão cumprida! +%s esmeraldas, +%s, +%s de reputação.", "Mission complete! +%s emeralds, +%s, +%s reputation."),
         ("tvilas.mission.deliver", "Trazer %s %s", "Trazer %s %s", "Bring %s %s"),
-        ("tvilas.mission.decorate", "Pôr %s %s na vila", "Pôr %s %s na povoação", "Place %s %s in the village"),
+        ("tvilas.mission.decorate", "Colocar %s %s na vila", "Pôr %s %s na povoação", "Place %s %s in the village"),
         ("tvilas.mission.defend", "Defender: derrotar %s monstros/invasores na vila", "Defender: derrotar %s monstros/invasores na povoação",
          "Defend: defeat %s monsters/raiders in the village"),
         ("tvilas.dialog.title", "Prefeitura — %s", "Câmara Municipal — %s", "Town Hall — %s"),
@@ -347,7 +511,7 @@ def gen_lang_names():
         ("tvilas.dialog.lot_info", "Ver este terreno", "Ver este terreno", "View this lot"),
         ("tvilas.dialog.friend_hint", "Amigos no seu terreno: /vila terreno amigo adicionar <jogador>",
          "Amigos no teu terreno: /vila terreno amigo adicionar <jogador>", "Friends on your lot: /vila terreno amigo adicionar <player>"),
-        ("tvilas.mayor.arrived", "Um Prefeito chegou à vila e instalou-se na Prefeitura.",
+        ("tvilas.mayor.arrived", "Um Prefeito chegou na vila e se instalou na Prefeitura.",
          "Um Presidente da Câmara chegou à povoação e instalou-se na Câmara.", "A Mayor arrived in the village and moved into the Town Hall."),
         ("tvilas.upgrade.immigrant", "um morador novo chegou (grátis)", "chegou um morador novo (grátis)", "a new resident arrived (free)"),
         ("tvilas.upgrade.resident", "novo morador", "novo morador", "new resident"),
@@ -365,43 +529,105 @@ def gen_lang_names():
          "%s · população %s · reputação da povoação %s (tua: %s) · terrenos %s/%s · Mesa em %s %s %s",
          "%s · population %s · village reputation %s (yours: %s) · lots %s/%s · Desk at %s %s %s"),
     ]
+    T += T_020
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
 
+T_020 = [
+    ("entity.tvilas.builder", "Construtor", "Construtor", "Builder"),
+    ("entity.tvilas.village_merchant", "Mercador da Vila", "Mercador da Povoação", "Village Peddler"),
+    ("tvilas.project.golem", "o golem da vila", "o golem da povoação", "the village golem"),
+    ("tvilas.project.wall", "a muralha", "a muralha", "the town wall"),
+    ("tvilas.project.lighting", "a iluminação pública", "a iluminação pública", "the street lights"),
+    ("tvilas.upgrade.lighting", "iluminação pública", "iluminação pública", "street lights"),
+    ("tvilas.upgrade.wall", "muralha encomendada", "muralha encomendada", "town wall ordered"),
+    ("tvilas.news.building", "A vila está construindo %s", "A povoação está a construir %s", "The village is building %s"),
+    ("tvilas.news.done", "A vila terminou %s", "A povoação terminou %s", "The village finished %s"),
+    ("tvilas.news.overnight", "Durante a noite os construtores colocaram %s blocos", "Durante a noite os construtores puseram %s blocos",
+     "Overnight the builders placed %s blocks"),
+    ("tvilas.news.merchant_arrived", "O mercador da vila chegou à praça (fica %s dias)", "O mercador chegou à praça (fica %s dias)",
+     "The village peddler reached the square (stays %s days)"),
+    ("tvilas.news.merchant_left", "O mercador foi embora (volta no dia %s)", "O mercador partiu (volta no dia %s)",
+     "The peddler left (back on day %s)"),
+    ("tvilas.news.tax_up", "O Prefeito subiu a taxa das trocas para %s %% (%s)", "O Presidente subiu a taxa das trocas para %s %% (%s)",
+     "The Mayor raised the trade tax to %s %% (%s)"),
+    ("tvilas.news.tax_down", "O Prefeito baixou a taxa das trocas para %s %% (%s)", "O Presidente baixou a taxa das trocas para %s %% (%s)",
+     "The Mayor lowered the trade tax to %s %% (%s)"),
+    ("tvilas.news.debt_warning", "Você deve %s à vila: pague até amanhã ou seu terreno fica congelado",
+     "Deves %s à povoação: paga até amanhã ou o teu terreno fica congelado", "You owe the village %s: pay by tomorrow or your lot freezes"),
+    ("tvilas.news.debt_frozen", "Seu terreno está congelado até pagar %s (nada foi apagado)",
+     "O teu terreno está congelado até pagares %s (nada foi apagado)", "Your lot is frozen until you pay %s (nothing was removed)"),
+    ("tvilas.news.debt_unfrozen", "Dívida paga: seu terreno voltou ao normal", "Dívida paga: o teu terreno voltou ao normal",
+     "Debt paid: your lot is back to normal"),
+    ("tvilas.news.wall_cancelled", "%s cancelou a muralha (o que já foi feito fica)", "%s cancelou a muralha (o que já está feito fica)",
+     "%s cancelled the town wall (what was built stays)"),
+    ("tvilas.tax.reason.base", "taxa base", "taxa base", "base rate"),
+    ("tvilas.tax.reason.raised", "mais obras para manter", "mais obras para manter", "more works to keep up"),
+    ("tvilas.tax.reason.capped", "chegou ao teto", "chegou ao teto", "at the ceiling"),
+    ("tvilas.tax.reason.full", "a tesouraria está cheia", "a tesouraria está cheia", "the treasury is full"),
+    ("tvilas.lot.frozen", "Terreno congelado por dívida: pague no quadro da Prefeitura.", "Terreno congelado por dívida: paga no quadro da Câmara.",
+     "Lot frozen for debt: pay at the Town Hall board."),
+    ("tvilas.debt.none", "Você não deve nada a esta vila.", "Não deves nada a esta povoação.", "You owe this village nothing."),
+    ("tvilas.debt.no_money", "Falta dinheiro: a dívida é %s.", "Falta dinheiro: a dívida é %s.", "Not enough money: the debt is %s."),
+    ("tvilas.debt.no_emeralds", "Faltam esmeraldas: são precisas %s.", "Faltam esmeraldas: são precisas %s.", "Not enough emeralds: %s needed."),
+    ("tvilas.debt.paid", "Dívida de %s paga. Obrigado!", "Dívida de %s paga. Obrigado!", "Debt of %s paid. Thank you!"),
+    ("tvilas.wall.not_citizen", "Só quem tem terreno ou reputação nesta vila decide sobre a muralha.",
+     "Só quem tem terreno ou reputação nesta povoação decide sobre a muralha.", "Only those with a lot or reputation here decide about the wall."),
+    ("tvilas.wall.not_building", "Não há muralha em obras.", "Não há muralha em obras.", "No wall is being built."),
+    ("tvilas.wall.not_cancelled", "A muralha não foi cancelada.", "A muralha não foi cancelada.", "The wall was not cancelled."),
+    ("tvilas.wall.cancelled", "Muralha cancelada.", "Muralha cancelada.", "Wall cancelled."),
+    ("tvilas.wall.resumed", "Muralha retomada.", "Muralha retomada.", "Wall resumed."),
+    ("tvilas.dialog.tax", "Taxa das trocas: %s %% (%s) · base %s %% + %s %% por obra paga (%s obras) · teto %s %%",
+     "Taxa das trocas: %s %% (%s) · base %s %% + %s %% por obra paga (%s obras) · teto %s %%",
+     "Trade tax: %s %% (%s) · base %s %% + %s %% per paid work (%s works) · ceiling %s %%"),
+    ("tvilas.dialog.project", "🏗 %s: %s blocos colocados (%s)", "🏗 %s: %s blocos postos (%s)", "🏗 %s: %s blocks placed (%s)"),
+    ("tvilas.dialog.wall_done", "A vila já tem muralha.", "A povoação já tem muralha.", "The village has its wall."),
+    ("tvilas.dialog.lighting", "💡 Iluminação pública: %s postes", "💡 Iluminação pública: %s postes", "💡 Street lights: %s poles"),
+    ("tvilas.dialog.merchant_here", "🐴 O mercador está na praça até o dia %s", "🐴 O mercador está na praça até ao dia %s",
+     "🐴 The peddler is in the square until day %s"),
+    ("tvilas.dialog.merchant_next", "Próximo mercador: dia %s", "Próximo mercador: dia %s", "Next peddler: day %s"),
+    ("tvilas.dialog.frozen", "❄ Seu terreno está congelado até pagar a dívida.", "❄ O teu terreno está congelado até pagares a dívida.",
+     "❄ Your lot is frozen until you pay the debt."),
+    ("tvilas.dialog.pay_debt", "Pagar dívida (%s)", "Pagar dívida (%s)", "Pay debt (%s)"),
+    ("tvilas.dialog.wall_cancel", "Cancelar muralha", "Cancelar muralha", "Cancel wall"),
+    ("tvilas.dialog.wall_resume", "Retomar muralha", "Retomar muralha", "Resume wall"),
+]
+
+
 # ------------------------------------------------------------------ guia
 
-def P(key, recipe, br, pt, en):
-    return {"key": key, "recipe": recipe, "br": br, "pt": pt, "en": en}
+def P(key, recipe, br, pt, en, requires=None):
+    return {"key": key, "recipe": recipe, "br": br, "pt": pt, "en": en, "requires": requires}
 
 
 GUIDE = [
     P("cover", None,
-      ("Guia das Vilas", "Prefeito, missões, terrenos com dono, vilas que crescem, alarme contra invasões e quatro vendedores novos.\n\nTudo começa na Prefeitura, no centro das vilas novas."),
-      ("Guia das Vilas", "Presidente da Câmara, missões, terrenos com dono, povoações que crescem, alarme contra invasões e quatro vendedores novos.\n\nTudo começa na Câmara, no centro das povoações novas."),
-      ("Villages Guide", "Mayor, missions, owned lots, growing villages, a raid alarm and four new traders.\n\nIt all starts at the Town Hall, in the center of new villages.")),
+      ("Guia das Vilas", "Prefeito, missões, terrenos com dono, vilas que crescem, alarme contra invasões, vendedores novos, obras à vista e um mercador.\n\nTudo começa na Prefeitura, no centro das vilas novas."),
+      ("Guia das Vilas", "Presidente da Câmara, missões, terrenos com dono, povoações que crescem, alarme contra invasões, vendedores novos, obras à vista e um mercador.\n\nTudo começa na Câmara, no centro das povoações novas."),
+      ("Villages Guide", "Mayor, missions, owned lots, growing villages, a raid alarm, new traders, works you can watch and a peddler.\n\nIt all starts at the Town Hall, in the center of new villages.")),
     P("mayor", "mayor_desk",
       ("O Prefeito", "Um aldeão sem emprego que ache a Mesa do Prefeito vira Prefeito. Só uma Mesa por vila."),
       ("Presidente", "Um aldeão sem emprego que encontre a Mesa da Câmara fica Presidente. Só uma por povoação."),
       ("The Mayor", "A jobless villager who finds the Mayor's Desk becomes the Mayor. One desk per village.")),
     P("town_hall", None,
-      ("A Prefeitura", "Metade das vilas novas nasce com uma Prefeitura no centro: um salão com a Mesa do Prefeito e um sino na praça.\n\nNas outras vilas, faça a Mesa e ponha-a perto do centro."),
+      ("A Prefeitura", "Metade das vilas novas nasce com uma Prefeitura no centro: um salão com a Mesa do Prefeito e um sino na praça.\n\nNas outras vilas, faça a Mesa e coloque-a perto do centro."),
       ("A Câmara", "Metade das povoações novas nasce com uma Câmara no centro: um salão com a Mesa da Câmara e um sino na praça.\n\nNas outras, faz a Mesa e põe-na perto do centro."),
       ("The Town Hall", "Half of new villages start with a Town Hall in the center: a hall with the Mayor's Desk and a bell in the square.\n\nIn other villages, craft the Desk and place it near the center.")),
     P("territory", None,
-      ("Território", "A vila vai até 400 blocos à volta da Mesa do Prefeito: casas longe do centro também contam.\n\nQuem gere o servidor muda o raio em config/tvilas.json."),
+      ("Território", "A vila vai até 400 blocos ao redor da Mesa do Prefeito: casas longe do centro também contam.\n\nQuem administra o servidor muda o raio em config/tvilas.json."),
       ("Território", "A povoação vai até 400 blocos à volta da Mesa da Câmara: casas longe do centro também contam.\n\nQuem gere o servidor muda o raio em config/tvilas.json."),
       ("Territory", "The village reaches 400 blocks around the Mayor's Desk: houses far from the center count too.\n\nServer admins change the radius in config/tvilas.json.")),
     P("reborn", None,
-      ("Vila vazia", "Uma vila sem aldeões renasce: ponha a Mesa do Prefeito e um Prefeito chega.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."),
+      ("Vila vazia", "Uma vila sem aldeões renasce: coloque a Mesa do Prefeito e um Prefeito chega.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."),
       ("Povoação vazia", "Uma povoação sem aldeões renasce: põe a Mesa da Câmara e chega um Presidente.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."),
       ("Empty village", "A village with no villagers comes back: place the Mayor's Desk and a Mayor arrives.\n\nWith free beds, one resident arrives per day, up to three. Then the treasury pays for more.")),
     P("talk", None,
-      ("Falar com ele", "Clique direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."),
+      ("Falar com ele", "Clique com o botão direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."),
       ("Falar com ele", "Clique direito no Presidente ou na Mesa: abre o quadro da Câmara, com o estado da povoação, as missões e os terrenos.\n\nO Presidente não faz trocas."),
       ("Talking", "Right-click the Mayor or the Desk: it opens the Town Hall board with the village status, missions and lots.\n\nThe Mayor does not trade.")),
     P("missions", None,
-      ("Missões", "Há sempre três: trazer itens, pôr blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos têm de lá estar quando entregar."),
+      ("Missões", "Há sempre três: trazer itens, colocar blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos precisam estar lá quando você entregar."),
       ("Missões", "Há sempre três: trazer itens, pôr blocos na povoação e defendê-la.\n\nAceita primeiro: só conta o que fizeres depois. Os blocos têm de lá estar quando entregares."),
       ("Missions", "There are always three: bring items, place blocks in the village and defend it.\n\nAccept first: only what you do afterwards counts. Blocks must still be there when you hand in.")),
     P("rewards", None,
@@ -413,15 +639,15 @@ GUIDE = [
       ("Defender", "A missão de defesa só conta durante um alarme: monstros e invasores derrotados dentro da povoação.\n\nDepois de entregares, o Presidente põe outra missão no lugar."),
       ("Defending", "The defense mission only counts during an alarm: monsters and raiders defeated inside the village.\n\nAfter you hand in, the Mayor posts a new mission.")),
     P("lots", None,
-      ("Terrenos", "No quadro, compre o terreno onde está: 16 por 16 blocos com você no meio, do fundo do mundo até ao céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."),
+      ("Terrenos", "No quadro, compre o terreno onde você está: 16 por 16 blocos com você no meio, do fundo do mundo até o céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."),
       ("Terrenos", "No quadro, compra o terreno onde estás: 16 por 16 blocos contigo no meio, do fundo do mundo até ao céu.\n\nPaga-se em esmeraldas. Mais reputação, mais barato."),
       ("Lots", "On the board, buy the lot you stand on: 16 by 16 blocks with you in the middle, from the bottom of the world to the sky.\n\nPaid in emeralds. More reputation, cheaper.")),
     P("lot_rules", None,
-      ("Proteção", "No seu terreno, só você e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Prefeitura não se vende."),
+      ("Proteção", "No seu terreno, só você e os amigos quebram ou colocam blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Prefeitura não se vende."),
       ("Proteção", "No teu terreno, só tu e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Câmara não se vende."),
       ("Protection", "On your lot, only you and your friends break or place blocks. Machines from the Industrial mod obey too. Lava, fire, explosions and pistons from outside stay out.\n\nThe Town Hall square is not for sale.")),
     P("friends", None,
-      ("Amigos", "Dentro do seu terreno escreva:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."),
+      ("Amigos", "Dentro do seu terreno digite:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."),
       ("Amigos", "Dentro do teu terreno escreve:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troca adicionar por remover."),
       ("Friends", "Inside your lot type:\n/vila terreno amigo adicionar Name\n\nTo take a friend out, use remover instead.")),
     P("levels", None,
@@ -433,15 +659,15 @@ GUIDE = [
       ("O que desbloqueia", "Aldeia: 4 terrenos à venda.\nVila: 8 terrenos, missões maiores e 1 reforço do alarme.\nCidade: 16 terrenos, as missões mais bem pagas e 2 reforços.\n\nO terreno fica mais caro em povoações maiores."),
       ("Unlocks", "Hamlet: 4 lots for sale.\nVillage: 8 lots, bigger missions and 1 alarm upgrade.\nTown: 16 lots, the best paid missions and 2 upgrades.\n\nLots cost more in bigger villages.")),
     P("alarm", None,
-      ("Alarme", "Numa invasão, ou com 3 ou mais monstros perto, o Prefeito toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens da vila ficam mais fortes."),
+      ("Alarme", "Durante uma invasão, ou com 3 ou mais monstros por perto, o Prefeito toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens da vila ficam mais fortes."),
       ("Alarme", "Numa invasão, ou com 3 ou mais monstros perto, o Presidente toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens ficam mais fortes."),
       ("Alarm", "In a raid, or with 3 or more monsters nearby, the Mayor rings the bell and calls iron golems: 2 at most (more with upgrades), one at a time.\n\nThe village golems get stronger.")),
     P("alarm_warning", None,
-      ("⚠ Cuidado", "Os golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão-se embora um minuto depois do alarme e não largam ferro."),
+      ("⚠ Cuidado", "Os golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão embora um minuto depois do alarme e não deixam ferro."),
       ("⚠ Cuidado", "Os golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão-se embora um minuto depois do alarme e não largam ferro."),
       ("⚠ Careful", "Golems attack anyone who hurts villagers, as in the normal game.\n\nCalled golems leave a minute after the alarm and drop no iron.")),
     P("taxes", None,
-      ("Impostos", "O Prefeito cobra 1 cêntimo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."),
+      ("Impostos", "O Prefeito cobra 1 centavo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."),
       ("Impostos", "O Presidente cobra 1 cêntimo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."),
       ("Taxes", "The Mayor charges 1 cent per bed per day in lot houses, and 2 percent of trades in the territory, with villagers or between players.\n\nWithout CubCoin, it charges emeralds once the bill reaches one.")),
     P("treasury", None,
@@ -449,11 +675,11 @@ GUIDE = [
       ("Tesouraria", "Os impostos vão para a tesouraria. Uma vez por dia o Presidente compra uma melhoria: moradores novos, um golem ou o reforço do alarme.\n\nVê a tesouraria e os gastos no quadro."),
       ("Treasury", "Taxes go to the treasury. Once a day the Mayor buys an upgrade: new residents, a village golem or an alarm upgrade.\n\nSee the treasury and spending on the board.")),
     P("debts", None,
-      ("Dívidas", "Quem não tiver com que pagar fica a dever. A dívida aparece no quadro e cobra-se quando houver dinheiro."),
+      ("Dívidas", "Quem não tiver como pagar fica devendo. A dívida aparece no quadro e é cobrada quando houver dinheiro."),
       ("Dívidas", "Quem não tiver com que pagar fica a dever. A dívida aparece no quadro e cobra-se quando houver dinheiro."),
       ("Debts", "Anyone who cannot pay owes it. The debt shows on the board and is charged when there is money.")),
     P("market", None,
-      ("Mercado", "Algumas vilas novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam lá a vender."),
+      ("Mercado", "Algumas vilas novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam vendendo lá."),
       ("Mercado", "Algumas povoações novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam lá a vender."),
       ("Market", "Some new villages have a Market: four stalls with the job sites of the new traders.\n\nJobless villagers take the stalls.")),
     P("baker", "baker_oven",
@@ -461,7 +687,7 @@ GUIDE = [
       ("Padeiro", "Compra trigo, açúcar, ovos e cacau. Vende pão, bolachas, tartes e bolo."),
       ("Baker", "Buys wheat, sugar, eggs and cocoa. Sells bread, cookies, pies and cake.")),
     P("florist", "flower_stall",
-      ("Florista", "Vende flores de todo o tipo. No último nível, sementes raras e flor de esporos."),
+      ("Florista", "Vende flores de todo tipo. No último nível, sementes raras e flor de esporos."),
       ("Florista", "Vende flores de todo o tipo. No último nível, sementes raras e flor de esporos."),
       ("Florist", "Sells all kinds of flowers. At the top level, rare seeds and spore blossom.")),
     P("innkeeper", "tavern_counter",
@@ -472,14 +698,110 @@ GUIDE = [
       ("Apicultor", "Mel, favos, velas e colmeias. No último nível vende um ninho de abelhas."),
       ("Apicultor", "Mel, favos, velas e colmeias. No último nível vende um ninho de abelhas."),
       ("Beekeeper", "Honey, honeycomb, candles and hives. At the top level it sells a bee nest.")),
+    # 0.2.0
+    P("guide_book", "guide",
+      ("Este livro", "Livro e trigo, juntos na mesa de trabalho, dão outro Guia das Vilas."),
+      ("Este livro", "Livro e trigo, juntos na mesa de trabalho, dão outro Guia das Vilas."),
+      ("This book", "A book and wheat, together on the crafting table, make another Villages Guide.")),
+    P("news", None,
+      ("Novidades", "O Prefeito avisa no chat, numa linha, quem está no território: obras, mercador, impostos.\n\nEx.: 🏗 A vila está construindo a muralha."),
+      ("Novidades", "O Presidente avisa no chat, numa linha, quem está no território: obras, mercador, impostos.\n\nEx.: 🏗 A povoação está a construir a muralha."),
+      ("News", "The Mayor tells everyone in the territory, in one chat line: works, peddler, taxes.\n\nE.g.: 🏗 The village is building the town wall.")),
+    P("builders", None,
+      ("Construtores", "As obras pagas pela tesouraria são feitas por um Construtor: ele vai ao local e coloca os blocos um a um, com pó e som.\n\nObras: golem, muralha e iluminação."),
+      ("Construtores", "As obras pagas pela tesouraria são feitas por um Construtor: ele vai ao sítio e põe os blocos um a um, com pó e som.\n\nObras: golem, muralha e iluminação."),
+      ("Builders", "Works paid by the treasury are done by a Builder: he walks to the spot and places the blocks one by one, with dust and sound.\n\nWorks: golem, wall and lights.")),
+    P("builders_night", None,
+      ("De noite", "Se ninguém estiver por perto para ver, a obra espera.\n\nO que falta aparece depois da noite, quando alguém dorme ou o dia passa."),
+      ("De noite", "Se ninguém estiver perto a ver, a obra espera.\n\nO que falta aparece depois da noite, quando alguém dorme ou o dia passa."),
+      ("At night", "If nobody is near to watch, the work waits.\n\nWhat is left appears after the night, when someone sleeps or the day passes.")),
+    P("golem_build", None,
+      ("Golem montado", "Quando a vila compra um golem, o Construtor monta quatro blocos de ferro e uma abóbora. O golem acorda sozinho."),
+      ("Golem montado", "Quando a povoação compra um golem, o Construtor monta quatro blocos de ferro e uma abóbora. O golem acorda sozinho."),
+      ("Built golem", "When the village buys a golem, the Builder stacks four iron blocks and a pumpkin. The golem wakes up by itself.")),
+    P("wall", None,
+      ("Muralha", "Quando a vila vira Cidade, o Prefeito encomenda uma muralha com torres em volta do centro.\n\nÉ construída aos poucos e paga pela tesouraria, bloco a bloco."),
+      ("Muralha", "Quando a povoação chega a Cidade, o Presidente encomenda uma muralha com torres à volta do centro.\n\nÉ feita aos poucos e paga pela tesouraria, bloco a bloco."),
+      ("Town wall", "When the village becomes a Town, the Mayor orders a wall with towers around the center.\n\nIt is built little by little, paid by the treasury block by block.")),
+    P("wall_safety", None,
+      ("Muralha segura", "A muralha nunca quebra nem troca blocos de jogadores nem nada dentro de terrenos. Só ocupa ar, grama, flores e neve.\n\nQuando encontra algo, desvia ou deixa um vão. As ruas ficam como portões."),
+      ("Muralha segura", "A muralha nunca parte nem troca blocos de jogadores nem nada dentro de terrenos. Só ocupa ar, erva, flores e neve.\n\nQuando encontra algo, desvia ou deixa um vão. As ruas ficam como portões."),
+      ("Safe wall", "The wall never breaks or replaces player blocks, nor anything inside lots. It only takes air, grass, flowers and snow.\n\nIt goes around things or leaves a gap. Streets become gates.")),
+    P("wall_cancel", None,
+      ("Cancelar", "Quem tem terreno ou reputação na vila pode cancelar a muralha no quadro. O que já foi feito fica.\n\nNo quadro também se retoma."),
+      ("Cancelar", "Quem tem terreno ou reputação na povoação pode cancelar a muralha no quadro. O que já está feito fica.\n\nNo quadro também se retoma."),
+      ("Cancel", "Anyone with a lot or reputation in the village can cancel the wall on the board. What was built stays.\n\nIt can be resumed there too.")),
+    P("lighting", None,
+      ("Iluminação", "Numa Vila, a tesouraria também compra iluminação pública: o Construtor coloca postes ao lado das ruas.\n\nSem o mod Industrial são postes com lanterna."),
+      ("Iluminação", "Numa Vila, a tesouraria também compra iluminação pública: o Construtor põe postes ao lado das ruas.\n\nSem o mod Industrial são postes com lanterna."),
+      ("Street lights", "In a Village, the treasury also buys street lights: the Builder sets poles beside the streets.\n\nWithout the Industrial mod they are lantern posts.")),
+    P("lighting_industrial", None,
+      ("Postes elétricos", "Com o Industrial são postes de verdade (madeira do bioma, ferro no deserto), ligados por fio aéreo.\n\nNa Prefeitura ficam 2 painéis solares e uma bateria: acendem à noite."),
+      ("Postes elétricos", "Com o Industrial são postes a sério (madeira do bioma, ferro no deserto), ligados por fio aéreo.\n\nNa Câmara ficam 2 painéis solares e uma bateria: acendem à noite."),
+      ("Industrial poles", "With Industrial they are real lamp posts (biome wood, iron in the desert), joined by aerial wire.\n\nThe Town Hall gets 2 solar panels and a battery: they light at night.")),
+    P("tax_changes", None,
+      ("Imposto variável", "A taxa das trocas sobe um pouco a cada obra paga, até um teto (5 por cento).\n\nQuando a tesouraria está cheia, o Prefeito baixa de novo. O quadro mostra o motivo."),
+      ("Imposto variável", "A taxa das trocas sobe um pouco a cada obra paga, até um teto (5 por cento).\n\nQuando a tesouraria está cheia, o Presidente baixa outra vez. O quadro mostra porquê."),
+      ("Changing tax", "The trade tax rises a little with each paid work, up to a ceiling (5 percent).\n\nWhen the treasury is full, the Mayor lowers it again. The board shows why.")),
+    P("freeze", None,
+      ("Terreno congelado", "Quem deve há alguns dias fica com o terreno congelado: não pode construir nem quebrar lá até pagar.\n\nNada é apagado nem tirado. Um dia antes, o Prefeito avisa."),
+      ("Terreno congelado", "Quem deve há alguns dias fica com o terreno congelado: não pode construir nem partir lá até pagar.\n\nNada é apagado nem tirado. Um dia antes, o Presidente avisa."),
+      ("Frozen lot", "Owing for a few days freezes your lot: no building or breaking there until you pay.\n\nNothing is removed or taken. The Mayor warns you a day before.")),
+    P("pay_debt", None,
+      ("Pagar a dívida", "No quadro, o botão Pagar dívida paga tudo de uma vez e o terreno volta ao normal.\n\nSem CubCoin, paga em esmeraldas."),
+      ("Pagar a dívida", "No quadro, o botão Pagar dívida paga tudo de uma vez e o terreno volta ao normal.\n\nSem CubCoin, paga-se em esmeraldas."),
+      ("Paying debt", "On the board, Pay debt pays it all at once and the lot is back to normal.\n\nWithout CubCoin, it is paid in emeralds.")),
+    P("merchant", None,
+      ("Mercador da Vila", "De tempos em tempos chega à praça um mercador com um burro de carga. Fica uns dias e o Prefeito avisa quando chega e quando vai embora."),
+      ("Mercador", "De tempos a tempos chega à praça um mercador com um burro de carga. Fica uns dias e o Presidente avisa quando chega e quando parte."),
+      ("Village Peddler", "Every few days a peddler with a pack donkey comes to the square. He stays a few days and the Mayor tells you when he comes and goes.")),
+    P("merchant_diff", None,
+      ("Não é o ambulante", "O Mercador Ambulante aparece por acaso e some depressa.\n\nO da vila vem por calendário, fica na praça e vende coisas raras: etiquetas, selas, discos, chaves e itens dos mods."),
+      ("Não é o ambulante", "O Vendedor Ambulante aparece ao acaso e desaparece depressa.\n\nO da povoação vem por calendário, fica na praça e vende coisas raras: etiquetas, selas, discos, chaves e itens dos mods."),
+      ("Not the wanderer", "The Wandering Trader shows up by chance and leaves fast.\n\nThe village peddler comes on schedule, stays in the square and sells rare things: name tags, saddles, discs, keys and mod items.")),
+    P("tavern", None,
+      ("Taverna", "Vilas novas podem ter uma Taverna e pousada: balcão do Taberneiro, mesas, cadeiras e camas para dormir."),
+      ("Taberna", "Povoações novas podem ter uma Taberna e estalagem: balcão do Taberneiro, mesas, cadeiras e camas para dormir."),
+      ("Tavern", "New villages may have a Tavern and inn: the Innkeeper's counter, tables, chairs and beds to sleep in.")),
+    P("plaza", None,
+      ("Praça", "Algumas vilas novas ganham uma praça com fonte, poço novo, bancos e uma mesa de café."),
+      ("Praça", "Algumas povoações novas ganham uma praça com fonte, poço novo, bancos e uma mesa de esplanada."),
+      ("Square", "Some new villages get a square with a fountain, a new well, benches and a café table.")),
+    P("furniture", None,
+      ("Com o Móveis", "Com o mod Móveis instalado, a Taverna e a Praça já nascem mobiliadas: cadeiras, mesas, lustres e cama de casal, envernizados.\n\nSem ele, ficam com blocos do jogo."),
+      ("Com o Móveis", "Com o mod Móveis instalado, a Taberna e a Praça já nascem mobiladas: cadeiras, mesas, lustres e cama de casal, envernizados.\n\nSem ele, ficam com blocos do jogo."),
+      ("With Móveis", "With the Móveis mod installed, the Tavern and the Square come furnished: chairs, tables, chandeliers and a double bed, varnished.\n\nWithout it, they use game blocks.")),
+    P("mod_vendors", None,
+      ("Mais vendedores", "Mais quatro vendedores, cada um só com o seu mod: Mecânico (Industrial), Ferreiro de Ligas (Forja), Marceneiro (Móveis) e Cambista (CubCoin)."),
+      ("Mais vendedores", "Mais quatro vendedores, cada um só com o seu mod: Mecânico (Industrial), Ferreiro de Ligas (Forja), Marceneiro (Móveis) e Cambista (CubCoin)."),
+      ("Mod traders", "Four more traders, each only with its mod: Mechanic (Industrial), Alloy Smith (Forja), Carpenter (Móveis) and Money Changer (CubCoin).")),
+    P("mechanic", "mechanic_bench",
+      ("Mecânico", "Só com o Industrial. Fio de cobre, cabos, canos, conectores e melhorias para as máquinas."),
+      ("Mecânico", "Só com o Industrial. Fio de cobre, cabos, canos, conectores e melhorias para as máquinas."),
+      ("Mechanic", "Industrial only. Copper wire, cables, pipes, connectors and machine upgrades."), "tindustrial"),
+    P("alloy_smith", "alloy_anvil",
+      ("Ferreiro de Ligas", "Só com a Forja. Bronze, aço, cromo, titânio, aço inox e peças de ferramenta."),
+      ("Ferreiro de Ligas", "Só com a Forja. Bronze, aço, crómio, titânio, aço inox e peças de ferramenta."),
+      ("Alloy Smith", "Forja only. Bronze, steel, chromium, titanium, stainless steel and tool parts."), "tforja"),
+    P("carpenter", "carpenter_bench",
+      ("Marceneiro", "Só com o Móveis. Cadeiras, mesas, sofás, lustres e cama de casal, já envernizados, e pincéis de verniz."),
+      ("Marceneiro", "Só com o Móveis. Cadeiras, mesas, sofás, lustres e cama de casal, já envernizados, e pincéis de verniz."),
+      ("Carpenter", "Móveis only. Chairs, tables, sofas, chandeliers and a double bed, varnished, and varnish brushes."), "tmoveis"),
+    P("money_changer", "changer_counter",
+      ("Cambista", "Só com o CubCoin. Troca esmeraldas por notas e notas por esmeraldas, ao preço do Balcão de Câmbio, sem desconto."),
+      ("Cambista", "Só com o CubCoin. Troca esmeraldas por notas e notas por esmeraldas, ao preço do Balcão de Câmbio, sem desconto."),
+      ("Money Changer", "CubCoin only. Swaps emeralds for notes and back at the Exchange Counter price, no discounts."), "cubcoin"),
     P("commands", None,
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info"),
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info"),
-      ("Commands", "/vila opens the board\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info")),
+      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"),
+      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"),
+      ("Commands", "/vila opens the board\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar")),
 ]
 
 
 def _grid(r):
+    if "ingredients" in r:  # sem forma: em fila na primeira linha
+        ing = r["ingredients"] + [None] * (3 - len(r["ingredients"]))
+        return [ing[:3], [None] * 3, [None] * 3]
     rows = [row.ljust(3) for row in r["pattern"]] + ["   "] * (3 - len(r["pattern"]))
     return [[None if ch == " " else r["key"][ch] for ch in row[:3]] for row in rows[:3]]
 
@@ -492,11 +814,13 @@ def gen_guide():
             tr(f"guide.{MOD}.{g['key']}.{part}", g["br"][i], g["pt"][i], g["en"][i])
     book = [f"§l{g['br'][0]}§r\n\n{g['br'][1]}" for g in GUIDE]
     assert len(book) <= 100
-    write(f"data/{MOD}/recipe/guide.json", {"type": "minecraft:crafting_shapeless", "category": "misc",
-                                             "ingredients": ["minecraft:book", "minecraft:wheat"],
-                                             "result": {"id": "minecraft:written_book", "components": {"minecraft:written_book_content": {
-                                                 "title": {"raw": "Guia das Vilas"}, "author": "Tcordeiro",
-                                                 "pages": [{"raw": p} for p in book], "resolved": True}}}})
+    guide = {"type": "minecraft:crafting_shapeless", "category": "misc",
+             "ingredients": ["minecraft:book", "minecraft:wheat"],
+             "result": {"id": "minecraft:written_book", "components": {"minecraft:written_book_content": {
+                 "title": {"raw": "Guia das Vilas"}, "author": "Tcordeiro",
+                 "pages": [{"raw": p} for p in book], "resolved": True}}}}
+    write(f"data/{MOD}/recipe/guide.json", guide)
+    RECIPES["guide"] = guide
     advancement("guide", ["minecraft:wheat"])
 
     def js(v):
@@ -504,15 +828,16 @@ def gen_guide():
 
     consts, lines = [], []
     for g in GUIDE:
+        req = "null" if not g["requires"] else f'"{g["requires"]}"'
         if g["recipe"] is None:
-            lines.append(f'new Page("{g["key"]}", null, List.of())')
+            lines.append(f'new Page("{g["key"]}", null, List.of(), {req})')
             continue
         r = RECIPES[g["recipe"]]
         const = g["recipe"].upper()
         rows = ", ".join("{" + ", ".join(js(c) for c in row) + "}" for row in _grid(r))
         consts.append(f'\tstatic final Recipe {const} = new Recipe("{MOD}:{g["recipe"]}", "{r["result"]["id"]}", {r["result"].get("count", 1)},\n'
                       f'\t\t\tnew String[][] {{{rows}}});')
-        lines.append(f'new Page("{g["key"]}", null, List.of({const}))')
+        lines.append(f'new Page("{g["key"]}", null, List.of({const}), {req})')
     java = f"""package com.tcordeiro.vilas.guide;
 
 import java.util.List;
@@ -534,13 +859,24 @@ public final class VilasGuide {{
 		}}
 	}}
 
-	/** Página: chave de tradução, imagem opcional (textures/gui/guide/&lt;img&gt;.png) e receitas. */
-	public record Page(String key, String image, List<Recipe> recipes) {{}}
+	/**
+	 * Página: chave de tradução, imagem opcional (textures/gui/guide/&lt;img&gt;.png), receitas e o mod de que depende (null =
+	 * sempre). As páginas de um mod que não está instalado não entram em {{@link #PAGES}}.
+	 */
+	public record Page(String key, String image, List<Recipe> recipes, String requires) {{
+		public boolean available() {{
+			return requires == null || net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded(requires);
+		}}
+	}}
 
 {chr(10).join(consts)}
 
-	public static final List<Page> PAGES = List.of(
+	/** Todas as páginas (o livro escrito leva-as todas; as dos mods dizem «só com o mod»). */
+	public static final List<Page> ALL = List.of(
 			{(","+chr(10)+chr(9)+chr(9)+chr(9)).join(lines)});
+
+	/** As páginas do separador «Guias» do Receitário: sem as dos mods que não estão instalados. */
+	public static final List<Page> PAGES = ALL.stream().filter(Page::available).toList();
 }}
 """
     path = os.path.join(JAVA, "guide", "VilasGuide.java")
@@ -569,6 +905,19 @@ def check_missions():
         assert item_exists(i), f"missão com item inexistente: {i}"
 
 
+def check_merchant_and_news():
+    """O stock do mercador (village/TravelingMerchant.java) existe; os anúncios do Prefeito são de UMA linha."""
+    src = open(os.path.join(JAVA, "village", "TravelingMerchant.java")).read()
+    ids = re.findall(r'new Stock\("([a-z_]+:[a-z0-9_]+)"', src)
+    assert len(ids) >= 10, ids
+    for i in ids:
+        assert item_exists(i), f"mercador com item inexistente: {i}"
+    for lg in TR:
+        for k, v in TR[lg].items():
+            if k.startswith("tvilas.news."):
+                assert "\n" not in v and len(v) <= 90, f"{lg}: anúncio de mais de uma linha: {k}"
+
+
 def gen_lang():
     for lg, code in (("br", "pt_br"), ("pt", "pt_pt"), ("en", "en_us")):
         write(f"assets/{MOD}/lang/{code}.json", dict(sorted(TR[lg].items())))
@@ -594,9 +943,10 @@ def main():
     gen_guide()
     check_names()
     check_missions()
+    check_merchant_and_news()
     gen_lang()
     clean_stale()
-    n_trades = sum(len(t) for lv in TRADES.values() for t in lv.values())
+    n_trades = sum(len(t) for lv in (dict(TRADES) | MOD_TRADES).values() for t in lv.values())
     print(f"{len(BLOCKS)} blocos, {len(PROFESSIONS)} profissões, {n_trades} trocas, {len(RECIPES)} receitas, "
           f"{len(GUIDE)} páginas no guia, {len(written)} ficheiros")
 

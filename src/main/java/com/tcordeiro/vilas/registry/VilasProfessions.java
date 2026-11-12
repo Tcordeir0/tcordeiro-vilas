@@ -40,6 +40,14 @@ public final class VilasProfessions {
 	public static final ResourceKey<VillagerProfession> FLORIST = key("florist");
 	public static final ResourceKey<VillagerProfession> INNKEEPER = key("innkeeper");
 	public static final ResourceKey<VillagerProfession> BEEKEEPER = key("beekeeper");
+	// 0.2.0 — vendedores dos mods irmãos (só registados com o mod: ver MOD_VENDORS)
+	public static final ResourceKey<VillagerProfession> MECHANIC = key("mechanic");
+	public static final ResourceKey<VillagerProfession> ALLOY_SMITH = key("alloy_smith");
+	public static final ResourceKey<VillagerProfession> CARPENTER = key("carpenter");
+	public static final ResourceKey<VillagerProfession> MONEY_CHANGER = key("money_changer");
+
+	/** Profissão de mod → o mod de que depende. */
+	public static final Map<ResourceKey<VillagerProfession>, String> MOD_VENDORS = new LinkedHashMap<>();
 
 	/** Os vendedores (profissão → posto de trabalho), pela ordem do guia. */
 	public static final Map<ResourceKey<VillagerProfession>, Block> VENDORS = new LinkedHashMap<>();
@@ -51,6 +59,15 @@ public final class VilasProfessions {
 		VENDORS.put(FLORIST, VilasBlocks.FLOWER_STALL);
 		VENDORS.put(INNKEEPER, VilasBlocks.TAVERN_COUNTER);
 		VENDORS.put(BEEKEEPER, VilasBlocks.APIARY_BENCH);
+		MOD_VENDORS.put(MECHANIC, com.tcordeiro.vilas.compat.Mods.INDUSTRIAL);
+		MOD_VENDORS.put(ALLOY_SMITH, com.tcordeiro.vilas.compat.Mods.FORJA);
+		MOD_VENDORS.put(CARPENTER, com.tcordeiro.vilas.compat.Mods.MOVEIS);
+		MOD_VENDORS.put(MONEY_CHANGER, com.tcordeiro.vilas.compat.Mods.CUBCOIN);
+		// os postos só existem com o mod; os vendedores registados entram na lista dos vendedores (trocas nos 5 níveis)
+		if (VilasBlocks.MECHANIC_BENCH != null) VENDORS.put(MECHANIC, VilasBlocks.MECHANIC_BENCH);
+		if (VilasBlocks.ALLOY_ANVIL != null) VENDORS.put(ALLOY_SMITH, VilasBlocks.ALLOY_ANVIL);
+		if (VilasBlocks.CARPENTER_BENCH != null) VENDORS.put(CARPENTER, VilasBlocks.CARPENTER_BENCH);
+		if (VilasBlocks.CHANGER_COUNTER != null) VENDORS.put(MONEY_CHANGER, VilasBlocks.CHANGER_COUNTER);
 	}
 
 	private static ResourceKey<VillagerProfession> key(String name) {
@@ -79,5 +96,14 @@ public final class VilasProfessions {
 		register(FLORIST, VilasBlocks.FLOWER_STALL, SoundEvents.VILLAGER_WORK_FARMER, true);
 		register(INNKEEPER, VilasBlocks.TAVERN_COUNTER, SoundEvents.VILLAGER_WORK_FISHERMAN, true);
 		register(BEEKEEPER, VilasBlocks.APIARY_BENCH, SoundEvents.VILLAGER_WORK_LEATHERWORKER, true);
+		if (VilasBlocks.MECHANIC_BENCH != null) register(MECHANIC, VilasBlocks.MECHANIC_BENCH, SoundEvents.VILLAGER_WORK_TOOLSMITH, true);
+		if (VilasBlocks.ALLOY_ANVIL != null) register(ALLOY_SMITH, VilasBlocks.ALLOY_ANVIL, SoundEvents.VILLAGER_WORK_ARMORER, true);
+		if (VilasBlocks.CARPENTER_BENCH != null) register(CARPENTER, VilasBlocks.CARPENTER_BENCH, SoundEvents.VILLAGER_WORK_FLETCHER, true);
+		if (VilasBlocks.CHANGER_COUNTER != null) register(MONEY_CHANGER, VilasBlocks.CHANGER_COUNTER, SoundEvents.VILLAGER_WORK_LIBRARIAN, true);
+	}
+
+	/** Esta profissão de mod está registada? (só com o mod instalado) */
+	public static boolean registered(ResourceKey<VillagerProfession> prof) {
+		return POIS.containsKey(prof);
 	}
 }

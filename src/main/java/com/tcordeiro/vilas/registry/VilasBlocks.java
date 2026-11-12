@@ -46,6 +46,16 @@ public final class VilasBlocks {
 	public static final Block APIARY_BENCH = block("apiary_bench", p -> new JobSiteBlock(JobSiteBlock.BENCH, p),
 			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(2.0f).sound(SoundType.WOOD).ignitedByLava().noOcclusion());
 
+	// 0.2.0 — postos dos vendedores dos mods irmãos: só existem com o mod respetivo (null sem ele)
+	public static final Block MECHANIC_BENCH = optional(com.tcordeiro.vilas.compat.Mods.INDUSTRIAL, "mechanic_bench", p -> new JobSiteBlock(JobSiteBlock.FULL, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).requiresCorrectToolForDrops());
+	public static final Block ALLOY_ANVIL = optional(com.tcordeiro.vilas.compat.Mods.FORJA, "alloy_anvil", p -> new JobSiteBlock(JobSiteBlock.BENCH, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE).strength(4.0f).sound(SoundType.ANVIL).requiresCorrectToolForDrops().noOcclusion());
+	public static final Block CARPENTER_BENCH = optional(com.tcordeiro.vilas.compat.Mods.MOVEIS, "carpenter_bench", p -> new JobSiteBlock(JobSiteBlock.BENCH, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.0f).sound(SoundType.WOOD).ignitedByLava().noOcclusion());
+	public static final Block CHANGER_COUNTER = optional(com.tcordeiro.vilas.compat.Mods.CUBCOIN, "changer_counter", p -> new JobSiteBlock(JobSiteBlock.FULL, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.EMERALD).strength(2.5f).sound(SoundType.WOOD).ignitedByLava());
+
 	public static final BlockEntityType<MayorDeskBlockEntity> MAYOR_DESK_BE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			TVilas.id("mayor_desk"), new BlockEntityType<>(MayorDeskBlockEntity::new, Set.of(MAYOR_DESK)));
 
@@ -57,6 +67,11 @@ public final class VilasBlocks {
 		Registry.register(BuiltInRegistries.ITEM, itemKey, new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix()));
 		ALL.add(block);
 		return block;
+	}
+
+	/** Um bloco que só é registado se o mod {@code mod} estiver instalado (sem ele: null). */
+	private static Block optional(String mod, String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties props) {
+		return com.tcordeiro.vilas.compat.Mods.loaded(mod) ? block(name, factory, props) : null;
 	}
 
 	public static List<Block> all() {

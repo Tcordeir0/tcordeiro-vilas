@@ -44,11 +44,11 @@ public final class VillageManager {
 
 	/** Resultado de uma ação do jogador: correu bem? e a mensagem a mostrar. */
 	public record Result(boolean ok, Component message) {
-		static Result ok(String key, Object... args) {
+		public static Result ok(String key, Object... args) {
 			return new Result(true, Component.translatable(key, args));
 		}
 
-		static Result fail(String key, Object... args) {
+		public static Result fail(String key, Object... args) {
 			return new Result(false, Component.translatable(key, args));
 		}
 	}
@@ -138,7 +138,8 @@ public final class VillageManager {
 
 	/** Aldeões dentro do raio (o Prefeito conta). */
 	public static int countPopulation(ServerLevel level, Village v) {
-		return level.getEntitiesOfClass(Villager.class, box(v, level), e -> e.isAlive() && v.covers(e.getBlockX(), e.getBlockZ())).size();
+		return level.getEntitiesOfClass(Villager.class, box(v, level),
+				e -> e.isAlive() && v.covers(e.getBlockX(), e.getBlockZ()) && !com.tcordeiro.vilas.build.Builders.isBuilder(e)).size();
 	}
 
 	/** Conta a população e sobe o nível se der. Devolve true se subiu. */
@@ -214,9 +215,20 @@ public final class VillageManager {
 	public static boolean explosionMayBreak(ServerLevel level, LivingEntity cause, BlockPos origin, BlockPos pos) {
 		Lot hit = lotAt(level, pos.getX(), pos.getZ());
 		if (hit == null) return true;
-		if (cause instanceof Player player) return isAdmin(player) || hit.mayModify(player.getUUID());
+		if (cause instanceof Player player) return isAdmin(player) || (!frozen(level, hit) && hit.mayModify(player.getUUID()));
 		if (cause != null) return false;
 		return mayCross(level, origin, pos);
+	}
+
+	public static Village byId(ServerLevel level, UUID id) {
+		for (Village v : data(level).villages) if (v.id.equals(id)) return v;
+		return null;
+	}
+
+	/** O terreno está congelado (o dono deve há dias demais)? */
+	public static boolean frozen(ServerLevel level, Lot lot) {
+		Village v = byId(level, lot.village);
+		return v != null && Debts.frozen(v, lot.owner);
 	}
 
 	public static List<Lot> lotsOf(ServerLevel level, Village v) {
@@ -238,6 +250,7 @@ public final class VillageManager {
 		Lot lot = lotAt(level, pos.getX(), pos.getZ());
 		if (lot == null) return true;
 		if (actor != null && isAdmin(actor)) return true;
+		if (frozen(level, lot)) return false; // 0.2.0: terreno congelado por dívida — ninguém constrói até pagar (nada se apaga)
 		return lot.mayModify(actor == null ? null : actor.getUUID());
 	}
 
@@ -283,6 +296,35 @@ public final class VillageManager {
 		boolean removed = lot.friends.remove(friend.getUUID());
 		data(owner.level()).changed();
 		return removed ? Result.ok("tvilas.friend.removed", friend.getDisplayName()) : Result.fail("tvilas.friend.not_friend");
+	}
+
+	// ------------------------------------------------------------------ muralha (0.2.0)
+
+	/** Quem decide da muralha: quem tem terreno nesta vila, quem tem reputação aqui, ou um operador. */
+	static boolean citizen(ServerPlayer p, Village v) {
+		if (isAdmin(p) || v.reputationOf(p.getUUID()) > 0) return true;
+		for (Lot l : lotsOf(p.level(), v)) if (l.owner.equals(p.getUUID())) return true;
+		return false;
+	}
+
+	/** Cancela a muralha: a obra pára; o que já foi construído fica (nada é desfeito). */
+	public static Result cancelWall(ServerPlayer p, Village v) {
+		if (!citizen(p, v)) return Result.fail("tvilas.wall.not_citizen");
+		if (v.extra.wall != Village.Extra.WALL_BUILDING) return Result.fail("tvilas.wall.not_building");
+		v.extra.wall = Village.Extra.WALL_CANCELLED;
+		v.extra.projects.removeIf(pr -> pr.kind == Project.Kind.WALL);
+		data(p.level()).changed();
+		VillageNews.announce(p.level(), v, VillageNews.BUILD, "tvilas.news.wall_cancelled", p.getDisplayName());
+		return Result.ok("tvilas.wall.cancelled");
+	}
+
+	/** Retoma uma muralha cancelada (recomeça do princípio; as colunas já feitas são saltadas sozinhas). */
+	public static Result resumeWall(ServerPlayer p, Village v) {
+		if (!citizen(p, v)) return Result.fail("tvilas.wall.not_citizen");
+		if (v.extra.wall != Village.Extra.WALL_CANCELLED) return Result.fail("tvilas.wall.not_cancelled");
+		v.extra.wall = Village.Extra.WALL_BUILDING;
+		com.tcordeiro.vilas.build.Builders.start(p.level(), v, com.tcordeiro.vilas.build.WallWork.create(v));
+		return Result.ok("tvilas.wall.resumed");
 	}
 
 	// ------------------------------------------------------------------ missões

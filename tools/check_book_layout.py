@@ -56,7 +56,7 @@ def wrap(text):
 
 
 src = open(JAVA).read()
-pages = re.findall(r'new Page\("([a-z0-9_]+)",\s*(null|"[a-z0-9_]+"),\s*List\.of\(([^)]*)\)\)', src)
+pages = re.findall(r'new Page\("([a-z0-9_]+)",\s*(null|"[a-z0-9_]+"),\s*List\.of\(([^)]*)\)(?:,\s*(?:null|"[a-z0-9_]+"))?\)', src)
 lang = json.load(open(LANG))
 problems = 0
 for key, image, recipes in pages:

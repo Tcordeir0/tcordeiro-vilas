@@ -90,6 +90,71 @@ public final class Village {
 		}
 	}
 
+	/**
+	 * 0.2.0: obras, imposto ajustável, dívidas congeladas, mercador viajante e construtor (num campo à parte, para o codec da
+	 * vila não passar dos 16 campos).
+	 */
+	public static final class Extra {
+		public static final int WALL_NONE = 0, WALL_BUILDING = 1, WALL_DONE = 2, WALL_CANCELLED = 3;
+		public static final Codec<Extra> CODEC = RecordCodecBuilder.create(i -> i.group(
+				Codec.INT.optionalFieldOf("structures", 0).forGetter(x -> x.structures),
+				Codec.DOUBLE.optionalFieldOf("last_rate", -1.0).forGetter(x -> x.lastRate),
+				Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("debt_since", Map.of()).forGetter(x -> x.debtSince),
+				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("frozen", List.of()).forGetter(x -> List.copyOf(x.frozen)),
+				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("warned", List.of()).forGetter(x -> List.copyOf(x.warned)),
+				Project.CODEC.listOf().optionalFieldOf("projects", List.of()).forGetter(x -> x.projects),
+				Codec.INT.optionalFieldOf("wall", WALL_NONE).forGetter(x -> x.wall),
+				Codec.INT.optionalFieldOf("poles", 0).forGetter(x -> x.poles),
+				UUIDUtil.STRING_CODEC.optionalFieldOf("merchant").forGetter(x -> java.util.Optional.ofNullable(x.merchant)),
+				UUIDUtil.STRING_CODEC.optionalFieldOf("donkey").forGetter(x -> java.util.Optional.ofNullable(x.donkey)),
+				Codec.LONG.optionalFieldOf("merchant_arrived", -1L).forGetter(x -> x.merchantArrived),
+				Codec.LONG.optionalFieldOf("merchant_next", -1L).forGetter(x -> x.merchantNext),
+				UUIDUtil.STRING_CODEC.optionalFieldOf("builder").forGetter(x -> java.util.Optional.ofNullable(x.builder)),
+				Codec.BOOL.optionalFieldOf("lighting", false).forGetter(x -> x.lighting))
+				.apply(i, (st, lr, ds, fr, wa, pr, w, po, me, dk, ma, mn, b, li) -> {
+					Extra x = new Extra();
+					x.structures = st;
+					x.lastRate = lr;
+					x.debtSince.putAll(ds);
+					x.frozen.addAll(fr);
+					x.warned.addAll(wa);
+					x.projects.addAll(pr);
+					x.wall = w;
+					x.poles = po;
+					x.merchant = me.orElse(null);
+					x.donkey = dk.orElse(null);
+					x.merchantArrived = ma;
+					x.merchantNext = mn;
+					x.builder = b.orElse(null);
+					x.lighting = li;
+					return x;
+				}));
+
+		/** Melhorias pagas pela tesouraria (sobem a taxa das trocas). */
+		public int structures;
+		/** A última taxa anunciada (para avisar quando muda). */
+		public double lastRate = -1;
+		/** Devedor → dia desde quando deve (≥ o mínimo). */
+		public final Map<UUID, Long> debtSince = new HashMap<>();
+		/** Devedores com os terrenos congelados (não constroem até pagar; nada é apagado). */
+		public final Set<UUID> frozen = new HashSet<>();
+		/** Devedores já avisados de que o terreno vai congelar. */
+		public final Set<UUID> warned = new HashSet<>();
+		/** Obras em curso (a primeira é a que o construtor está a fazer). */
+		public final List<Project> projects = new ArrayList<>();
+		public int wall = WALL_NONE;
+		/** Postes postos pela iluminação pública. */
+		public int poles;
+		/** A iluminação pública já foi comprada? */
+		public boolean lighting;
+		public UUID merchant, donkey;
+		public long merchantArrived = -1, merchantNext = -1;
+		/** O aldeão construtor (enquanto há obra à vista). */
+		public UUID builder;
+		/** Não guardados: quando pôs o último bloco e desde quando anda a caminho. */
+		public long lastStep = -1, walkingSince = -1;
+	}
+
 	public static final Codec<Village> CODEC = RecordCodecBuilder.create(i -> i.group(
 			UUIDUtil.STRING_CODEC.fieldOf("id").forGetter(v -> v.id),
 			BlockPos.CODEC.fieldOf("center").forGetter(v -> v.center),
@@ -105,8 +170,9 @@ public final class Village {
 			Alarm.CODEC.optionalFieldOf("alarm").forGetter(v -> java.util.Optional.of(v.alarm)),
 			Economy.CODEC.optionalFieldOf("economy").forGetter(v -> java.util.Optional.of(v.economy)),
 			Codec.LONG.listOf().optionalFieldOf("paid_spots", List.of())
-					.forGetter(v -> java.util.Arrays.stream(v.paidSpots.toArray()).boxed().toList()))
-			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec, ps) -> {
+					.forGetter(v -> java.util.Arrays.stream(v.paidSpots.toArray()).boxed().toList()),
+			Extra.CODEC.optionalFieldOf("extra").forGetter(v -> java.util.Optional.of(v.extra)))
+			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec, ps, ex) -> {
 				Village v = new Village(id, c, r);
 				v.level = lvl;
 				v.population = pop;
@@ -119,6 +185,7 @@ public final class Village {
 				v.alarm = al.orElseGet(Alarm::new);
 				v.economy = ec.orElseGet(Economy::new);
 				v.paidSpots = com.tcordeiro.vilas.logic.PaidSpots.fromArray(ps.stream().mapToLong(Long::longValue).toArray());
+				v.extra = ex.orElseGet(Extra::new);
 				return v;
 			}));
 
@@ -141,6 +208,8 @@ public final class Village {
 	public Economy economy = new Economy();
 	/** Posições já pagas por missões de decorar/construir: não voltam a contar (nem partindo e repondo, nem noutra missão). */
 	public com.tcordeiro.vilas.logic.PaidSpots paidSpots = new com.tcordeiro.vilas.logic.PaidSpots();
+	/** 0.2.0: obras, imposto, dívidas, mercador. */
+	public Extra extra = new Extra();
 
 	public Village(UUID id, BlockPos center, int radius) {
 		this.id = id;

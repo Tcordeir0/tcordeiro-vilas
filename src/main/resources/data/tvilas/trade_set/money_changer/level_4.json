@@ -1,0 +1,16 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "cubcoin"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/money_changer/level_4",
+  "trades": [
+    "tvilas:money_changer/4/emerald_note_5",
+    "tvilas:money_changer/4/note_5_emerald"
+  ]
+}

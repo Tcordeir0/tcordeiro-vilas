@@ -17,7 +17,11 @@
 			"com.tcordeiro.vilas.test.ProfessionGameTests",
 			"com.tcordeiro.vilas.test.StructureGameTests",
 			"com.tcordeiro.vilas.test.EconomyGameTests",
-			"com.tcordeiro.vilas.test.DataGameTests"
+			"com.tcordeiro.vilas.test.DataGameTests",
+			"com.tcordeiro.vilas.test.ModVendorGameTests",
+			"com.tcordeiro.vilas.test.BuilderGameTests",
+			"com.tcordeiro.vilas.test.TaxDebtGameTests",
+			"com.tcordeiro.vilas.test.MerchantGameTests"
 		]
 	},
 	"depends": {

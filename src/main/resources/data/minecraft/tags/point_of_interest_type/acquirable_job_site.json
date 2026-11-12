@@ -5,6 +5,22 @@
     "tvilas:baker",
     "tvilas:florist",
     "tvilas:innkeeper",
-    "tvilas:beekeeper"
+    "tvilas:beekeeper",
+    {
+      "id": "tvilas:mechanic",
+      "required": false
+    },
+    {
+      "id": "tvilas:alloy_smith",
+      "required": false
+    },
+    {
+      "id": "tvilas:carpenter",
+      "required": false
+    },
+    {
+      "id": "tvilas:money_changer",
+      "required": false
+    }
   ]
 }

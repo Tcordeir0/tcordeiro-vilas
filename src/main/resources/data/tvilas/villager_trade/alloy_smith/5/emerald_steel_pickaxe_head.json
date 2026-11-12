@@ -1,0 +1,32 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 6
+  },
+  "gives": {
+    "id": "tforja:part",
+    "components": {
+      "tforja:part_kind": "pickaxe_head",
+      "tforja:parts": [
+        "alloy_steel"
+      ],
+      "minecraft:custom_model_data": {
+        "strings": [
+          "pickaxe_head",
+          "alloy_steel"
+        ]
+      }
+    }
+  },
+  "max_uses": 3,
+  "xp": 30,
+  "reputation_discount": 0.05
+}

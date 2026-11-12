@@ -1,0 +1,23 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "cubcoin"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "cubcoin:note_5"
+  },
+  "gives": {
+    "id": "minecraft:emerald"
+  },
+  "max_uses": 32,
+  "xp": 15,
+  "reputation_discount": 0.0,
+  "additional_wants": {
+    "id": "cubcoin:note_5",
+    "count": 7
+  }
+}

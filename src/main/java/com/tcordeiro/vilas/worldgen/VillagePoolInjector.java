@@ -37,6 +37,7 @@ public final class VillagePoolInjector {
 	public static final int MARKET_WEIGHT = 4;
 
 	public static void init() {
+		FurnitureProcessor.init();
 		ServerLifecycleEvents.SERVER_STARTING.register(VillagePoolInjector::inject);
 	}
 
@@ -46,6 +47,23 @@ public final class VillagePoolInjector {
 
 	public static Identifier market(String biome) {
 		return TVilas.id("village/" + biome + "/market");
+	}
+
+	/** 0.2.0: Taverna e pousada (camas, balcão do Taberneiro, mesas). */
+	public static Identifier tavern(String biome) {
+		return TVilas.id("village/" + biome + "/tavern");
+	}
+
+	/** 0.2.0: Praça com fonte e poço. */
+	public static Identifier plaza(String biome) {
+		return TVilas.id("village/" + biome + "/plaza");
+	}
+
+	public static final int TAVERN_WEIGHT = 3, PLAZA_WEIGHT = 3;
+
+	/** Os móveis do Móveis (quando instalado) entram pela lista de processadores destas peças: {@link FurnitureProcessor}. */
+	public static Holder<StructureProcessorList> furniture() {
+		return Holder.direct(new StructureProcessorList(List.of(FurnitureProcessor.INSTANCE)));
 	}
 
 	public static ResourceKey<StructureTemplatePool> pool(String biome, String kind) {
@@ -68,6 +86,8 @@ public final class VillagePoolInjector {
 				if (!p.getFirst().toString().contains("zombie")) normal += p.getSecond();
 			added += add(centers, townHall(biome), Math.max(1, Math.min(150, normal)), empty);
 			added += add(houses, market(biome), MARKET_WEIGHT, empty);
+			added += add(houses, tavern(biome), TAVERN_WEIGHT, furniture());
+			added += add(houses, plaza(biome), PLAZA_WEIGHT, furniture());
 		}
 		TVilas.LOGGER.info("Vilas: {} peças acrescentadas às vilas vanilla", added);
 	}

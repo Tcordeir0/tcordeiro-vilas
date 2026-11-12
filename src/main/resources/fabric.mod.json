@@ -3,7 +3,7 @@
 	"id": "tvilas",
 	"version": "${version}",
 	"name": "Vilas do Tcordeiro",
-	"description": "Prefeito com missões, terrenos protegidos, vilas que sobem de nível (aldeia, vila, cidade), alarme que chama golens, Prefeitura e Mercado nas vilas e quatro vendedores novos. Feito por Tcordeiro.",
+	"description": "Prefeito com missões, terrenos protegidos, vilas que sobem de nível (aldeia, vila, cidade), alarme que chama golens, Prefeitura, Mercado, Taverna e Praça nas vilas, construtores, muralha, iluminação pública, mercador da vila e vendedores novos (também dos mods Industrial, Forja, Móveis e CubCoin). Feito por Tcordeiro.",
 	"authors": ["Tcordeiro"],
 	"contact": {},
 	"license": "MIT",
@@ -13,7 +13,7 @@
 		"main": ["com.tcordeiro.vilas.TVilas"]
 	},
 	"mixins": ["tvilas.mixins.json"],
-	"suggests": { "cubcoin": "*", "tindustrial": "*" },
+	"suggests": { "cubcoin": "*", "tindustrial": "*", "tforja": "*", "tmoveis": "*" },
 	"depends": {
 		"fabricloader": ">=0.20.1",
 		"minecraft": "~26.3",

@@ -18,9 +18,15 @@ para a lógica; o cliente precisa para as texturas e nomes (não há código de 
 - **Prefeitura** (centro) e **Mercado** (casa) nas vilas de planície, savana, deserto, taiga e neve; **Padeiro**, **Florista**,
   **Taberneiro** e **Apicultor** com trocas nos 5 níveis.
 
-Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`).
+- **0.2.0** — vendedores dos mods irmãos (Mecânico, Ferreiro de Ligas, Marceneiro, Cambista: só com o mod), Taverna e Praça
+  (mobiladas com o Móveis), construtores à vista (ou de noite), muralha da Cidade, iluminação pública (postes do Industrial 0.11
+  ou lanternas), imposto ajustável, terrenos congelados por dívida (nada é apagado) e o Mercador da Vila.
+
+Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
+`tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
+`merchant_every_days`, `merchant_stay_days`, `wall`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
-`/vila terreno amigo adicionar|remover <jogador>`.
+`/vila terreno amigo adicionar|remover <jogador>`, `/vila divida pagar`, `/vila muralha cancelar|retomar`.
 
 ## Desenvolvimento
 
@@ -28,13 +34,15 @@ Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila t
 export JAVA_HOME="$HOME/Library/Application Support/horizon-launcher/minecraft/runtime/java-runtime-epsilon/mac-os-arm64/java-runtime-epsilon/jre.bundle/Contents/Home"
 python3 tools/gen_data.py          # modelos, blockstates, receitas, loot, tags, trocas, traduções, guia (VilasGuide.java)
 python3 tools/textures.py          # texturas (PIL) dos blocos, das profissões e o ícone
-python3 tools/gen_structures.py    # NBT da Prefeitura e do Mercado nos 5 biomas
+python3 tools/gen_structures.py    # NBT da Prefeitura, Mercado, Taverna e Praça nos 5 biomas
 ./gradlew build                    # jar em build/libs/ (+ testes JUnit da lógica pura)
 ./gradlew runGametest              # testes de servidor (sem janela), com o CubCoin
 ./gradlew runGametest -PnoCubcoin  # os mesmos sem o CubCoin (só esmeraldas)
+./gradlew runGametest -PnoMods     # sem nenhum mod opcional (CubCoin, Industrial, Forja, Móveis)
 python3 tools/mutation_test.py     # prova de mutação das regras de segurança
 python3 tools/check_book_layout.py <26.3.jar> src/main/java/com/tcordeiro/vilas/guide/VilasGuide.java src/main/resources/assets/tvilas/lang/pt_br.json guide.tvilas
 ```
 
-As estruturas só usam blocos vanilla (os NBT são fixos; com os Móveis seriam precisas duas versões de cada) e só aparecem em
-chunks gerados depois de instalar o mod.
+Os NBT só usam blocos vanilla; na Taverna e na Praça o processador `tvilas:furniture` troca marcadores (escada = cadeira,
+cerca + placa = mesa, lanterna pendurada = lustre, camas azul-clara + ciano = cama de casal) por móveis do Móveis quando ele está
+instalado. As estruturas só aparecem em chunks gerados depois de instalar o mod.

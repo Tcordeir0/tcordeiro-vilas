@@ -1,0 +1,21 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 3
+  },
+  "gives": {
+    "id": "tforja:bronze_ingot",
+    "count": 4
+  },
+  "max_uses": 12,
+  "xp": 1,
+  "reputation_discount": 0.05
+}

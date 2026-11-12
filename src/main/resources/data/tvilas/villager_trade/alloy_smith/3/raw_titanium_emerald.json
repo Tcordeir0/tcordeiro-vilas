@@ -1,0 +1,20 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "tforja:raw_titanium",
+    "count": 6
+  },
+  "gives": {
+    "id": "minecraft:emerald"
+  },
+  "max_uses": 16,
+  "xp": 20,
+  "reputation_discount": 0.05
+}

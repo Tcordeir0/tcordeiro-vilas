@@ -1,0 +1,20 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tmoveis"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:oak_planks",
+    "count": 24
+  },
+  "gives": {
+    "id": "minecraft:emerald"
+  },
+  "max_uses": 16,
+  "xp": 2,
+  "reputation_discount": 0.05
+}

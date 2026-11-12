@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tmoveis"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/carpenter/level_3",
+  "trades": [
+    "tvilas:carpenter/3/emerald_varnish_brush_natural",
+    "tvilas:carpenter/3/emerald_varnish_brush_honey",
+    "tvilas:carpenter/3/emerald_oak_coffee_table"
+  ]
+}

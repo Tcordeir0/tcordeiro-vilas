@@ -188,6 +188,93 @@ def apiary_bench():
     save(side, "block/apiary_bench_side.png")
 
 
+# ------------------------------------------------------------------ 0.2.0: postos dos vendedores dos mods
+
+IRON = rgb("#9a9ea4")
+COPPER = rgb("#c8703a")
+
+
+def mechanic_bench():
+    top = noisy((16, 16), IRON, 0.05, 60)
+    d = ImageDraw.Draw(top)
+    d.line([(2, 4), (13, 4)], fill=COPPER)                        # rolo de fio de cobre
+    d.line([(2, 5), (13, 5)], fill=shade(COPPER, 0.8))
+    d.rectangle([3, 9, 6, 12], fill=rgb("#4a4e54"))               # engrenagem
+    d.point((4, 8), fill=rgb("#4a4e54"))
+    d.point((7, 10), fill=rgb("#4a4e54"))
+    d.rectangle([9, 8, 13, 9], fill=rgb("#c03030"))               # chave inglesa (cabo)
+    d.rectangle([12, 10, 13, 12], fill=rgb("#6a6e74"))
+    frame(top, shade(IRON, 0.6))
+    save(top, "block/mechanic_bench_top.png")
+    side = planks(61, DARK_WOOD)
+    d = ImageDraw.Draw(side)
+    d.rectangle([0, 0, 15, 2], fill=IRON)
+    save(side, "block/mechanic_bench_side.png")
+    front = side.copy()
+    d = ImageDraw.Draw(front)
+    for i, x in enumerate((3, 7, 11)):                            # gavetas com puxador de cobre
+        d.rectangle([x - 1, 5, x + 2, 13], outline=shade(DARK_WOOD, 0.55))
+        d.point((x, 9), fill=COPPER)
+        d.point((x + 1, 9), fill=COPPER)
+    save(front, "block/mechanic_bench_front.png")
+
+
+def alloy_anvil():
+    bronze, steel = rgb("#b5803a"), rgb("#7c8590")
+    top = noisy((16, 16), steel, 0.06, 70)
+    d = ImageDraw.Draw(top)
+    d.rectangle([2, 5, 13, 10], fill=shade(steel, 1.15))           # face da bigorna
+    d.rectangle([4, 7, 7, 8], fill=bronze)                         # lingote de bronze
+    d.rectangle([9, 7, 12, 8], fill=rgb("#c8ccd2"))                # lingote de aço inox
+    frame(top, shade(steel, 0.55))
+    save(top, "block/alloy_anvil_top.png")
+    side = noisy((16, 16), shade(steel, 0.85), 0.06, 71)
+    d = ImageDraw.Draw(side)
+    d.rectangle([0, 0, 15, 3], fill=steel)
+    d.rectangle([5, 4, 10, 15], fill=shade(steel, 0.7))            # pé da bigorna
+    d.line([(0, 3), (15, 3)], fill=bronze)
+    save(side, "block/alloy_anvil_side.png")
+
+
+def carpenter_bench():
+    top = planks(80, WOOD)
+    d = ImageDraw.Draw(top)
+    d.line([(3, 3), (12, 3)], fill=rgb("#cfcfcf"))                 # serrote
+    d.rectangle([2, 2, 3, 4], fill=DARK_WOOD)
+    d.rectangle([9, 8, 13, 12], fill=rgb("#e0c080"))               # tábua com verniz
+    d.line([(4, 9), (6, 12)], fill=rgb("#d8a030"))                 # pincel
+    d.point((4, 9), fill=rgb("#f4e8c8"))
+    frame(top, shade(WOOD, 0.6))
+    save(top, "block/carpenter_bench_top.png")
+    side = planks(81, shade(WOOD, 1.1))
+    d = ImageDraw.Draw(side)
+    d.rectangle([0, 0, 15, 3], fill=WOOD)
+    d.line([(0, 3), (15, 3)], fill=shade(WOOD, 0.6))
+    d.rectangle([2, 7, 13, 8], fill=rgb("#5a5a5a"))                # torno de bancada
+    save(side, "block/carpenter_bench_side.png")
+
+
+def changer_counter():
+    green = rgb("#2f9a5a")
+    top = planks(90, DARK_WOOD)
+    d = ImageDraw.Draw(top)
+    d.rectangle([2, 3, 8, 7], fill=rgb("#8fd8a0"), outline=rgb("#3a7a4a"))   # nota
+    d.point((5, 5), fill=rgb("#3a7a4a"))
+    d.polygon([(11, 8), (13, 10), (11, 12), (9, 10)], fill=rgb("#40e080"), outline=rgb("#1a8a40"))  # esmeralda
+    d.ellipse([3, 10, 6, 13], fill=GOLD, outline=rgb("#8a6a10"))              # moeda
+    save(top, "block/changer_counter_top.png")
+    side = planks(91, WOOD)
+    d = ImageDraw.Draw(side)
+    d.rectangle([0, 0, 15, 2], fill=green)
+    save(side, "block/changer_counter_side.png")
+    front = side.copy()
+    d = ImageDraw.Draw(front)
+    d.rectangle([3, 5, 12, 13], fill=shade(WOOD, 0.8), outline=rgb("#6a6a6a"))  # cofre
+    d.ellipse([6, 7, 9, 10], outline=GOLD)
+    d.point((10, 9), fill=GOLD)
+    save(front, "block/changer_counter_front.png")
+
+
 # ------------------------------------------------------------------ aldeões (64×64, UV do VillagerModel)
 
 def rect(d, x0, y0, x1, y1, c):
@@ -297,6 +384,40 @@ def beekeeper(d):
     jacket_front(d, lambda x, y, w, h: (yellow if (y // 2) % 2 == 0 else black) if h == 20 and 2 <= y <= 9 else None)
 
 
+def mechanic(d):
+    blue, gray, copper = rgb("#2a4a7a"), rgb("#6a6e74"), COPPER
+    hat_cap(d, blue, gray, band_rows=(14, 15))                    # boné azul
+    jacket_front(d, lambda x, y, w, h: blue if h == 20 else (gray if (x + y) % 5 == 0 else None))   # macacão
+    for x in range(6, 14):
+        d.point((x, 50), fill=copper)                             # cinto de ferramentas
+    rect(d, 8, 51, 10, 54, gray)
+
+
+def alloy_smith(d):
+    leather, bronze = rgb("#5a3a20"), rgb("#b5803a")
+    hat_cap(d, rgb("#3a3a3a"), None)                              # gorro de forja
+    jacket_front(d, lambda x, y, w, h: leather if y >= 3 else None)   # avental de couro grosso
+    for x in range(6, 14):
+        d.point((x, 47), fill=bronze)
+    rect(d, 9, 48, 11, 50, bronze)
+
+
+def carpenter(d):
+    tan, pencil = rgb("#c8a060"), rgb("#e8c040")
+    hat_cap(d, tan, None)
+    brim(d, tan, 2)                                               # chapéu de palha
+    jacket_front(d, lambda x, y, w, h: rgb("#7a5a30") if h == 20 and y >= 6 else None)   # avental com bolso
+    rect(d, 7, 52, 9, 56, pencil)                                 # lápis no bolso
+
+
+def money_changer(d):
+    green, gold = rgb("#2f6a4a"), GOLD
+    hat_cap(d, green, gold, band_rows=(15, 15))                   # viseira verde de contabilista
+    brim(d, rgb("#40a070"), 3)
+    jacket_front(d, lambda x, y, w, h: green if x in (0, 1, 6, 7) else None)   # colete
+    rect(d, 9, 46, 11, 48, gold)                                  # corrente de relógio
+
+
 # ------------------------------------------------------------------ ícone
 
 def icon():
@@ -322,6 +443,14 @@ def main():
     flower_stall()
     tavern_counter()
     apiary_bench()
+    mechanic_bench()
+    alloy_anvil()
+    carpenter_bench()
+    changer_counter()
+    villager("mechanic", mechanic, "full")
+    villager("alloy_smith", alloy_smith, "full")
+    villager("carpenter", carpenter, "partial")
+    villager("money_changer", money_changer, "full")
     villager("mayor", mayor, "full")
     villager("baker", baker, "full")
     villager("florist", florist, "partial")

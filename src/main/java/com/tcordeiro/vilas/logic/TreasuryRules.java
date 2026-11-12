@@ -23,7 +23,11 @@ public final class TreasuryRules {
 	public static final int MAX_DAYS_AT_ONCE = 7;
 
 	public enum Upgrade {
-		RESIDENT(2000), GOLEM(6000), ALARM(12000);
+		RESIDENT(2000), GOLEM(6000), ALARM(12000),
+		/** 0.2.0: postes nas ruas (pago de uma vez). */
+		LIGHTING(8000),
+		/** 0.2.0: muralha da Cidade (paga bloco a bloco, {@link WallRules#BLOCK_CENTS}). */
+		WALL(0);
 
 		public final long cost;
 
@@ -70,10 +74,16 @@ public final class TreasuryRules {
 
 	/** O que o Prefeito compra hoje (ou null): a primeira melhoria que faz falta e que a tesouraria paga. */
 	public static Upgrade choose(long treasury, int population, int beds, int golems, int alarmBonus, int level) {
+		return choose(treasury, population, beds, golems, alarmBonus, level, true);
+	}
+
+	/** Como {@link #choose(long, int, int, int, int, int)}, e depois a iluminação pública (Vila ou Cidade, ainda sem postes). */
+	public static Upgrade choose(long treasury, int population, int beds, int golems, int alarmBonus, int level, boolean lightingDone) {
 		Upgrade want;
 		if (population < beds) want = Upgrade.RESIDENT;
 		else if (golems < wantedGolems(population)) want = Upgrade.GOLEM;
 		else if (alarmBonus < maxAlarmBonus(level)) want = Upgrade.ALARM;
+		else if (!lightingDone && VillageRules.clamp(level) >= VillageRules.VILA) want = Upgrade.LIGHTING;
 		else return null;
 		return treasury >= want.cost ? want : null;
 	}

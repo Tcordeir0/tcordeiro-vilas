@@ -42,7 +42,7 @@ public final class LotProtection {
 		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, be) -> {
 			if (!(world instanceof ServerLevel level)) return true;
 			boolean ok = VillageManager.mayModify(level, pos, player);
-			if (!ok) warn(player);
+			if (!ok) warn(player, level, pos);
 			return ok;
 		});
 
@@ -51,7 +51,7 @@ public final class LotProtection {
 			ItemStack stack = player.getItemInHand(hand);
 			BlockPos target = targetOf(player, hand, stack, hit);
 			if (target == null || VillageManager.mayModify(level, target, player)) return InteractionResult.PASS;
-			warn(player);
+			warn(player, level, target);
 			return InteractionResult.FAIL;
 		});
 
@@ -64,7 +64,7 @@ public final class LotProtection {
 			if (hit.getType() != HitResult.Type.BLOCK) return InteractionResult.PASS;
 			if (VillageManager.mayModify(level, hit.getBlockPos(), player) && VillageManager.mayModify(level, hit.getBlockPos().relative(hit.getDirection()), player))
 				return InteractionResult.PASS;
-			warn(player);
+			warn(player, level, hit.getBlockPos());
 			return InteractionResult.FAIL;
 		});
 	}
@@ -79,8 +79,10 @@ public final class LotProtection {
 		return null;
 	}
 
-	private static void warn(Player player) {
-		if (player instanceof ServerPlayer sp && !(player instanceof net.fabricmc.fabric.api.entity.FakePlayer))
-			sp.sendSystemMessage(Component.translatable("tvilas.lot.protected"), true);
+	private static void warn(Player player, ServerLevel level, BlockPos pos) {
+		if (!(player instanceof ServerPlayer sp) || player instanceof net.fabricmc.fabric.api.entity.FakePlayer) return;
+		var lot = VillageManager.lotAt(level, pos.getX(), pos.getZ());
+		boolean frozen = lot != null && lot.mayModify(player.getUUID()) && VillageManager.frozen(level, lot);
+		sp.sendSystemMessage(Component.translatable(frozen ? "tvilas.lot.frozen" : "tvilas.lot.protected"), true);
 	}
 }

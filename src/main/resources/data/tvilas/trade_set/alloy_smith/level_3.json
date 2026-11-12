@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/alloy_smith/level_3",
+  "trades": [
+    "tvilas:alloy_smith/3/emerald_titanium_ingot",
+    "tvilas:alloy_smith/3/emerald_steel_cable",
+    "tvilas:alloy_smith/3/raw_titanium_emerald"
+  ]
+}

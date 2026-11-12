@@ -1,0 +1,16 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/alloy_smith/level_4",
+  "trades": [
+    "tvilas:alloy_smith/4/emerald_stainless_steel_ingot",
+    "tvilas:alloy_smith/4/emerald_red_steel_ingot"
+  ]
+}

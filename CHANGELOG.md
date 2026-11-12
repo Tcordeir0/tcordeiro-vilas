@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.0 — 12/11/2026
+
+- **Vendedores dos mods irmãos** — só existem com o mod instalado (profissão, posto, receita, trocas e página do guia):
+  Mecânico (Industrial; Bancada do Mecânico): fio de cobre, cabos, canos, conectores, chave, melhorias e placa de expansão;
+  Ferreiro de Ligas (Forja; Bigorna de Ligas): bronze, aço, cromo, titânio, aço inox, aço rubro, cabo de aço e peças de aço/bronze;
+  Marceneiro (Móveis; Bancada do Marceneiro): cadeiras, bancos, mesas, criado-mudo, mesa de centro, sofá, lustre, guarda-roupa e
+  cama de casal, envernizados, e pincéis de verniz; Cambista (CubCoin; Balcão do Cambista): esmeraldas ↔ notas ao preço do Balcão
+  de Câmbio, sem descontos. Ficheiros de dados com condições da Fabric API (`fabric:all_mods_loaded`).
+- **Taverna e pousada** e **Praça com fonte e poço** nas vilas dos 5 biomas. Com o Móveis, um processador de estrutura próprio
+  (`tvilas:furniture`) troca marcadores vanilla por móveis (cadeiras, mesas, lustres acesos, cama de casal); sem ele ficam vanilla.
+- **Construtores à vista** — golem (montado com ferro e abóbora), muralha e iluminação são feitos por um aldeão Construtor, bloco a
+  bloco, com partículas e som; sem ninguém perto, o que falta aparece depois da noite. Só ocupa ar, erva, flores e neve.
+- **Muralha encomendada** quando a vila chega a Cidade: quadrado com torres, pago bloco a bloco pela tesouraria; nunca destrói blocos
+  de jogador nem entra em terrenos (contorna ou deixa vão; as ruas ficam portões); cancelar/retomar no quadro.
+- **Iluminação pública** (Vila ou Cidade): postes ao lado das ruas. Com o Industrial 0.11 (rede aérea): postes `<madeira>_lamp_post`
+  pelo bioma (ferro no deserto), ligados por fio aéreo, com 2 painéis solares e uma bateria na Prefeitura; sem ele, lanternas.
+- **Novidades no chat** numa linha com ícone (🏗 obras, ☾ noite, 🐴 mercador, 💰 imposto, ⚠/❄/🔓 dívidas).
+- **Imposto ajustável** — +0,5 % por melhoria paga, teto 5 %, volta à base com a tesouraria cheia; o quadro mostra porquê.
+- **Dívidas** — 3 dias a dever (config) congelam os terrenos do devedor: não constrói nem parte lá, mas nada é apagado; aviso na
+  véspera; «Pagar dívida» no quadro (`/vila divida pagar`) descongela.
+- **Mercador da Vila** — chega à praça de 5 em 5 dias com um burro de carga, fica 2 dias, stock raro próprio; o Prefeito avisa.
+- Guia: página da receita do livro (livro + trigo), 23 páginas novas; pt-BR revisto (até o céu, fica devendo, quem administra,
+  quebram, vão embora, ficam vendendo, centavo…). Páginas dos mods só aparecem no Receitário com o mod.
+- Testes: 52 GameTests (15 novos) com todos os mods (Industrial 0.11 com postes), `-PnoCubcoin` e `-PnoMods` (lanternas); 17 JUnit novos (45); 30 mutações novas (61).
+
+
 ## 0.1.1 — 12/11/2026
 
 Correções de segurança (revisão automática).

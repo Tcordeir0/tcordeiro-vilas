@@ -4,6 +4,14 @@
     "tvilas:mayor_desk",
     "tvilas:flower_stall",
     "tvilas:tavern_counter",
-    "tvilas:apiary_bench"
+    "tvilas:apiary_bench",
+    {
+      "id": "tvilas:carpenter_bench",
+      "required": false
+    },
+    {
+      "id": "tvilas:changer_counter",
+      "required": false
+    }
   ]
 }

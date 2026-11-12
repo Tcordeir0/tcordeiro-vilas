@@ -1,0 +1,25 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tmoveis"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 6
+  },
+  "gives": {
+    "id": "tmoveis:oak_wardrobe",
+    "components": {
+      "minecraft:block_state": {
+        "finish": "natural"
+      }
+    }
+  },
+  "max_uses": 4,
+  "xp": 30,
+  "reputation_discount": 0.05
+}

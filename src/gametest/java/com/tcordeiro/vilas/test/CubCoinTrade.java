@@ -21,6 +21,21 @@ final class CubCoinTrade {
 		return Wallet.total(p.getInventory());
 	}
 
+	/** O preço de uma esmeralda no Balcão de Câmbio (cêntimos). */
+	static long emeraldPrice() {
+		return com.tcordeiro.cubcoin.exchange.ExchangePrices.base(net.minecraft.world.item.Items.EMERALD);
+	}
+
+	/** Valor em cêntimos de um item de troca em JSON ({"id", "count"}): notas/moedas pelo CubCoin, esmeraldas ao preço do Balcão. */
+	static long value(com.google.gson.JsonObject o, long emerald) {
+		String id = o.get("id").getAsString();
+		int n = o.has("count") ? o.get("count").getAsInt() : 1;
+		if (id.equals("minecraft:emerald")) return n * emerald;
+		if (id.equals("minecraft:emerald_block")) return n * 9 * emerald;
+		var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.parse(id));
+		return Wallet.valueOf(new ItemStack(item, n));
+	}
+
 	/** O vendedor envia {@code stack} ao comprador por {@code cents}; o comprador aceita. Devolve true se correu bem. */
 	static boolean sell(ServerPlayer seller, ServerPlayer buyer, ItemStack stack, long cents) {
 		if (!Trades.send(seller, stack, buyer, cents).ok()) return false;

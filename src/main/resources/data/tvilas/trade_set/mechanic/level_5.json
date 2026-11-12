@@ -1,0 +1,16 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/mechanic/level_5",
+  "trades": [
+    "tvilas:mechanic/5/emerald_expansion_plate",
+    "tvilas:mechanic/5/emerald_range_upgrade"
+  ]
+}

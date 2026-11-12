@@ -1,0 +1,21 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 2
+  },
+  "gives": {
+    "id": "tindustrial:copper_cable",
+    "count": 6
+  },
+  "max_uses": 16,
+  "xp": 1,
+  "reputation_discount": 0.05
+}

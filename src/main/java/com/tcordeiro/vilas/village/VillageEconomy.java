@@ -74,8 +74,10 @@ public final class VillageEconomy {
 			}
 		}
 		if (paid > 0) {
-			if (debt - paid <= 0) v.economy.debts.remove(who);
-			else v.economy.debts.put(who, debt - paid);
+			if (debt - paid <= 0) {
+				v.economy.debts.remove(who);
+				Debts.cleared(level, v, who);
+			} else v.economy.debts.put(who, debt - paid);
 			v.economy.treasury += paid;
 			v.economy.collected += paid;
 			VillageData.get(level).changed();
@@ -120,7 +122,7 @@ public final class VillageEconomy {
 		if (offer.getBaseCostA().is(Items.EMERALD)) emeralds += offer.getCostA().getCount();
 		if (offer.getCostB().is(Items.EMERALD)) emeralds += offer.getCostB().getCount();
 		if (offer.getResult().is(Items.EMERALD)) emeralds += offer.getResult().getCount();
-		long tax = TreasuryRules.tradeTax(emeralds * VilasConfig.get().emerald_value_cents, VilasConfig.get().trade_tax_percent);
+		long tax = TreasuryRules.tradeTax(emeralds * VilasConfig.get().emerald_value_cents, taxRate(v).percent());
 		charge(level, v, p.getUUID(), tax);
 	}
 
@@ -128,7 +130,25 @@ public final class VillageEconomy {
 	public static void onPlayerSale(ServerLevel level, BlockPos where, UUID seller, long priceCents) {
 		Village v = VillageManager.villageAt(level, where);
 		if (v == null) return;
-		charge(level, v, seller, TreasuryRules.tradeTax(priceCents, VilasConfig.get().trade_tax_percent));
+		charge(level, v, seller, TreasuryRules.tradeTax(priceCents, taxRate(v).percent()));
+	}
+
+	/** A taxa das trocas em vigor nesta vila (o Prefeito ajusta-a: {@link com.tcordeiro.vilas.logic.TaxRules}). */
+	public static com.tcordeiro.vilas.logic.TaxRules.Rate taxRate(Village v) {
+		VilasConfig c = VilasConfig.get();
+		return com.tcordeiro.vilas.logic.TaxRules.rate(c.trade_tax_percent, v.extra.structures, c.tax_per_structure_percent, c.tax_cap_percent,
+				v.economy.treasury, c.treasury_full_cents);
+	}
+
+	/** Anuncia (uma linha) quando a taxa muda. */
+	static void announceRate(ServerLevel level, Village v) {
+		var rate = taxRate(v);
+		double last = v.extra.lastRate;
+		v.extra.lastRate = rate.percent();
+		if (last < 0 || Math.abs(last - rate.percent()) < 1e-9) return;
+		String key = rate.percent() > last ? "tvilas.news.tax_up" : "tvilas.news.tax_down";
+		VillageNews.announce(level, v, VillageNews.TAX, key, com.tcordeiro.vilas.logic.TaxRules.format(rate.percent()),
+				Component.translatable(rate.reason().key()));
 	}
 
 	// ------------------------------------------------------------------ Prefeito e moradores
@@ -184,29 +204,69 @@ public final class VillageEconomy {
 		long perBed = VilasConfig.get().bed_tax_cents;
 		for (Lot lot : VillageManager.lotsOf(level, v)) charge(level, v, lot.owner, TreasuryRules.bedTax(bedsIn(level, lot), days, perBed));
 		for (UUID who : new ArrayList<>(e.debts.keySet())) settle(level, v, who);
+		Debts.daily(level, v, day);
+		// a noite passou: o que ficou por construir aparece agora
+		com.tcordeiro.vilas.build.Builders.overnight(level, v);
+		TravelingMerchant.daily(level, v, day);
+		commissionWall(level, v);
 
 		int pop = VillageManager.countPopulation(level, v);
 		int beds = bedsNear(level, v);
 		if (TreasuryRules.freeResident(pop, beds)) {
 			if (spawnVillager(level, v) != null) e.log(day, "tvilas.upgrade.immigrant", 0);
 		} else {
-			TreasuryRules.Upgrade up = TreasuryRules.choose(e.treasury, pop, beds, homeGolems(level, v), e.alarmBonus, v.level);
+			TreasuryRules.Upgrade up = TreasuryRules.choose(e.treasury, pop, beds, homeGolems(level, v) + golemsBeingBuilt(v), e.alarmBonus, v.level,
+					v.extra.lighting);
 			if (up != null && apply(level, v, up)) {
 				e.treasury -= up.cost;
 				e.log(day, up.key(), up.cost);
+				v.extra.structures++;
 				VillageManager.broadcast(level, v, Component.translatable("tvilas.upgrade.bought", Component.translatable(up.key()),
 						VillageManager.money(up.cost)));
 			}
 		}
+		// obras acabadas de começar sem ninguém a ver: aparecem já (a compra foi feita durante a noite)
+		if (!v.extra.projects.isEmpty() && !com.tcordeiro.vilas.build.Builders.watchedNow(level, v)) com.tcordeiro.vilas.build.Builders.overnight(level, v);
+		announceRate(level, v);
 		VillageData.get(level).changed();
+	}
+
+	static int golemsBeingBuilt(Village v) {
+		int n = 0;
+		for (Project p : v.extra.projects) if (p.kind == Project.Kind.GOLEM) n++;
+		return n;
+	}
+
+	/** Uma Cidade encomenda a muralha (uma vez; pode ser cancelada no quadro). */
+	public static boolean commissionWall(ServerLevel level, Village v) {
+		if (!VilasConfig.get().wall || v.level < com.tcordeiro.vilas.logic.VillageRules.CIDADE || v.extra.wall != Village.Extra.WALL_NONE) return false;
+		v.extra.wall = Village.Extra.WALL_BUILDING;
+		com.tcordeiro.vilas.build.Builders.start(level, v, com.tcordeiro.vilas.build.WallWork.create(v));
+		v.economy.log(day(level), TreasuryRules.Upgrade.WALL.key(), 0);
+		return true;
 	}
 
 	static boolean apply(ServerLevel level, Village v, TreasuryRules.Upgrade up) {
 		return switch (up) {
 			case RESIDENT -> spawnVillager(level, v) != null;
-			case GOLEM -> SpawnUtil.trySpawnMob(EntityTypes.IRON_GOLEM, EntitySpawnReason.MOB_SUMMONED, level, v.center, 20,
-					Math.max(1, Math.min(8, v.radius / 2)), 6,
-					SpawnUtil.Strategy.LEGACY_IRON_GOLEM, false).isPresent();
+			case GOLEM -> {
+				// 0.2.0: o construtor monta o golem (ferro + abóbora); sem sítio livre, chega como antes
+				Project p = com.tcordeiro.vilas.build.GolemWork.create(level, v);
+				if (p != null) {
+					com.tcordeiro.vilas.build.Builders.start(level, v, p);
+					yield true;
+				}
+				yield SpawnUtil.trySpawnMob(EntityTypes.IRON_GOLEM, EntitySpawnReason.MOB_SUMMONED, level, v.center, 20,
+						Math.max(1, Math.min(8, v.radius / 2)), 6, SpawnUtil.Strategy.LEGACY_IRON_GOLEM, false).isPresent();
+			}
+			case LIGHTING -> {
+				Project p = com.tcordeiro.vilas.build.LightingWork.create(level, v);
+				if (p == null) yield false; // sem ruas: não gasta nada
+				v.extra.lighting = true;
+				com.tcordeiro.vilas.build.Builders.start(level, v, p);
+				yield true;
+			}
+			case WALL -> false;
 			case ALARM -> {
 				v.economy.alarmBonus++;
 				yield true;

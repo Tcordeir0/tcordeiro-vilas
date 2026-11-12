@@ -1,0 +1,20 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 10
+  },
+  "gives": {
+    "id": "tindustrial:efficiency_upgrade"
+  },
+  "max_uses": 6,
+  "xp": 15,
+  "reputation_discount": 0.05
+}

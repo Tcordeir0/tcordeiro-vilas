@@ -1,0 +1,32 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tforja"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 3
+  },
+  "gives": {
+    "id": "tforja:part",
+    "components": {
+      "tforja:part_kind": "handle",
+      "tforja:parts": [
+        "alloy_steel"
+      ],
+      "minecraft:custom_model_data": {
+        "strings": [
+          "handle",
+          "alloy_steel"
+        ]
+      }
+    }
+  },
+  "max_uses": 6,
+  "xp": 30,
+  "reputation_discount": 0.05
+}

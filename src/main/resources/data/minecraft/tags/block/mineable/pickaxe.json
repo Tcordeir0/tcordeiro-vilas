@@ -1,6 +1,14 @@
 {
   "replace": false,
   "values": [
-    "tvilas:baker_oven"
+    "tvilas:baker_oven",
+    {
+      "id": "tvilas:mechanic_bench",
+      "required": false
+    },
+    {
+      "id": "tvilas:alloy_anvil",
+      "required": false
+    }
   ]
 }

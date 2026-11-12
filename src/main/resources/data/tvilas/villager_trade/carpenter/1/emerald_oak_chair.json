@@ -1,0 +1,25 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tmoveis"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald"
+  },
+  "gives": {
+    "id": "tmoveis:oak_chair",
+    "components": {
+      "minecraft:block_state": {
+        "finish": "natural"
+      }
+    },
+    "count": 2
+  },
+  "max_uses": 12,
+  "xp": 1,
+  "reputation_discount": 0.05
+}

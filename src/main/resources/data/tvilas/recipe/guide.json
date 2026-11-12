@@ -15,25 +15,25 @@
         "author": "Tcordeiro",
         "pages": [
           {
-            "raw": "§lGuia das Vilas§r\n\nPrefeito, missões, terrenos com dono, vilas que crescem, alarme contra invasões e quatro vendedores novos.\n\nTudo começa na Prefeitura, no centro das vilas novas."
+            "raw": "§lGuia das Vilas§r\n\nPrefeito, missões, terrenos com dono, vilas que crescem, alarme contra invasões, vendedores novos, obras à vista e um mercador.\n\nTudo começa na Prefeitura, no centro das vilas novas."
           },
           {
             "raw": "§lO Prefeito§r\n\nUm aldeão sem emprego que ache a Mesa do Prefeito vira Prefeito. Só uma Mesa por vila."
           },
           {
-            "raw": "§lA Prefeitura§r\n\nMetade das vilas novas nasce com uma Prefeitura no centro: um salão com a Mesa do Prefeito e um sino na praça.\n\nNas outras vilas, faça a Mesa e ponha-a perto do centro."
+            "raw": "§lA Prefeitura§r\n\nMetade das vilas novas nasce com uma Prefeitura no centro: um salão com a Mesa do Prefeito e um sino na praça.\n\nNas outras vilas, faça a Mesa e coloque-a perto do centro."
           },
           {
-            "raw": "§lTerritório§r\n\nA vila vai até 400 blocos à volta da Mesa do Prefeito: casas longe do centro também contam.\n\nQuem gere o servidor muda o raio em config/tvilas.json."
+            "raw": "§lTerritório§r\n\nA vila vai até 400 blocos ao redor da Mesa do Prefeito: casas longe do centro também contam.\n\nQuem administra o servidor muda o raio em config/tvilas.json."
           },
           {
-            "raw": "§lVila vazia§r\n\nUma vila sem aldeões renasce: ponha a Mesa do Prefeito e um Prefeito chega.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."
+            "raw": "§lVila vazia§r\n\nUma vila sem aldeões renasce: coloque a Mesa do Prefeito e um Prefeito chega.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."
           },
           {
-            "raw": "§lFalar com ele§r\n\nClique direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."
+            "raw": "§lFalar com ele§r\n\nClique com o botão direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."
           },
           {
-            "raw": "§lMissões§r\n\nHá sempre três: trazer itens, pôr blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos têm de lá estar quando entregar."
+            "raw": "§lMissões§r\n\nHá sempre três: trazer itens, colocar blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos precisam estar lá quando você entregar."
           },
           {
             "raw": "§lRecompensas§r\n\nCada missão paga esmeraldas e dá reputação nesta vila. Com o mod CubCoin, paga também em CubCoins.\n\nA reputação deixa os aldeões daqui um pouco mais baratos."
@@ -42,13 +42,13 @@
             "raw": "§lDefender§r\n\nA missão de defesa só conta durante um alarme: monstros e invasores derrotados dentro da vila.\n\nDepois de entregar, o Prefeito põe outra missão no lugar."
           },
           {
-            "raw": "§lTerrenos§r\n\nNo quadro, compre o terreno onde está: 16 por 16 blocos com você no meio, do fundo do mundo até ao céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."
+            "raw": "§lTerrenos§r\n\nNo quadro, compre o terreno onde você está: 16 por 16 blocos com você no meio, do fundo do mundo até o céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."
           },
           {
-            "raw": "§lProteção§r\n\nNo seu terreno, só você e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem.\n\nA praça da Prefeitura não se vende."
+            "raw": "§lProteção§r\n\nNo seu terreno, só você e os amigos quebram ou colocam blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Prefeitura não se vende."
           },
           {
-            "raw": "§lAmigos§r\n\nDentro do seu terreno escreva:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."
+            "raw": "§lAmigos§r\n\nDentro do seu terreno digite:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."
           },
           {
             "raw": "§lNível da vila§r\n\nAldeia, depois Vila, depois Cidade.\n\nVila: 8 aldeões e 100 de reputação somada.\nCidade: 16 aldeões e 400.\n\nO nível nunca desce."
@@ -57,28 +57,28 @@
             "raw": "§lO que desbloqueia§r\n\nAldeia: 4 terrenos à venda.\nVila: 8 terrenos, missões maiores e 1 reforço do alarme.\nCidade: 16 terrenos, as missões mais bem pagas e 2 reforços.\n\nO terreno fica mais caro em vilas maiores."
           },
           {
-            "raw": "§lAlarme§r\n\nNuma invasão, ou com 3 ou mais monstros perto, o Prefeito toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens da vila ficam mais fortes."
+            "raw": "§lAlarme§r\n\nDurante uma invasão, ou com 3 ou mais monstros por perto, o Prefeito toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens da vila ficam mais fortes."
           },
           {
-            "raw": "§l⚠ Cuidado§r\n\nOs golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão-se embora um minuto depois do alarme e não largam ferro."
+            "raw": "§l⚠ Cuidado§r\n\nOs golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão embora um minuto depois do alarme e não deixam ferro."
           },
           {
-            "raw": "§lImpostos§r\n\nO Prefeito cobra 1 cêntimo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."
+            "raw": "§lImpostos§r\n\nO Prefeito cobra 1 centavo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."
           },
           {
             "raw": "§lTesouraria§r\n\nOs impostos vão para a tesouraria. Uma vez por dia o Prefeito compra uma melhoria: moradores novos, um golem da vila ou o reforço do alarme.\n\nVeja a tesouraria e os gastos no quadro."
           },
           {
-            "raw": "§lDívidas§r\n\nQuem não tiver com que pagar fica a dever. A dívida aparece no quadro e cobra-se quando houver dinheiro."
+            "raw": "§lDívidas§r\n\nQuem não tiver como pagar fica devendo. A dívida aparece no quadro e é cobrada quando houver dinheiro."
           },
           {
-            "raw": "§lMercado§r\n\nAlgumas vilas novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam lá a vender."
+            "raw": "§lMercado§r\n\nAlgumas vilas novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam vendendo lá."
           },
           {
             "raw": "§lPadeiro§r\n\nCompra trigo, açúcar, ovos e cacau. Vende pão, biscoitos, tortas e bolo."
           },
           {
-            "raw": "§lFlorista§r\n\nVende flores de todo o tipo. No último nível, sementes raras e flor de esporos."
+            "raw": "§lFlorista§r\n\nVende flores de todo tipo. No último nível, sementes raras e flor de esporos."
           },
           {
             "raw": "§lTaberneiro§r\n\nSopas, batatas, leite, camas para a pousada e, no fim, maçã dourada e um disco."
@@ -87,7 +87,76 @@
             "raw": "§lApicultor§r\n\nMel, favos, velas e colmeias. No último nível vende um ninho de abelhas."
           },
           {
-            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info"
+            "raw": "§lEste livro§r\n\nLivro e trigo, juntos na mesa de trabalho, dão outro Guia das Vilas."
+          },
+          {
+            "raw": "§lNovidades§r\n\nO Prefeito avisa no chat, numa linha, quem está no território: obras, mercador, impostos.\n\nEx.: 🏗 A vila está construindo a muralha."
+          },
+          {
+            "raw": "§lConstrutores§r\n\nAs obras pagas pela tesouraria são feitas por um Construtor: ele vai ao local e coloca os blocos um a um, com pó e som.\n\nObras: golem, muralha e iluminação."
+          },
+          {
+            "raw": "§lDe noite§r\n\nSe ninguém estiver por perto para ver, a obra espera.\n\nO que falta aparece depois da noite, quando alguém dorme ou o dia passa."
+          },
+          {
+            "raw": "§lGolem montado§r\n\nQuando a vila compra um golem, o Construtor monta quatro blocos de ferro e uma abóbora. O golem acorda sozinho."
+          },
+          {
+            "raw": "§lMuralha§r\n\nQuando a vila vira Cidade, o Prefeito encomenda uma muralha com torres em volta do centro.\n\nÉ construída aos poucos e paga pela tesouraria, bloco a bloco."
+          },
+          {
+            "raw": "§lMuralha segura§r\n\nA muralha nunca quebra nem troca blocos de jogadores nem nada dentro de terrenos. Só ocupa ar, grama, flores e neve.\n\nQuando encontra algo, desvia ou deixa um vão. As ruas ficam como portões."
+          },
+          {
+            "raw": "§lCancelar§r\n\nQuem tem terreno ou reputação na vila pode cancelar a muralha no quadro. O que já foi feito fica.\n\nNo quadro também se retoma."
+          },
+          {
+            "raw": "§lIluminação§r\n\nNuma Vila, a tesouraria também compra iluminação pública: o Construtor coloca postes ao lado das ruas.\n\nSem o mod Industrial são postes com lanterna."
+          },
+          {
+            "raw": "§lPostes elétricos§r\n\nCom o Industrial são postes de verdade (madeira do bioma, ferro no deserto), ligados por fio aéreo.\n\nNa Prefeitura ficam 2 painéis solares e uma bateria: acendem à noite."
+          },
+          {
+            "raw": "§lImposto variável§r\n\nA taxa das trocas sobe um pouco a cada obra paga, até um teto (5 por cento).\n\nQuando a tesouraria está cheia, o Prefeito baixa de novo. O quadro mostra o motivo."
+          },
+          {
+            "raw": "§lTerreno congelado§r\n\nQuem deve há alguns dias fica com o terreno congelado: não pode construir nem quebrar lá até pagar.\n\nNada é apagado nem tirado. Um dia antes, o Prefeito avisa."
+          },
+          {
+            "raw": "§lPagar a dívida§r\n\nNo quadro, o botão Pagar dívida paga tudo de uma vez e o terreno volta ao normal.\n\nSem CubCoin, paga em esmeraldas."
+          },
+          {
+            "raw": "§lMercador da Vila§r\n\nDe tempos em tempos chega à praça um mercador com um burro de carga. Fica uns dias e o Prefeito avisa quando chega e quando vai embora."
+          },
+          {
+            "raw": "§lNão é o ambulante§r\n\nO Mercador Ambulante aparece por acaso e some depressa.\n\nO da vila vem por calendário, fica na praça e vende coisas raras: etiquetas, selas, discos, chaves e itens dos mods."
+          },
+          {
+            "raw": "§lTaverna§r\n\nVilas novas podem ter uma Taverna e pousada: balcão do Taberneiro, mesas, cadeiras e camas para dormir."
+          },
+          {
+            "raw": "§lPraça§r\n\nAlgumas vilas novas ganham uma praça com fonte, poço novo, bancos e uma mesa de café."
+          },
+          {
+            "raw": "§lCom o Móveis§r\n\nCom o mod Móveis instalado, a Taverna e a Praça já nascem mobiliadas: cadeiras, mesas, lustres e cama de casal, envernizados.\n\nSem ele, ficam com blocos do jogo."
+          },
+          {
+            "raw": "§lMais vendedores§r\n\nMais quatro vendedores, cada um só com o seu mod: Mecânico (Industrial), Ferreiro de Ligas (Forja), Marceneiro (Móveis) e Cambista (CubCoin)."
+          },
+          {
+            "raw": "§lMecânico§r\n\nSó com o Industrial. Fio de cobre, cabos, canos, conectores e melhorias para as máquinas."
+          },
+          {
+            "raw": "§lFerreiro de Ligas§r\n\nSó com a Forja. Bronze, aço, cromo, titânio, aço inox e peças de ferramenta."
+          },
+          {
+            "raw": "§lMarceneiro§r\n\nSó com o Móveis. Cadeiras, mesas, sofás, lustres e cama de casal, já envernizados, e pincéis de verniz."
+          },
+          {
+            "raw": "§lCambista§r\n\nSó com o CubCoin. Troca esmeraldas por notas e notas por esmeraldas, ao preço do Balcão de Câmbio, sem desconto."
+          },
+          {
+            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"
           }
         ],
         "resolved": true

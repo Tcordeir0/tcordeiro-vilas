@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "tvilas:block/mechanic_bench_top",
+    "front": "tvilas:block/mechanic_bench_front",
+    "side": "tvilas:block/mechanic_bench_side"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "tvilas:block/mechanic_bench"
+    },
+    "facing=east": {
+      "model": "tvilas:block/mechanic_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "tvilas:block/mechanic_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "tvilas:block/mechanic_bench",
+      "y": 270
+    }
+  }
+}

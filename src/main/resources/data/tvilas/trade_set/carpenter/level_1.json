@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tmoveis"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/carpenter/level_1",
+  "trades": [
+    "tvilas:carpenter/1/oak_planks_emerald",
+    "tvilas:carpenter/1/emerald_oak_chair",
+    "tvilas:carpenter/1/emerald_oak_stool"
+  ]
+}

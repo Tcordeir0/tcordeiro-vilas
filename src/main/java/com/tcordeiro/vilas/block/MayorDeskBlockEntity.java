@@ -61,6 +61,7 @@ public class MayorDeskBlockEntity extends BlockEntity {
 			com.tcordeiro.vilas.village.VillageEconomy.daily(sl, v, com.tcordeiro.vilas.village.VillageEconomy.day(sl));
 		}
 		alarmTick(sl, v, sl.getGameTime());
+		com.tcordeiro.vilas.build.Builders.tick(sl, v, sl.getGameTime()); // 0.2.0: o construtor põe 1 bloco por segundo à vista
 	}
 
 	/** Invasão ativa perto da Mesa? */

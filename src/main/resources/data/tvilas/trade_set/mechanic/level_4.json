@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/mechanic/level_4",
+  "trades": [
+    "tvilas:mechanic/4/emerald_speed_upgrade",
+    "tvilas:mechanic/4/emerald_capacity_upgrade",
+    "tvilas:mechanic/4/emerald_efficiency_upgrade"
+  ]
+}

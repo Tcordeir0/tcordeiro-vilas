@@ -44,7 +44,27 @@ public final class TownDialog {
 		var eco = v.economy;
 		body.add(new PlainMessage(Component.translatable("tvilas.dialog.treasury", VillageManager.money(eco.treasury),
 				VillageManager.money(eco.collected), VillageManager.money(com.tcordeiro.vilas.village.VillageEconomy.debt(v, p.getUUID())),
-				com.tcordeiro.vilas.VilasConfig.get().trade_tax_percent, v.radius), 300));
+				com.tcordeiro.vilas.logic.TaxRules.format(com.tcordeiro.vilas.village.VillageEconomy.taxRate(v).percent()), v.radius), 300));
+		// 0.2.0: a taxa e porquê, obras, mercador, dívida/congelamento
+		var rate = com.tcordeiro.vilas.village.VillageEconomy.taxRate(v);
+		var cfg = com.tcordeiro.vilas.VilasConfig.get();
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.tax", com.tcordeiro.vilas.logic.TaxRules.format(rate.percent()),
+				Component.translatable(rate.reason().key()), com.tcordeiro.vilas.logic.TaxRules.format(cfg.trade_tax_percent),
+				com.tcordeiro.vilas.logic.TaxRules.format(cfg.tax_per_structure_percent), v.extra.structures,
+				com.tcordeiro.vilas.logic.TaxRules.format(cfg.tax_cap_percent)).withStyle(ChatFormatting.GRAY), 300));
+		for (var pr : v.extra.projects)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.project", Component.translatable(pr.kind.key()), pr.placed,
+					pr.kind == com.tcordeiro.vilas.village.Project.Kind.WALL ? pr.nextColumn + "/" + pr.total : Integer.toString(pr.total)), 300));
+		if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_DONE)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.wall_done").withStyle(ChatFormatting.GRAY), 300));
+		if (v.extra.lighting) body.add(new PlainMessage(Component.translatable("tvilas.dialog.lighting", v.extra.poles).withStyle(ChatFormatting.GRAY), 300));
+		if (com.tcordeiro.vilas.village.TravelingMerchant.present(v))
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.merchant_here", v.extra.merchantArrived + cfg.merchant_stay_days), 300));
+		else if (v.extra.merchantNext >= 0)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.merchant_next", v.extra.merchantNext).withStyle(ChatFormatting.GRAY), 300));
+		long myDebt = com.tcordeiro.vilas.village.VillageEconomy.debt(v, p.getUUID());
+		if (com.tcordeiro.vilas.village.Debts.frozen(v, p.getUUID()))
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.frozen").withStyle(ChatFormatting.AQUA), 300));
 		var spent = com.tcordeiro.vilas.village.VillageEconomy.expenses(v);
 		if (spent.isEmpty()) body.add(new PlainMessage(Component.translatable("tvilas.dialog.no_expenses").withStyle(ChatFormatting.GRAY), 300));
 		for (int i = spent.size() - 1; i >= Math.max(0, spent.size() - 3); i--)
@@ -62,6 +82,11 @@ public final class TownDialog {
 			Component label = acc ? Component.translatable("tvilas.dialog.deliver", i + 1) : Component.translatable("tvilas.dialog.accept", i + 1);
 			buttons.add(button(label, cmd));
 		}
+		if (myDebt > 0) buttons.add(button(Component.translatable("tvilas.dialog.pay_debt", VillageManager.money(myDebt)), "/vila divida pagar"));
+		if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_BUILDING)
+			buttons.add(button(Component.translatable("tvilas.dialog.wall_cancel"), "/vila muralha cancelar"));
+		else if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_CANCELLED)
+			buttons.add(button(Component.translatable("tvilas.dialog.wall_resume"), "/vila muralha retomar"));
 		Lot here = VillageManager.lotAt(level, p.getBlockX(), p.getBlockZ());
 		if (here == null) {
 			buttons.add(button(Component.translatable("tvilas.dialog.buy", VillageManager.lotPrice(v, p.getUUID())), "/vila terreno comprar"));

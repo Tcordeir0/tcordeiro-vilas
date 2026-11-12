@@ -9,7 +9,17 @@ de quebra-cabeça/jigsaw com name/target/pool/joint/final_state):
   - Mercado (houses): 11×6×9. Quatro bancas com toldo e os postos de trabalho dos vendedores novos; entrada a oeste
     (building_entrance, como as casas vanilla) e 2 pontos de aldeões desempregados, que apanham as bancas.
 
-Só blocos vanilla (os móveis do mod Móveis NÃO entram: as estruturas são ficheiros fixos e teriam de existir em duas versões).
+0.2.0:
+  - Taverna e pousada (houses): 13×8×11. Balcão do Taberneiro (posto), barris, 2 mesas com cadeiras, 2 lustres, 2 camas de
+    solteiro (para aldeões e jogadores) e uma cama de casal; entrada a oeste.
+  - Praça (houses): 13×5×13. Fonte com bacia de água e coluna com lanterna, poço com telhado, bancos à volta da fonte e uma
+    mesa de esplanada; entrada a oeste.
+
+Só blocos vanilla nos NBT. Os móveis do mod Móveis entram pelo processador tvilas:furniture (worldgen/FurnitureProcessor.java),
+que troca MARCADORES vanilla pelos móveis quando o Móveis está instalado:
+  escada de madeira (meia de baixo) = cadeira · cerca + placa de pressão de madeira = mesa · lanterna pendurada = lustre
+  (o tronco descascado de carvalho por cima vira redstone) · cama azul-clara + cama ciano lado a lado = cama de casal.
+Por isso, nestas duas peças, escadas, cercas, placas de pressão de madeira e lanternas penduradas SÓ aparecem como marcadores.
 Uso: python3 tools/gen_structures.py
 """
 import json
@@ -31,15 +41,15 @@ with zipfile.ZipFile(JAR) as z:
 
 PALETTES = {
     "plains": dict(planks="oak_planks", log="oak_log", stone="cobblestone", path="dirt_path", stairs="oak_stairs", slab="oak_slab",
-                   fence="oak_fence", door="oak_door", wool="red_wool", carpet="red_carpet"),
+                   fence="oak_fence", plate="oak_pressure_plate", door="oak_door", wool="red_wool", carpet="red_carpet"),
     "savanna": dict(planks="acacia_planks", log="acacia_log", stone="orange_terracotta", path="dirt_path", stairs="acacia_stairs",
-                    slab="acacia_slab", fence="acacia_fence", door="acacia_door", wool="orange_wool", carpet="orange_carpet"),
+                    slab="acacia_slab", fence="acacia_fence", plate="acacia_pressure_plate", door="acacia_door", wool="orange_wool", carpet="orange_carpet"),
     "desert": dict(planks="smooth_sandstone", log="cut_sandstone", stone="sandstone", path="smooth_sandstone", stairs="sandstone_stairs",
-                   slab="sandstone_slab", fence="jungle_fence", door="jungle_door", wool="cyan_wool", carpet="cyan_carpet"),
+                   slab="sandstone_slab", fence="jungle_fence", plate="jungle_pressure_plate", door="jungle_door", wool="cyan_wool", carpet="cyan_carpet"),
     "taiga": dict(planks="spruce_planks", log="spruce_log", stone="cobblestone", path="dirt_path", stairs="spruce_stairs",
-                  slab="spruce_slab", fence="spruce_fence", door="spruce_door", wool="green_wool", carpet="green_carpet"),
+                  slab="spruce_slab", fence="spruce_fence", plate="spruce_pressure_plate", door="spruce_door", wool="green_wool", carpet="green_carpet"),
     "snowy": dict(planks="spruce_planks", log="stripped_spruce_log", stone="polished_diorite", path="dirt_path", stairs="spruce_stairs",
-                  slab="spruce_slab", fence="spruce_fence", door="spruce_door", wool="blue_wool", carpet="blue_carpet"),
+                  slab="spruce_slab", fence="spruce_fence", plate="spruce_pressure_plate", door="spruce_door", wool="blue_wool", carpet="blue_carpet"),
 }
 
 
@@ -183,10 +193,133 @@ def market(biome, p):
     return t
 
 
+def pane(axis):
+    if axis == "x":
+        return {"east": "true", "west": "true", "north": "false", "south": "false", "waterlogged": "false"}
+    return {"north": "true", "south": "true", "east": "false", "west": "false", "waterlogged": "false"}
+
+
+def chair(t, p, x, y, z, look):
+    """Marcador de cadeira: escada com as costas do lado oposto para onde se olha."""
+    back = {"north": "south", "south": "north", "east": "west", "west": "east"}[look]
+    t.set(x, y, z, p["stairs"], {"facing": back, "half": "bottom", "shape": "straight", "waterlogged": "false"})
+
+
+def table(t, p, x, y, z):
+    """Marcador de mesa: cerca + placa de pressão de madeira por cima."""
+    t.set(x, y, z, p["fence"])
+    t.set(x, y + 1, z, p["plate"])
+
+
+def bed(t, x, y, z, color, facing="south"):
+    """Cama vanilla: pés em (x, y, z), cabeceira no sentido {facing}."""
+    dz = {"south": 1, "north": -1}[facing]
+    props = {"facing": facing, "occupied": "false"}
+    t.set(x, y, z, f"{color}_bed", props | {"part": "foot"})
+    t.set(x, y, z + dz, f"{color}_bed", props | {"part": "head"})
+
+
+def tavern(biome, p):
+    t = Template(13, 8, 11)
+    path = p["path"]
+    t.fill(0, 0, 0, 12, 0, 10, path)
+    t.fill(1, 0, 1, 11, 0, 9, p["planks"])
+    # paredes (x 1..11, z 1..9), cantos em tronco
+    t.fill(1, 1, 1, 11, 4, 1, p["planks"])
+    t.fill(1, 1, 9, 11, 4, 9, p["planks"])
+    t.fill(1, 1, 1, 1, 4, 9, p["planks"])
+    t.fill(11, 1, 1, 11, 4, 9, p["planks"])
+    for x, z in ((1, 1), (11, 1), (1, 9), (11, 9)):
+        t.fill(x, 1, z, x, 4, z, p["log"], {"axis": "y"})
+    t.fill(2, 1, 2, 10, 4, 8, "air")
+    # janelas
+    for x in (3, 9):
+        t.fill(x, 2, 1, x, 3, 1, "glass_pane", pane("x"))
+        t.fill(x, 2, 9, x, 3, 9, "glass_pane", pane("x"))
+    t.fill(11, 2, 5, 11, 3, 5, "glass_pane", pane("z"))
+    # porta a oeste
+    door = {"facing": "west", "hinge": "left", "open": "false", "powered": "false"}
+    t.set(1, 1, 5, p["door"], door | {"half": "lower"})
+    t.set(1, 2, 5, p["door"], door | {"half": "upper"})
+    # teto e telhado em degraus de lajes
+    t.fill(1, 5, 1, 11, 5, 9, p["planks"])
+    t.fill(0, 5, 0, 12, 5, 0, p["slab"], {"type": "bottom", "waterlogged": "false"})
+    t.fill(0, 5, 10, 12, 5, 10, p["slab"], {"type": "bottom", "waterlogged": "false"})
+    t.fill(2, 6, 2, 10, 6, 8, p["slab"], {"type": "bottom", "waterlogged": "false"})
+    t.fill(3, 6, 3, 9, 6, 7, p["planks"])
+    t.fill(4, 7, 4, 8, 7, 6, p["slab"], {"type": "bottom", "waterlogged": "false"})
+    # balcão do Taberneiro (posto de trabalho) entre barris, ao fundo (norte)
+    t.set(6, 1, 2, "tvilas:tavern_counter", {"facing": "south"})
+    for x in (4, 5, 7, 8):
+        t.set(x, 1, 2, "barrel", {"facing": "up", "open": "false"}, {"id": "minecraft:barrel"})
+    # duas mesas com cadeiras (marcadores) e dois lustres por cima
+    for tx in (4, 8):
+        table(t, p, tx, 1, 5)
+        chair(t, p, tx - 1, 1, 5, "east")
+        chair(t, p, tx + 1, 1, 5, "west")
+        t.set(tx, 4, 5, "lantern", {"hanging": "true", "waterlogged": "false"})
+        t.set(tx, 5, 5, "stripped_oak_wood", {"axis": "y"})
+    # pousada: 2 camas de solteiro (aldeões e jogadores) e a cama de casal (marcador: azul-clara à esquerda, ciano à direita)
+    bed(t, 3, 1, 7, "red")
+    bed(t, 5, 1, 7, "red")
+    bed(t, 10, 1, 7, "light_blue")
+    bed(t, 9, 1, 7, "cyan")
+    t.set(7, 1, 8, "lantern", {"hanging": "false", "waterlogged": "false"})
+    # entrada (oeste, no chão) e aldeões
+    t.jigsaw(0, 0, 5, "west_up", "minecraft:building_entrance", "minecraft:building_entrance", "minecraft:empty", "aligned", "minecraft:" + path)
+    villagers = f"minecraft:village/{biome}/villagers"
+    for x, z in ((6, 4), (7, 7)):
+        t.jigsaw(x, 0, z, "up_north", "minecraft:bottom", "minecraft:bottom", villagers, "rollable", "minecraft:" + p["planks"])
+    return t
+
+
+def plaza(biome, p):
+    t = Template(13, 5, 13)
+    path = p["path"]
+    t.fill(0, 0, 0, 12, 0, 12, path)
+    for x in range(13):
+        for z in range(13):
+            if (x * 2 + z) % 5 == 0:
+                t.set(x, 0, z, p["stone"])
+    # fonte: bacia 5×5 com água e coluna ao meio com lanterna
+    t.fill(4, 0, 4, 8, 0, 8, "stone_bricks")
+    t.fill(4, 1, 4, 8, 1, 8, "stone_bricks")
+    t.fill(5, 1, 5, 7, 1, 7, "water", {"level": "0"})
+    t.set(6, 1, 6, "stone_bricks")
+    t.set(6, 2, 6, "stone_brick_wall", {"up": "true", "north": "none", "south": "none", "east": "none", "west": "none", "waterlogged": "false"})
+    t.set(6, 3, 6, "lantern", {"hanging": "false", "waterlogged": "false"})
+    # poço (canto nordeste): borda de pedra, água em baixo, postes de muro e telhado de lajes
+    t.fill(9, 0, 1, 11, 1, 3, "cobblestone")
+    t.fill(10, 0, 2, 10, 1, 2, "water", {"level": "0"})
+    wall = {"up": "true", "north": "none", "south": "none", "east": "none", "west": "none", "waterlogged": "false"}
+    for x, z in ((9, 1), (11, 1), (9, 3), (11, 3)):
+        t.set(x, 2, z, "cobblestone_wall", wall)
+    t.fill(9, 3, 1, 11, 3, 3, p["slab"], {"type": "bottom", "waterlogged": "false"})
+    # bancos à volta da fonte (marcadores de cadeira) e uma mesa de esplanada com 2 cadeiras
+    chair(t, p, 6, 1, 3, "south")
+    chair(t, p, 6, 1, 9, "north")
+    chair(t, p, 3, 1, 6, "east")
+    chair(t, p, 9, 1, 6, "west")
+    table(t, p, 2, 1, 10)
+    chair(t, p, 1, 1, 10, "east")
+    chair(t, p, 3, 1, 10, "west")
+    # candeeiros (lanterna em cima de um muro: não é marcador)
+    for x, z in ((1, 1), (11, 11), (1, 6)):
+        t.set(x, 1, z, "cobblestone_wall", wall)
+        t.set(x, 2, z, "lantern", {"hanging": "false", "waterlogged": "false"})
+    t.set(10, 1, 9, "flower_pot")
+    t.set(11, 1, 6, "hay_block", {"axis": "y"})
+    t.jigsaw(0, 0, 6, "west_up", "minecraft:building_entrance", "minecraft:building_entrance", "minecraft:empty", "aligned", "minecraft:" + path)
+    villagers = f"minecraft:village/{biome}/villagers"
+    for x, z in ((8, 10), (3, 3)):
+        t.jigsaw(x, 0, z, "up_north", "minecraft:bottom", "minecraft:bottom", villagers, "rollable", "minecraft:" + path)
+    return t
+
+
 def main():
     n = 0
     for biome, p in PALETTES.items():
-        for kind, fn in (("town_hall", town_hall), ("market", market)):
+        for kind, fn in (("town_hall", town_hall), ("market", market), ("tavern", tavern), ("plaza", plaza)):
             data = fn(biome, p).to_nbt()
             path = os.path.join(OUT, biome, kind + ".nbt")
             os.makedirs(os.path.dirname(path), exist_ok=True)

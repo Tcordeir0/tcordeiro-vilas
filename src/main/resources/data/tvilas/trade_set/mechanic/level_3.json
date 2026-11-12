@@ -1,0 +1,17 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/mechanic/level_3",
+  "trades": [
+    "tvilas:mechanic/3/emerald_pipe_wrench",
+    "tvilas:mechanic/3/emerald_extraction_connector",
+    "tvilas:mechanic/3/emerald_gold_cable"
+  ]
+}

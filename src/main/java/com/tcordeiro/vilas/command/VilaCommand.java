@@ -31,6 +31,10 @@ public final class VilaCommand {
 				.then(Commands.literal("missao")
 						.then(Commands.literal("aceitar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(c -> mission(c, true))))
 						.then(Commands.literal("entregar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(c -> mission(c, false)))))
+				.then(Commands.literal("divida").then(Commands.literal("pagar").executes(VilaCommand::payDebt)))
+				.then(Commands.literal("muralha")
+						.then(Commands.literal("cancelar").executes(c -> wall(c, true)))
+						.then(Commands.literal("retomar").executes(c -> wall(c, false))))
 				.then(Commands.literal("terreno")
 						.then(Commands.literal("comprar").executes(c -> result(c, VillageManager.buyLot(c.getSource().getPlayerOrException()))))
 						.then(Commands.literal("info").executes(VilaCommand::lotInfo))
@@ -71,6 +75,20 @@ public final class VilaCommand {
 		if (v == null) return 0;
 		int slot = IntegerArgumentType.getInteger(c, "n") - 1;
 		return result(c, accept ? VillageManager.accept(p, v, slot) : VillageManager.deliver(p, v, slot));
+	}
+
+	private static int payDebt(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, com.tcordeiro.vilas.village.Debts.pay(p, v));
+	}
+
+	private static int wall(CommandContext<CommandSourceStack> c, boolean cancel) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, cancel ? VillageManager.cancelWall(p, v) : VillageManager.resumeWall(p, v));
 	}
 
 	private static int lotInfo(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

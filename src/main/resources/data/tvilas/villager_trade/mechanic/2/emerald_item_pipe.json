@@ -1,0 +1,21 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "tindustrial"
+      ]
+    }
+  ],
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 3
+  },
+  "gives": {
+    "id": "tindustrial:item_pipe",
+    "count": 8
+  },
+  "max_uses": 12,
+  "xp": 5,
+  "reputation_discount": 0.05
+}
