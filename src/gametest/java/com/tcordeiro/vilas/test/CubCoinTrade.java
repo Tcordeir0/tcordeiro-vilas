@@ -44,4 +44,19 @@ final class CubCoinTrade {
 		UUID id = offers.get(offers.size() - 1).id();
 		return Trades.accept(buyer, id) == Trades.Result.OK;
 	}
+
+	/** {@code count} notas/moedas do valor {@code cents}. */
+	static ItemStack money(long cents, int count) {
+		for (var m : com.tcordeiro.cubcoin.Money.values())
+			if (m.cents == cents) return new ItemStack(com.tcordeiro.cubcoin.CubCoin.ITEMS.get(m), count);
+		throw new IllegalArgumentException("valor " + cents);
+	}
+
+	static long value(ItemStack s) {
+		return Wallet.valueOf(s);
+	}
+
+	static boolean isMoney(ItemStack s) {
+		return s.getItem() instanceof com.tcordeiro.cubcoin.MoneyItem;
+	}
 }

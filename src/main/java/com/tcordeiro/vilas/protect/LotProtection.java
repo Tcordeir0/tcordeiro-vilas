@@ -39,10 +39,13 @@ public final class LotProtection {
 	private LotProtection() {}
 
 	public static void init() {
+		EntityProtection.init();
 		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, be) -> {
 			if (!(world instanceof ServerLevel level)) return true;
 			boolean ok = VillageManager.mayModify(level, pos, player);
 			if (!ok) warn(player, level, pos);
+			// 0.3.0 (A1): decoração já paga por uma missão sai sem largar nada (é da vila)
+			else if (!(player instanceof net.fabricmc.fabric.api.entity.FakePlayer) && VillageManager.consumeDecoration(level, pos, player)) return false;
 			return ok;
 		});
 
@@ -57,7 +60,9 @@ public final class LotProtection {
 
 		UseItemCallback.EVENT.register((player, world, hand) -> {
 			if (!(world instanceof ServerLevel level)) return InteractionResult.PASS;
-			if (!(player.getItemInHand(hand).getItem() instanceof BucketItem)) return InteractionResult.PASS;
+			Item held = player.getItemInHand(hand).getItem();
+			// 0.3.0 (C6): barcos também (um barco posto num terreno alheio servia para levar os bichos e aldeões de lá)
+			if (!(held instanceof BucketItem) && !(held instanceof net.minecraft.world.item.BoatItem)) return InteractionResult.PASS;
 			Vec3 eye = player.getEyePosition();
 			Vec3 end = eye.add(player.getViewVector(1.0f).scale(player.blockInteractionRange()));
 			BlockHitResult hit = level.clip(new ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.SOURCE_ONLY, player));

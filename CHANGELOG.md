@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.3.0 — 12/11/2026
+
+- **Economia em CubCoin** (com o mod CubCoin): TODOS os aldeões — os do jogo, os deste mod, o vendedor ambulante e o Mercador da
+  Vila — compram e vendem em notas/moedas em vez de esmeraldas, a 40 CB por esmeralda (o preço do Balcão de Câmbio,
+  `emerald_value_cents`). As trocas continuam guardadas em esmeraldas: o ecrã mostra-as em CB (1 ou 2 montes; se não houver forma
+  exata, o preço vai escrito no nome), o preço acompanha a procura e os descontos do aldeão, e paga-se com QUALQUER mistura de
+  notas/moedas, com troco no inventário. Escolher a troca na lista põe nas casas o dinheiro que a paga. O Cambista não muda.
+  Sem o CubCoin (ou com `cubcoin_trades: false`) tudo volta logo às esmeraldas, sem converter nada no mundo. Terrenos, impostos e
+  missões também em CB. Acabou o bónus de 10 CB por esmeralda por cima das esmeraldas das missões.
+- **Vilas antigas**: com a Mesa numa vila sem Prefeitura, Mercado, Taverna ou Praça, o Prefeito manda construir o que falta, um de
+  cada vez, pago pela tesouraria (120/80/100/60 CB), com as estruturas das vilas novas, num sítio livre perto do centro (chão
+  natural, nunca em cima de casas, ruas ou terrenos); o Construtor faz à vista bloco a bloco, ou de noite. Só numa vila de verdade
+  (estrutura de vila do jogo ou 5+ aldeões). Config `civic_buildings`.
+- **Correções da revisão**:
+  C6 — bichos, aldeões e decorações dentro de terrenos (e da área cívica) protegidos de quem não pode mexer lá: sem bater (nem com
+  flechas/poções), trela, balde, barco, tesoura, nome ou tirar itens; monstros não; trocar com aldeões continua livre. O Prefeito
+  levado (vivo, longe) não é substituído: volta pela Mesa; morto, chega outro (no máximo 1 por dia).
+  A1 — missões pagas pela tesouraria, com teto diário (`mission_daily_cap_cents`, 400 CB) e 3 por jogador por dia
+  (`mission_daily_per_player`); recompensa nunca acima do valor de mercado ×1,25 nem do custo de comprar aos aldeões; sem
+  pedregulho; decoração paga é da vila (partida, não larga nada); a defesa só conta numa invasão a sério.
+  M3 — dono em dívida: a automação congela nos terrenos dele (pistões, ejetores, água, lava, máquinas do Industrial).
+  M14 — codecs estritos (obras, missões, áreas cívicas): um elemento estragado é ignorado com aviso, a vila carrega.
+  M15 — área cívica protegida (praça da Mesa, Prefeitura, Praça, Mercado, Taverna): ninguém parte nem põe; de fora nada entra.
+  M18 — `/vila terreno amigo remover <nome>` funciona com o amigo desligado (nome guardado no terreno).
+- **Prefeito que perdia a profissão**: o que chegava pela Mesa ficava «minecraft:none» (0 de XP e nível 1: o jogo repunha a
+  profissão); agora chega com 1 de XP e a vaga da Mesa é confirmada.
+- Guia: 11 páginas novas (59), livro escrito com a página final «E o resto?» (60); pt-BR, pt-PT e en.
+- Testes: 68 GameTests (16 novos) com o CubCoin, `-PnoCubcoin` e `-PnoMods`; 9 JUnit novos (54: CoinRules, CivicRules, missões);
+  33 mutações novas (94).
+
+
 ## 0.2.0 — 12/11/2026
 
 - **Vendedores dos mods irmãos** — só existem com o mod instalado (profissão, posto, receita, trocas e página do guia):

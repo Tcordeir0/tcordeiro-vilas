@@ -142,7 +142,7 @@ public class EconomyGameTests {
 		h.assertTrue(!v.covers(center.getX() + 401, center.getZ()), "a 401 já não");
 		ServerPlayer p = h.makeMockServerPlayerInLevel();
 		p.getInventory().clearContent();
-		p.getInventory().add(new ItemStack(Items.EMERALD, 64));
+		TestUtil.giveEmeralds(p, 64);
 		p.setPos(center.getX() + 380.5, center.getY(), center.getZ() + 0.5);
 		h.assertTrue(VillageManager.buyLot(p).ok(), "compra um terreno a 380 blocos da Prefeitura");
 		d.lots.removeIf(l -> l.village.equals(v.id));

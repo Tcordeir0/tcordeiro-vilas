@@ -69,12 +69,29 @@ public final class TownDialog {
 		if (spent.isEmpty()) body.add(new PlainMessage(Component.translatable("tvilas.dialog.no_expenses").withStyle(ChatFormatting.GRAY), 300));
 		for (int i = spent.size() - 1; i >= Math.max(0, spent.size() - 3); i--)
 			body.add(new PlainMessage(spent.get(i).copy().withStyle(ChatFormatting.GRAY), 300));
+		// 0.3.0: as missões pagam pela tesouraria (teto por dia) e cada um faz poucas por dia; o Prefeito levado
+		var cfg3 = com.tcordeiro.vilas.VilasConfig.get();
+		var civic = v.civic;
+		boolean today = civic.missionDay == com.tcordeiro.vilas.village.VillageEconomy.day(level);
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.missions_today", today ? civic.doneToday.getOrDefault(p.getUUID(), 0) : 0,
+				cfg3.mission_daily_per_player, VillageManager.money(today ? civic.paidToday : 0), VillageManager.money(cfg3.mission_daily_cap_cents))
+				.withStyle(ChatFormatting.GRAY), 300));
+		if (civic.mayorTaken) body.add(new PlainMessage(Component.translatable("tvilas.dialog.mayor_taken").withStyle(ChatFormatting.RED), 300));
+		if (!civic.missing().isEmpty() && cfg3.civic_buildings)
+		{
+			MutableComponent list = Component.empty();
+			for (String k : civic.missing()) {
+				if (!list.getSiblings().isEmpty()) list.append(", ");
+				list.append(Component.translatable("tvilas.upgrade." + k));
+			}
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.civic_missing", list).withStyle(ChatFormatting.GRAY), 300));
+		}
 		List<ActionButton> buttons = new ArrayList<>();
 		for (int i = 0; i < v.missions.size(); i++) {
 			Mission m = v.missions.get(i);
 			boolean acc = VillageManager.accepted(v, p.getUUID(), m) || m.kind() == MissionRules.Kind.DELIVER;
 			int prog = VillageManager.progress(p, v, m);
-			MutableComponent line = Component.translatable("tvilas.dialog.mission", i + 1, VillageManager.describe(m), m.emeralds(), m.reputation());
+			MutableComponent line = Component.translatable("tvilas.dialog.mission", i + 1, VillageManager.describe(m), VillageManager.reward(m.emeralds()), m.reputation());
 			if (acc) line.append(Component.translatable("tvilas.dialog.progress", Math.min(prog, m.count()), m.count()).withStyle(ChatFormatting.GRAY));
 			if (m.kind() == MissionRules.Kind.DEFEND) line.append(Component.translatable("tvilas.dialog.defend_hint").withStyle(ChatFormatting.GRAY));
 			body.add(new PlainMessage(line, 300));
@@ -89,7 +106,7 @@ public final class TownDialog {
 			buttons.add(button(Component.translatable("tvilas.dialog.wall_resume"), "/vila muralha retomar"));
 		Lot here = VillageManager.lotAt(level, p.getBlockX(), p.getBlockZ());
 		if (here == null) {
-			buttons.add(button(Component.translatable("tvilas.dialog.buy", VillageManager.lotPrice(v, p.getUUID())), "/vila terreno comprar"));
+			buttons.add(button(Component.translatable("tvilas.dialog.buy", VillageManager.price(VillageManager.lotPrice(v, p.getUUID()))), "/vila terreno comprar"));
 		} else {
 			body.add(new PlainMessage(Component.translatable("tvilas.dialog.lot_here", here.ownerName), 300));
 			buttons.add(button(Component.translatable("tvilas.dialog.lot_info"), "/vila terreno info"));

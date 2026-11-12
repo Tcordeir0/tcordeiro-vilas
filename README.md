@@ -5,7 +5,8 @@ para a lógica; o cliente precisa para as texturas e nomes (não há código de 
 
 - **Prefeito** — aldeão vanilla com profissão própria (`tvilas:mayor`), posto de trabalho na **Mesa do Prefeito** (1 vaga, uma Mesa
   por vila). Clique direito nele ou na Mesa abre o quadro da Prefeitura (diálogo do servidor). Não faz trocas.
-- **Missões** — 3 ativas (trazer itens, pôr blocos, defender durante um alarme). Pagam esmeraldas (+ CubCoins com o CubCoin) e
+- **Missões** — 3 ativas (trazer itens, pôr blocos, defender numa invasão). Pagas pela tesouraria (CubCoins com o CubCoin,
+  esmeraldas sem ele; teto diário e 3 por jogador por dia) e
   reputação por jogador e por vila (+ gossip vanilla nos aldeões).
 - **Terrenos** — 16×16 com o jogador no meio, dentro do território; só dono e amigos partem/põem blocos (também as máquinas do
   Industrial, que perguntam ao `PlayerBlockBreakEvents.BEFORE` em nome do dono).
@@ -21,12 +22,16 @@ para a lógica; o cliente precisa para as texturas e nomes (não há código de 
 - **0.2.0** — vendedores dos mods irmãos (Mecânico, Ferreiro de Ligas, Marceneiro, Cambista: só com o mod), Taverna e Praça
   (mobiladas com o Móveis), construtores à vista (ou de noite), muralha da Cidade, iluminação pública (postes do Industrial 0.11
   ou lanternas), imposto ajustável, terrenos congelados por dívida (nada é apagado) e o Mercador da Vila.
+- **0.3.0** — com o CubCoin, todos os aldeões trocam em CubCoin (40 CB por esmeralda, com troco); vilas antigas ganham a
+  Prefeitura/Mercado/Taverna/Praça que faltam; bichos dos terrenos e área cívica protegidos; Prefeito levado não é substituído;
+  missões sem lucro infinito; automação congelada com dívida; codecs estritos; tirar amigos desligados.
 
 Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
 `tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
-`merchant_every_days`, `merchant_stay_days`, `wall`).
+`merchant_every_days`, `merchant_stay_days`, `wall`, `cubcoin_trades`, `mission_daily_cap_cents`, `mission_daily_per_player`,
+`civic_buildings`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
-`/vila terreno amigo adicionar|remover <jogador>`, `/vila divida pagar`, `/vila muralha cancelar|retomar`.
+`/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`.
 
 ## Desenvolvimento
 

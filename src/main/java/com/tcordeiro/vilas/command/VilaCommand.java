@@ -1,6 +1,7 @@
 package com.tcordeiro.vilas.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.tcordeiro.vilas.logic.VillageRules;
@@ -41,8 +42,19 @@ public final class VilaCommand {
 						.then(Commands.literal("amigo")
 								.then(Commands.literal("adicionar").then(Commands.argument("jogador", EntityArgument.player())
 										.executes(c -> result(c, VillageManager.addFriend(c.getSource().getPlayerOrException(), EntityArgument.getPlayer(c, "jogador"))))))
-								.then(Commands.literal("remover").then(Commands.argument("jogador", EntityArgument.player())
-										.executes(c -> result(c, VillageManager.removeFriend(c.getSource().getPlayerOrException(), EntityArgument.getPlayer(c, "jogador"))))))))));
+								.then(Commands.literal("remover").then(Commands.argument("jogador", StringArgumentType.word()) // 0.3.0 (M18): por nome, também desligado
+											.suggests(VilaCommand::friendNames)
+											.executes(c -> result(c, VillageManager.removeFriend(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "jogador"))))))))));
+	}
+
+	private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> friendNames(CommandContext<CommandSourceStack> c,
+			com.mojang.brigadier.suggestion.SuggestionsBuilder b) {
+		if (c.getSource().getPlayer() instanceof ServerPlayer p) {
+			Lot lot = VillageManager.lotAt(p.level(), p.getBlockX(), p.getBlockZ());
+			if (lot != null && lot.owner.equals(p.getUUID()))
+				for (var id : lot.friends) b.suggest(lot.friendNames.getOrDefault(id, id.toString()));
+		}
+		return b.buildFuture();
 	}
 
 	private static Village here(ServerPlayer p) {

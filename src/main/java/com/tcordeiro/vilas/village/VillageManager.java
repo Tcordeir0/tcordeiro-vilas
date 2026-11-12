@@ -195,12 +195,26 @@ public final class VillageManager {
 	 */
 	public static boolean mayCross(ServerLevel level, BlockPos from, BlockPos to) {
 		VillageData d = data(level);
+		Village civic = d.civicAt(to.getX(), to.getZ());
+		if (civic != null) return civic.civic.covers(from.getX(), from.getZ()); // M15: na área cívica, só o que nasce lá dentro
 		if (d.lots.isEmpty()) return true;
 		Lot target = d.lotAt(to.getX(), to.getZ());
 		if (target == null) return true;
+		if (frozen(level, target)) return false; // M3: terreno congelado por dívida — pistões, ejetores, água e lava param
 		Lot source = d.lotAt(from.getX(), from.getZ());
 		if (source == target) return true;
 		return LotRules.mayCross(source == null ? null : source.owner, target.owner, target.friends);
+	}
+
+	/** 0.3.0 (M3): a automação (pistões, ejetores, máquinas do Industrial) trabalha aqui? Não num terreno congelado por dívida. */
+	public static boolean automationAllowed(ServerLevel level, BlockPos pos) {
+		Lot lot = lotAt(level, pos.getX(), pos.getZ());
+		return lot == null || !frozen(level, lot);
+	}
+
+	/** 0.3.0 (M15): a posição está na área cívica de uma vila? */
+	public static boolean civic(ServerLevel level, BlockPos pos) {
+		return data(level).civicAt(pos.getX(), pos.getZ()) != null;
 	}
 
 	/**
@@ -213,6 +227,10 @@ public final class VillageManager {
 	 * </ul>
 	 */
 	public static boolean explosionMayBreak(ServerLevel level, LivingEntity cause, BlockPos origin, BlockPos pos) {
+		if (civic(level, pos)) { // M15: a área cívica só cai por um operador ou por uma explosão nascida lá dentro
+			if (cause instanceof Player player) return isAdmin(player);
+			return cause == null && mayCross(level, origin, pos);
+		}
 		Lot hit = lotAt(level, pos.getX(), pos.getZ());
 		if (hit == null) return true;
 		if (cause instanceof Player player) return isAdmin(player) || (!frozen(level, hit) && hit.mayModify(player.getUUID()));
@@ -247,11 +265,23 @@ public final class VillageManager {
 	 * sim; num terreno, só o dono e os amigos (e os operadores).
 	 */
 	public static boolean mayModify(ServerLevel level, BlockPos pos, Player actor) {
+		if (civic(level, pos)) return actor != null && isAdmin(actor); // M15: Prefeitura, Praça… são da vila
 		Lot lot = lotAt(level, pos.getX(), pos.getZ());
 		if (lot == null) return true;
 		if (actor != null && isAdmin(actor)) return true;
 		if (frozen(level, lot)) return false; // 0.2.0: terreno congelado por dívida — ninguém constrói até pagar (nada se apaga)
 		return lot.mayModify(actor == null ? null : actor.getUUID());
+	}
+
+	/**
+	 * 0.3.0 (C6) — REGRA DE SEGURANÇA para as entidades: este jogador pode bater/apanhar/usar o que está em {@code pos}? Como
+	 * {@link #mayModify}, mas um terreno congelado por dívida não impede o dono de tratar dos seus bichos.
+	 */
+	public static boolean mayTouch(ServerLevel level, BlockPos pos, Player actor) {
+		if (actor != null && isAdmin(actor)) return true;
+		if (civic(level, pos)) return false;
+		Lot lot = lotAt(level, pos.getX(), pos.getZ());
+		return lot == null || lot.mayModify(actor == null ? null : actor.getUUID());
 	}
 
 	/** O preço de um terreno nesta vila para este jogador. */
@@ -267,18 +297,18 @@ public final class VillageManager {
 		LotRules.Area area = LotRules.around(p.getBlockX(), p.getBlockZ());
 		if (!LotRules.insideVillage(area, v.center.getX(), v.center.getZ(), v.radius)) return Result.fail("tvilas.lot.outside");
 		if (!LotRules.awayFromDesk(area, v.center.getX(), v.center.getZ())) return Result.fail("tvilas.lot.civic");
+		for (Village o : data(level).villages) if (o.civic.overlaps(area)) return Result.fail("tvilas.lot.civic");
 		List<LotRules.Area> taken = new ArrayList<>();
 		for (Lot l : data(level).lots) taken.add(l.area);
 		if (LotRules.overlapsAny(area, taken)) return Result.fail("tvilas.lot.overlap");
 		int max = VillageRules.maxLots(v.level);
 		if (lotsOf(level, v).size() >= max) return Result.fail("tvilas.lot.sold_out", max);
 		int price = lotPrice(v, p.getUUID());
-		if (count(p.getInventory(), Items.EMERALD) < price) return Result.fail("tvilas.lot.no_money", price);
-		take(p.getInventory(), Items.EMERALD, price);
+		if (!payEmeralds(p, price)) return Result.fail("tvilas.lot.no_money", price(price));
 		Lot lot = new Lot(UUID.randomUUID(), v.id, area, p.getUUID(), p.getGameProfile().name(), new HashSet<>());
 		data(level).lots.add(lot);
 		data(level).changed();
-		return Result.ok("tvilas.lot.bought", price, area.minX(), area.minZ(), area.maxX(), area.maxZ());
+		return Result.ok("tvilas.lot.bought", price(price), area.minX(), area.minZ(), area.maxX(), area.maxZ());
 	}
 
 	public static Result addFriend(ServerPlayer owner, ServerPlayer friend) {
@@ -286,16 +316,42 @@ public final class VillageManager {
 		if (lot == null || !lot.owner.equals(owner.getUUID())) return Result.fail("tvilas.lot.not_yours");
 		if (friend.getUUID().equals(owner.getUUID())) return Result.fail("tvilas.friend.self");
 		lot.friends.add(friend.getUUID());
+		lot.friendNames.put(friend.getUUID(), friend.getGameProfile().name());
 		data(owner.level()).changed();
 		return Result.ok("tvilas.friend.added", friend.getDisplayName());
 	}
 
 	public static Result removeFriend(ServerPlayer owner, ServerPlayer friend) {
+		return removeFriend(owner, friend.getUUID(), friend.getGameProfile().name());
+	}
+
+	/**
+	 * 0.3.0 (M18): tira um amigo pelo NOME, esteja ligado ou não — o nome guardado quando foi adicionado, o UUID escrito por
+	 * extenso, ou o nome que o servidor conhece (cache de perfis, sem ir à Internet).
+	 */
+	public static Result removeFriend(ServerPlayer owner, String name) {
 		Lot lot = lotAt(owner.level(), owner.getBlockX(), owner.getBlockZ());
 		if (lot == null || !lot.owner.equals(owner.getUUID())) return Result.fail("tvilas.lot.not_yours");
-		boolean removed = lot.friends.remove(friend.getUUID());
+		UUID who = lot.friendByName(name);
+		if (who == null) {
+			ServerPlayer online = owner.level().getServer().getPlayerList().getPlayerByName(name);
+			if (online != null) who = online.getUUID();
+		}
+		if (who == null) {
+			var cached = owner.level().getServer().services().nameToIdCache().get(name);
+			if (cached.isPresent()) who = cached.get().id();
+		}
+		if (who == null) return Result.fail("tvilas.friend.not_friend");
+		return removeFriend(owner, who, name);
+	}
+
+	static Result removeFriend(ServerPlayer owner, UUID who, String name) {
+		Lot lot = lotAt(owner.level(), owner.getBlockX(), owner.getBlockZ());
+		if (lot == null || !lot.owner.equals(owner.getUUID())) return Result.fail("tvilas.lot.not_yours");
+		boolean removed = lot.friends.remove(who);
+		lot.friendNames.remove(who);
 		data(owner.level()).changed();
-		return removed ? Result.ok("tvilas.friend.removed", friend.getDisplayName()) : Result.fail("tvilas.friend.not_friend");
+		return removed ? Result.ok("tvilas.friend.removed", name) : Result.fail("tvilas.friend.not_friend");
 	}
 
 	// ------------------------------------------------------------------ muralha (0.2.0)
@@ -400,6 +456,16 @@ public final class VillageManager {
 		if (m.kind() != MissionRules.Kind.DELIVER && !accepted(v, p.getUUID(), m)) return Result.fail("tvilas.mission.not_accepted");
 		int done = progress(p, v, m);
 		if (!MissionRules.complete(m.template(), done)) return Result.fail("tvilas.mission.not_done", done, m.count());
+		// A1: a tesouraria paga (com teto por dia) e cada jogador faz poucas por dia
+		long reward = MissionRules.rewardCents(m.emeralds(), VilasConfig.get().emerald_value_cents);
+		Civic c = missionDay(p.level(), v);
+		VilasConfig cfg = VilasConfig.get();
+		int today = c.doneToday.getOrDefault(p.getUUID(), 0);
+		if (!MissionRules.mayPay(v.economy.treasury, c.paidToday, cfg.mission_daily_cap_cents, today, cfg.mission_daily_per_player, reward)) {
+			if (today >= cfg.mission_daily_per_player) return Result.fail("tvilas.mission.daily_limit", cfg.mission_daily_per_player);
+			if (v.economy.treasury < reward) return Result.fail("tvilas.mission.no_funds", money(reward), money(v.economy.treasury));
+			return Result.fail("tvilas.mission.daily_cap", money(cfg.mission_daily_cap_cents));
+		}
 		if (m.kind() == MissionRules.Kind.DELIVER) take(p.getInventory(), item(m.target()), m.count());
 		if (m.kind() == MissionRules.Kind.DECORATE) {
 			// as posições pagas ficam marcadas: partir e repor, ou usá-las noutra missão, já não conta
@@ -407,15 +473,50 @@ public final class VillageManager {
 			List<Long> spots = decorateSpots(p, v, m);
 			for (int i = 0; i < m.count() && i < spots.size(); i++) v.paidSpots.markPaid(spots.get(i), now);
 		}
+		v.economy.treasury -= reward;
+		c.paidToday += reward;
+		c.doneToday.merge(p.getUUID(), 1, Integer::sum);
 		pay(p, m);
 		addReputation(p.level(), v, p, m.reputation());
 		v.forget(m);
 		v.missions.set(slot, newMission(p.level(), v, slot, Set.of(m.template())));
 		data(p.level()).changed();
 		updateLevel(p.level(), v);
+		return Result.ok("tvilas.mission.paid", reward(m.emeralds()), m.reputation());
+	}
+
+	/** As contas diárias das missões desta vila (recomeçam a cada dia de jogo). */
+	static Civic missionDay(ServerLevel level, Village v) {
+		Civic c = v.civic;
+		long day = VillageEconomy.day(level);
+		if (c.missionDay != day) {
+			c.missionDay = day;
+			c.paidToday = 0;
+			c.doneToday.clear();
+		}
+		return c;
+	}
+
+	// ------------------------------------------------------------------ dinheiro (0.3.0: em CubCoin quando ele existe)
+
+	/** Um preço em esmeraldas como se paga: «480 CB» com o CubCoin, «12 esmeraldas» sem ele. */
+	public static Component price(int emeralds) {
 		return TVilas.CUBCOIN
-				? Result.ok("tvilas.mission.paid_cubcoin", m.emeralds(), Component.literal(cubcoinText(MissionRules.cubcoinBonus(m.emeralds()))), m.reputation())
-				: Result.ok("tvilas.mission.paid", m.emeralds(), m.reputation());
+				? money(com.tcordeiro.vilas.logic.CoinRules.price(emeralds, VilasConfig.get().emerald_value_cents))
+				: Component.translatable("tvilas.money.emeralds", emeralds);
+	}
+
+	/** A recompensa de uma missão como se recebe. */
+	public static Component reward(int emeralds) {
+		return price(emeralds);
+	}
+
+	/** Cobra um preço em esmeraldas: com o CubCoin em notas/moedas (com troco); sem ele em esmeraldas. False sem tirar nada se não chegar. */
+	public static boolean payEmeralds(ServerPlayer p, int emeralds) {
+		if (TVilas.CUBCOIN) return com.tcordeiro.vilas.compat.CubCoinPay.pay(p, com.tcordeiro.vilas.logic.CoinRules.price(emeralds, VilasConfig.get().emerald_value_cents));
+		if (count(p.getInventory(), Items.EMERALD) < emeralds) return false;
+		take(p.getInventory(), Items.EMERALD, emeralds);
+		return true;
 	}
 
 	private static String cubcoinText(long cents) {
@@ -427,15 +528,21 @@ public final class VillageManager {
 		return Component.literal(cubcoinText(cents));
 	}
 
-	/** Paga a missão: esmeraldas; com o CubCoin instalado, também CubCoins (classe de compatibilidade só carregada se ele existir). */
+	/**
+	 * Paga a missão (o dinheiro já saiu da tesouraria): com o CubCoin, em CubCoins; sem ele, em esmeraldas (classe de
+	 * compatibilidade só carregada se o CubCoin existir).
+	 */
 	static void pay(ServerPlayer p, Mission m) {
+		if (TVilas.CUBCOIN) {
+			com.tcordeiro.vilas.compat.CubCoinPay.give(p, MissionRules.rewardCents(m.emeralds(), VilasConfig.get().emerald_value_cents));
+			return;
+		}
 		int left = m.emeralds();
 		while (left > 0) {
 			int n = Math.min(left, 64);
 			p.getInventory().placeItemBackInInventory(new ItemStack(Items.EMERALD, n), net.minecraft.util.Prediction.SERVER_ONLY);
 			left -= n;
 		}
-		if (TVilas.CUBCOIN) com.tcordeiro.vilas.compat.CubCoinPay.give(p, MissionRules.cubcoinBonus(m.emeralds()));
 	}
 
 	/** «Trazer 24 Trigo», «Pôr 6 Lanternas», «Defender: 5 invasores». */
@@ -450,10 +557,14 @@ public final class VillageManager {
 	/** Um monstro/invasor morto por um jogador dentro de uma vila em alarme conta para a missão de defesa dele. */
 	public static void onKill(ServerPlayer killer, LivingEntity victim) {
 		if (!(victim instanceof Enemy)) return;
-		if (victim.entityTags().contains(FROM_SPAWNER_TAG)) return; // monstros de gerador não contam (seria uma quinta de missões)
 		ServerLevel level = killer.level();
 		Village v = villageAt(level, victim.blockPosition());
-		if (v == null || !v.alarm.on) return;
+		if (v == null) return;
+		// 0.3.0 (A1): só conta numa invasão a sério — o invasor é de uma invasão que está nesta vila (o alarme sozinho não chega:
+		// monstros trazidos ou de uma quinta de monstros eram missões infinitas). Monstros de gerador nunca contam.
+		var raid = victim instanceof net.minecraft.world.entity.raid.Raider r ? r.getCurrentRaid() : null;
+		if (!MissionRules.defenseCounts(raid != null, raid != null && v.covers(raid.getCenter().getX(), raid.getCenter().getZ()),
+				raid != null && raid.isOver(), victim.entityTags().contains(FROM_SPAWNER_TAG))) return;
 		for (Mission m : v.missions)
 			if (m.kind() == MissionRules.Kind.DEFEND && accepted(v, killer.getUUID(), m)) {
 				v.kills.merge(Village.key(killer.getUUID(), m), 1, Integer::sum);
@@ -463,6 +574,17 @@ public final class VillageManager {
 
 	/** Etiqueta (entity tag) dos monstros nascidos de um gerador (spawner ou trial spawner): não contam para as missões de defesa. */
 	public static final String FROM_SPAWNER_TAG = "tvilas_from_spawner";
+
+	/**
+	 * 0.3.0 (A1): um bloco de decoração já pago por uma missão é da vila — partido por um jogador, sai sem largar nada (não se
+	 * pode levar e pagar outra vez noutro sítio). Devolve true se o bloco foi consumido (o jogo não o parte de novo).
+	 */
+	public static boolean consumeDecoration(ServerLevel level, BlockPos pos, Player player) {
+		Village v = villageAt(level, pos);
+		if (v == null || !v.paidSpots.isPaid(pos.asLong(), level.getGameTime())) return false;
+		level.destroyBlock(pos, false, player);
+		return true;
+	}
 
 	/** Um bloco posto por um jogador dentro da vila conta para a missão de decorar dele (cada posição só uma vez; as já pagas são filtradas em {@link #decorateSpots}). */
 	public static void onPlaced(ServerPlayer p, BlockPos pos, BlockState state) {

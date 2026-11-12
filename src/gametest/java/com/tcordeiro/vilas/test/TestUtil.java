@@ -49,6 +49,30 @@ final class TestUtil {
 		return VillageManager.found(h.getLevel(), h.absolutePos(new BlockPos(4, 1, 4)), RADIUS);
 	}
 
+	/** 0.3.0: dinheiro que vale {@code emeralds} esmeraldas: notas/moedas com o CubCoin, esmeraldas sem ele. */
+	static void giveEmeralds(ServerPlayer p, int emeralds) {
+		if (com.tcordeiro.vilas.TVilas.CUBCOIN) CubCoinTrade.give(p, emeralds * com.tcordeiro.vilas.VilasConfig.get().emerald_value_cents);
+		else p.getInventory().add(new ItemStack(net.minecraft.world.item.Items.EMERALD, emeralds));
+	}
+
+	/** O dinheiro do jogador em cêntimos (CubCoins com o CubCoin; esmeraldas ×40 CB sem ele). */
+	static long money(ServerPlayer p) {
+		if (com.tcordeiro.vilas.TVilas.CUBCOIN) return CubCoinTrade.balance(p);
+		return VillageManager.count(p.getInventory(), net.minecraft.world.item.Items.EMERALD) * com.tcordeiro.vilas.VilasConfig.get().emerald_value_cents;
+	}
+
+	/** O dinheiro do jogador em esmeraldas (para comparar com as recompensas). */
+	static long moneyInEmeralds(ServerPlayer p) {
+		return money(p) / com.tcordeiro.vilas.VilasConfig.get().emerald_value_cents;
+	}
+
+	/** Uma vila de teste com tesouraria para pagar as missões (0.3.0: as missões saem da tesouraria). */
+	static Village richVillage(GameTestHelper h) {
+		Village v = village(h);
+		v.economy.treasury = 1_000_000;
+		return v;
+	}
+
 	static ServerPlayer playerAt(GameTestHelper h, BlockPos rel) {
 		ServerPlayer p = h.makeMockServerPlayerInLevel();
 		Vec3 v = Vec3.atBottomCenterOf(h.absolutePos(rel));

@@ -104,14 +104,14 @@ public class LotGameTests {
 		h.assertTrue(!VillageManager.buyLot(p).ok(), "sem esmeraldas não compra");
 		int price = VillageManager.lotPrice(v, p.getUUID());
 		h.assertValueEqual(price, LotRules.price(0, 0), "preço de aldeia sem reputação");
-		p.getInventory().add(new ItemStack(Items.EMERALD, price + 1));
+		TestUtil.giveEmeralds(p, price + 1);
 		var r = VillageManager.buyLot(p);
 		h.assertTrue(r.ok(), "compra");
-		h.assertValueEqual(VillageManager.count(p.getInventory(), Items.EMERALD), 1, "pagou o preço");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 1L, "pagou o preço (em esmeraldas, ou em CubCoins com o CubCoin)");
 		Lot lot = VillageManager.lotAt(h.getLevel(), center.getX() + 20, center.getZ());
 		h.assertTrue(lot != null && lot.owner.equals(p.getUUID()), "o terreno é dele");
 		h.assertValueEqual(lot.area.maxX() - lot.area.minX() + 1, 16, "16 de largura");
-		p.getInventory().add(new ItemStack(Items.EMERALD, 64));
+		TestUtil.giveEmeralds(p, 64);
 		p.setPos(center.getX() + 25.5, center.getY(), center.getZ() + 0.5);
 		h.assertTrue(!VillageManager.buyLot(p).ok(), "não compra por cima de outro terreno");
 		p.setPos(center.getX() + 60.5, center.getY(), center.getZ() + 0.5);

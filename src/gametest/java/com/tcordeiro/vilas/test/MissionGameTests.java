@@ -31,7 +31,7 @@ public class MissionGameTests {
 
 	@GameTest
 	public void deliverPaysAndGivesReputation(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
 		p.getInventory().clearContent();
 		Mission m = VillageManager.setMission(h.getLevel(), v, 0, new MissionRules.Template(MissionRules.Kind.DELIVER, "minecraft:wheat", 5, 3, 10, 1));
@@ -42,7 +42,7 @@ public class MissionGameTests {
 		var r = VillageManager.deliver(p, v, 0);
 		h.assertTrue(r.ok(), "entrega com 7 de 5");
 		h.assertValueEqual(count(p, Items.WHEAT), 2, "tira só os 5 pedidos");
-		h.assertValueEqual(count(p, Items.EMERALD), 3, "paga 3 esmeraldas");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 3L, "paga 3 esmeraldas");
 		h.assertValueEqual(v.reputationOf(p.getUUID()), 10, "dá 10 de reputação nesta vila");
 		h.assertTrue(v.missions.get(0).id() != m.id(), "a missão entregue é trocada por outra");
 		h.assertValueEqual(v.missions.get(0).kind(), MissionRules.Kind.DELIVER, "a casa 1 continua a ser de trazer");
@@ -52,7 +52,7 @@ public class MissionGameTests {
 
 	@GameTest
 	public void decorateCountsOnlyAfterAcceptAndWhileThere(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
 		p.getInventory().clearContent();
 		VillageManager.setMission(h.getLevel(), v, 1, new MissionRules.Template(MissionRules.Kind.DECORATE, "minecraft:lantern", 2, 2, 8, 1));
@@ -71,28 +71,41 @@ public class MissionGameTests {
 		h.assertTrue(!VillageManager.deliver(p, v, 1).ok(), "1 de 2 não entrega");
 		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), c);
 		h.assertTrue(VillageManager.deliver(p, v, 1).ok(), "entrega com 2 de 2");
-		h.assertValueEqual(count(p, Items.EMERALD), 2, "paga 2 esmeraldas");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 2L, "paga 2 esmeraldas");
 		h.assertValueEqual(v.reputationOf(p.getUUID()), 8, "dá 8 de reputação");
 		h.succeed();
 	}
 
+	/** Um saqueador de uma invasão a sério nesta vila (a invasão não está nos registos do mundo: só lhe dá o «raid»). */
+	static net.minecraft.world.entity.monster.illager.Pillager raider(GameTestHelper h, BlockPos rel) {
+		var raid = new net.minecraft.world.entity.raid.Raid(h.absolutePos(new BlockPos(4, 1, 4)), net.minecraft.world.Difficulty.NORMAL);
+		var p = h.spawn(EntityTypes.PILLAGER, rel);
+		p.setCurrentRaid(raid);
+		return p;
+	}
+
 	@GameTest
-	public void defendCountsOnlyDuringAlarm(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+	public void defendCountsOnlyInARealRaid(GameTestHelper h) {
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
 		p.getInventory().clearContent();
 		VillageManager.setMission(h.getLevel(), v, 2, new MissionRules.Template(MissionRules.Kind.DEFEND, MissionRules.INVADERS, 1, 5, 20, 1));
 		VillageManager.accept(p, v, 2);
 		Husk calm = h.spawn(EntityTypes.HUSK, new BlockPos(2, 1, 2));
 		calm.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
-		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 0, "sem alarme não conta");
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 0, "sem invasão não conta");
+		// A1 (0.3.0): o alarme sozinho (monstros por perto) já não chega — uma quinta de monstros dava missões infinitas
 		v.alarm.on = true;
-		Husk raider = h.spawn(EntityTypes.HUSK, new BlockPos(6, 1, 6));
-		raider.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
-		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 1, "durante o alarme conta");
+		Husk husk = h.spawn(EntityTypes.HUSK, new BlockPos(6, 1, 6));
+		husk.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		var loose = h.spawn(EntityTypes.PILLAGER, new BlockPos(6, 1, 2));
+		loose.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 0, "alarme com monstros e um saqueador solto: não conta");
 		v.alarm.on = false;
+		raider(h, new BlockPos(2, 1, 6)).hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 1, "invasor de uma invasão nesta vila conta");
 		h.assertTrue(VillageManager.deliver(p, v, 2).ok(), "entrega a defesa");
-		h.assertValueEqual(count(p, Items.EMERALD), 5, "paga 5 esmeraldas");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 5L, "paga 5 esmeraldas (ou 200 CB)");
 		h.assertValueEqual(v.reputationOf(p.getUUID()), 20, "dá 20 de reputação");
 		h.succeed();
 	}
@@ -100,7 +113,7 @@ public class MissionGameTests {
 
 	@GameTest
 	public void decorateBreakAndReplaceDoesNotPayAgain(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
 		p.getInventory().clearContent();
 		BlockPos a = new BlockPos(2, 1, 2), b = new BlockPos(6, 1, 2), c = new BlockPos(2, 1, 6), d = new BlockPos(6, 1, 6);
@@ -109,7 +122,7 @@ public class MissionGameTests {
 		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), a);
 		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), b);
 		h.assertTrue(VillageManager.deliver(p, v, 1).ok(), "1.ª entrega");
-		h.assertValueEqual(count(p, Items.EMERALD), 2, "pagou 2");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 2L, "pagou 2");
 
 		// a mesma missão outra vez: partir e repor as lanternas nos mesmos sítios não conta
 		VillageManager.setMission(h.getLevel(), v, 1, LANTERNS_2);
@@ -121,18 +134,18 @@ public class MissionGameTests {
 		h.assertBlockPresent(Blocks.LANTERN, a);
 		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(1)), 0, "posições já pagas não contam");
 		h.assertTrue(!VillageManager.deliver(p, v, 1).ok(), "partir e repor não paga outra vez");
-		h.assertValueEqual(count(p, Items.EMERALD), 2, "continua com 2");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 2L, "continua com 2");
 		// em sítios novos conta normalmente
 		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), c);
 		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), d);
 		h.assertTrue(VillageManager.deliver(p, v, 1).ok(), "sítios novos pagam");
-		h.assertValueEqual(count(p, Items.EMERALD), 4, "agora 4");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 4L, "agora 4");
 		h.succeed();
 	}
 
 	@GameTest
 	public void samePositionDoesNotCountInTwoMissions(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer first = TestUtil.playerAt(h, new BlockPos(3, 1, 4));
 		ServerPlayer second = TestUtil.playerAt(h, new BlockPos(5, 1, 4));
 		first.getInventory().clearContent();
@@ -156,25 +169,22 @@ public class MissionGameTests {
 		h.assertTrue(!VillageManager.deliver(second, v, 1).ok(), "1 de 2");
 		TestUtil.placeWithItem(h, second, new ItemStack(Items.LANTERN), d);
 		h.assertTrue(VillageManager.deliver(second, v, 1).ok(), "com 2 posições novas entrega");
-		h.assertValueEqual(count(second, Items.EMERALD), 2, "paga 2 ao segundo");
+		h.assertValueEqual(TestUtil.moneyInEmeralds(second), 2L, "paga 2 ao segundo");
 		h.succeed();
 	}
 
 	@GameTest
 	public void spawnerMobsDoNotCountForDefense(GameTestHelper h) {
-		Village v = TestUtil.village(h);
+		Village v = TestUtil.richVillage(h);
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
 		VillageManager.setMission(h.getLevel(), v, 2, new MissionRules.Template(MissionRules.Kind.DEFEND, MissionRules.INVADERS, 2, 5, 20, 1));
 		VillageManager.accept(p, v, 2);
-		v.alarm.on = true;
-		Husk farmed = h.spawn(EntityTypes.HUSK, new BlockPos(2, 1, 2));
+		var farmed = raider(h, new BlockPos(2, 1, 2));
 		farmed.addTag(VillageManager.FROM_SPAWNER_TAG);
 		farmed.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
 		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 0, "monstro de gerador não conta");
-		Husk raider = h.spawn(EntityTypes.HUSK, new BlockPos(6, 1, 6));
-		raider.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
-		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 1, "monstro normal conta");
-		v.alarm.on = false;
+		raider(h, new BlockPos(6, 1, 6)).hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 1, "invasor normal conta");
 		h.succeed();
 	}
 	@GameTest

@@ -102,7 +102,7 @@ public final class Village {
 				Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("debt_since", Map.of()).forGetter(x -> x.debtSince),
 				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("frozen", List.of()).forGetter(x -> List.copyOf(x.frozen)),
 				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("warned", List.of()).forGetter(x -> List.copyOf(x.warned)),
-				Project.CODEC.listOf().optionalFieldOf("projects", List.of()).forGetter(x -> x.projects),
+				SafeCodecs.list(Project.CODEC, "obra").optionalFieldOf("projects", List.of()).forGetter(x -> x.projects),
 				Codec.INT.optionalFieldOf("wall", WALL_NONE).forGetter(x -> x.wall),
 				Codec.INT.optionalFieldOf("poles", 0).forGetter(x -> x.poles),
 				UUIDUtil.STRING_CODEC.optionalFieldOf("merchant").forGetter(x -> java.util.Optional.ofNullable(x.merchant)),
@@ -162,7 +162,7 @@ public final class Village {
 			Codec.INT.optionalFieldOf("level", 0).forGetter(v -> v.level),
 			Codec.INT.optionalFieldOf("population", 0).forGetter(v -> v.population),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.INT).optionalFieldOf("reputation", Map.of()).forGetter(v -> v.reputation),
-			Mission.CODEC.listOf().optionalFieldOf("missions", List.of()).forGetter(v -> v.missions),
+			SafeCodecs.list(Mission.CODEC, "missão").optionalFieldOf("missions", List.of()).forGetter(v -> v.missions),
 			Codec.LONG.optionalFieldOf("mission_counter", 0L).forGetter(v -> v.missionCounter),
 			Codec.STRING.listOf().optionalFieldOf("accepted", List.of()).forGetter(v -> List.copyOf(v.accepted)),
 			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("kills", Map.of()).forGetter(v -> v.kills),
@@ -171,8 +171,9 @@ public final class Village {
 			Economy.CODEC.optionalFieldOf("economy").forGetter(v -> java.util.Optional.of(v.economy)),
 			Codec.LONG.listOf().optionalFieldOf("paid_spots", List.of())
 					.forGetter(v -> java.util.Arrays.stream(v.paidSpots.toArray()).boxed().toList()),
-			Extra.CODEC.optionalFieldOf("extra").forGetter(v -> java.util.Optional.of(v.extra)))
-			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec, ps, ex) -> {
+			Extra.CODEC.optionalFieldOf("extra").forGetter(v -> java.util.Optional.of(v.extra)),
+			Civic.CODEC.optionalFieldOf("civic").forGetter(v -> java.util.Optional.of(v.civic)))
+			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec, ps, ex, cv) -> {
 				Village v = new Village(id, c, r);
 				v.level = lvl;
 				v.population = pop;
@@ -186,6 +187,7 @@ public final class Village {
 				v.economy = ec.orElseGet(Economy::new);
 				v.paidSpots = com.tcordeiro.vilas.logic.PaidSpots.fromArray(ps.stream().mapToLong(Long::longValue).toArray());
 				v.extra = ex.orElseGet(Extra::new);
+				v.civic = cv.orElseGet(Civic::new);
 				return v;
 			}));
 
@@ -210,6 +212,8 @@ public final class Village {
 	public com.tcordeiro.vilas.logic.PaidSpots paidSpots = new com.tcordeiro.vilas.logic.PaidSpots();
 	/** 0.2.0: obras, imposto, dívidas, mercador. */
 	public Extra extra = new Extra();
+	/** 0.3.0: área cívica, edifícios, Prefeito levado, limite diário das missões. */
+	public Civic civic = new Civic();
 
 	public Village(UUID id, BlockPos center, int radius) {
 		this.id = id;

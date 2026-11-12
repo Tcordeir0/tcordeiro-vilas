@@ -31,6 +31,7 @@ public final class MissionEvents {
 
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (source.getEntity() instanceof ServerPlayer killer) VillageManager.onKill(killer, entity);
+			if (VillageManager.isMayor(entity) && entity.level() instanceof ServerLevel level) VillageEconomy.onMayorDied(level, entity.getUUID());
 		});
 
 		// Golens chamados pelo alarme não largam ferro (senão ligar/desligar o alarme seria uma quinta de ferro)

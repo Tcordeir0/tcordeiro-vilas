@@ -38,7 +38,8 @@ public class DataGameTests {
 		var content = book.get(DataComponents.WRITTEN_BOOK_CONTENT);
 		h.assertTrue(content != null && !content.pages().isEmpty() && content.pages().size() <= 100, "livro com 1–100 páginas");
 		// 0.2.0: o livro leva TODAS as páginas (as dos mods dizem «só com o mod»); o separador do Receitário só as dos mods instalados
-		h.assertValueEqual(com.tcordeiro.vilas.guide.VilasGuide.ALL.size(), content.pages().size(), "livro = páginas do guia");
+		// 0.3.0: + a página final «E o resto?»
+		h.assertValueEqual(com.tcordeiro.vilas.guide.VilasGuide.ALL.size() + 1, content.pages().size(), "livro = páginas do guia + «E o resto?»");
 		for (var page : com.tcordeiro.vilas.guide.VilasGuide.ALL)
 			h.assertValueEqual(com.tcordeiro.vilas.guide.VilasGuide.PAGES.contains(page), page.available(), "página " + page.key() + " só com o mod");
 		h.succeed();

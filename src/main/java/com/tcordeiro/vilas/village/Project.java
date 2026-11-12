@@ -18,7 +18,19 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public final class Project {
 	public enum Kind {
-		GOLEM, WALL, LIGHTING;
+		GOLEM, WALL, LIGHTING,
+		/** 0.3.0: os edifícios cívicos que faltam a uma vila antiga ({@link com.tcordeiro.vilas.build.CivicWork}). */
+		TOWN_HALL, MARKET, TAVERN, PLAZA;
+
+		/** 0.3.0 (M14): nomes desconhecidos dão erro ao ler (a obra é ignorada) em vez de rebentar o carregamento do mundo. */
+		public static final Codec<Kind> CODEC = Codec.STRING.comapFlatMap(s -> {
+			for (Kind k : values()) if (k.name().equals(s)) return com.mojang.serialization.DataResult.success(k);
+			return com.mojang.serialization.DataResult.error(() -> "obra desconhecida: " + s);
+		}, Kind::name);
+
+		public boolean civic() {
+			return this == TOWN_HALL || this == MARKET || this == TAVERN || this == PLAZA;
+		}
 
 		public String key() {
 			return "tvilas.project." + name().toLowerCase(java.util.Locale.ROOT);
@@ -27,9 +39,12 @@ public final class Project {
 
 	/** Um bloco a pôr; {@code clear} = quantos blocos (a contar deste, para cima) têm de estar livres (postes altos do Industrial). */
 	public record Placement(BlockPos pos, BlockState state, int clear) {
+		/** M14: quantos blocos livres por cima se podem pedir (um valor estragado não faz o construtor varrer o mundo). */
+		public static final int MAX_CLEAR = 32;
+
 		public static final Codec<Placement> CODEC = RecordCodecBuilder.create(i -> i.group(
 				BlockPos.CODEC.fieldOf("pos").forGetter(Placement::pos), BlockState.CODEC.fieldOf("state").forGetter(Placement::state),
-				Codec.INT.optionalFieldOf("clear", 1).forGetter(Placement::clear))
+				Codec.intRange(1, MAX_CLEAR).optionalFieldOf("clear", 1).forGetter(Placement::clear))
 				.apply(i, Placement::new));
 
 		public Placement(BlockPos pos, BlockState state) {
@@ -37,14 +52,17 @@ public final class Project {
 		}
 	}
 
+	/** M14: contadores guardados entre 0 e isto. */
+	public static final int MAX_COUNT = 1 << 20;
+
 	public static final Codec<Project> CODEC = RecordCodecBuilder.create(i -> i.group(
-			Codec.STRING.xmap(Kind::valueOf, Kind::name).fieldOf("kind").forGetter(p -> p.kind),
+			Kind.CODEC.fieldOf("kind").forGetter(p -> p.kind),
 			BlockPos.CODEC.fieldOf("site").forGetter(p -> p.site),
-			Placement.CODEC.listOf().optionalFieldOf("pending", List.of()).forGetter(p -> p.pending),
-			Codec.INT.optionalFieldOf("next_column", 0).forGetter(p -> p.nextColumn),
-			Codec.INT.optionalFieldOf("placed", 0).forGetter(p -> p.placed),
-			Codec.INT.optionalFieldOf("skipped", 0).forGetter(p -> p.skipped),
-			Codec.INT.optionalFieldOf("total", 0).forGetter(p -> p.total),
+			SafeCodecs.list(Placement.CODEC, "bloco de obra").optionalFieldOf("pending", List.of()).forGetter(p -> p.pending),
+			Codec.intRange(0, MAX_COUNT).optionalFieldOf("next_column", 0).forGetter(p -> p.nextColumn),
+			Codec.intRange(0, MAX_COUNT).optionalFieldOf("placed", 0).forGetter(p -> p.placed),
+			Codec.intRange(0, MAX_COUNT).optionalFieldOf("skipped", 0).forGetter(p -> p.skipped),
+			Codec.intRange(0, MAX_COUNT).optionalFieldOf("total", 0).forGetter(p -> p.total),
 			BlockPos.CODEC.listOf().optionalFieldOf("anchors", List.of()).forGetter(p -> p.anchors))
 			.apply(i, (k, s, pe, nc, pl, sk, t, an) -> {
 				Project p = new Project(k, s);

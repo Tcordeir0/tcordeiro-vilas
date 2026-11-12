@@ -73,6 +73,15 @@ public class VillageData extends SavedData {
 		indexedMods = lots.mods();
 	}
 
+	/**
+	 * 0.3.0 (M15): a vila cuja área cívica (Mesa, Prefeitura, Praça, Mercado, Taverna) contém (x, z), ou null. Sai logo se
+	 * nenhuma vila tiver área cívica (os fluidos e o fogo chamam isto muitas vezes).
+	 */
+	public Village civicAt(int x, int z) {
+		for (Village v : villages) if (!v.civic.boxes.isEmpty() && v.civic.covers(x, z)) return v;
+		return null;
+	}
+
 	/** Marca para gravar (todas as alterações passam pelo VillageManager, que chama isto). */
 	public void changed() {
 		setDirty();

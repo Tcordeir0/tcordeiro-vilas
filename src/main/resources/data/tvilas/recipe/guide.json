@@ -36,19 +36,19 @@
             "raw": "§lMissões§r\n\nHá sempre três: trazer itens, colocar blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos precisam estar lá quando você entregar."
           },
           {
-            "raw": "§lRecompensas§r\n\nCada missão paga esmeraldas e dá reputação nesta vila. Com o mod CubCoin, paga também em CubCoins.\n\nA reputação deixa os aldeões daqui um pouco mais baratos."
+            "raw": "§lRecompensas§r\n\nCada missão dá reputação nesta vila e é paga pela tesouraria: em CubCoins com o mod CubCoin, em esmeraldas sem ele.\n\nA reputação deixa os aldeões daqui um pouco mais baratos."
           },
           {
-            "raw": "§lDefender§r\n\nA missão de defesa só conta durante um alarme: monstros e invasores derrotados dentro da vila.\n\nDepois de entregar, o Prefeito põe outra missão no lugar."
+            "raw": "§lDefender§r\n\nA missão de defesa só conta numa invasão de verdade: os invasores dessa invasão derrotados dentro da vila. Monstros comuns não contam.\n\nDepois de entregar, o Prefeito põe outra missão no lugar."
           },
           {
-            "raw": "§lTerrenos§r\n\nNo quadro, compre o terreno onde você está: 16 por 16 blocos com você no meio, do fundo do mundo até o céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."
+            "raw": "§lTerrenos§r\n\nNo quadro, compre o terreno onde você está: 16 por 16 blocos com você no meio, do fundo do mundo até o céu.\n\nPaga em esmeraldas, ou em CubCoins com o CubCoin. Mais reputação, mais barato."
           },
           {
             "raw": "§lProteção§r\n\nNo seu terreno, só você e os amigos quebram ou colocam blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Prefeitura não se vende."
           },
           {
-            "raw": "§lAmigos§r\n\nDentro do seu terreno digite:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."
+            "raw": "§lAmigos§r\n\nDentro do seu terreno digite:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover. Funciona mesmo com o amigo desligado."
           },
           {
             "raw": "§lNível da vila§r\n\nAldeia, depois Vila, depois Cidade.\n\nVila: 8 aldeões e 100 de reputação somada.\nCidade: 16 aldeões e 400.\n\nO nível nunca desce."
@@ -120,7 +120,7 @@
             "raw": "§lImposto variável§r\n\nA taxa das trocas sobe um pouco a cada obra paga, até um teto (5 por cento).\n\nQuando a tesouraria está cheia, o Prefeito baixa de novo. O quadro mostra o motivo."
           },
           {
-            "raw": "§lTerreno congelado§r\n\nQuem deve há alguns dias fica com o terreno congelado: não pode construir nem quebrar lá até pagar.\n\nNada é apagado nem tirado. Um dia antes, o Prefeito avisa."
+            "raw": "§lTerreno congelado§r\n\nQuem deve há alguns dias fica com o terreno congelado: não pode construir nem quebrar lá até pagar.\n\nPistões e ejetores param lá. Nada é apagado. Um dia antes, o Prefeito avisa."
           },
           {
             "raw": "§lPagar a dívida§r\n\nNo quadro, o botão Pagar dívida paga tudo de uma vez e o terreno volta ao normal.\n\nSem CubCoin, paga em esmeraldas."
@@ -156,7 +156,43 @@
             "raw": "§lCambista§r\n\nSó com o CubCoin. Troca esmeraldas por notas e notas por esmeraldas, ao preço do Balcão de Câmbio, sem desconto."
           },
           {
+            "raw": "§lTrocas em CubCoin§r\n\nCom o mod CubCoin, todos os aldeões compram e vendem em notas e moedas em vez de esmeraldas: os do jogo, os deste mod, o ambulante e o mercador.\n\nO preço é o do Balcão de Câmbio: uma esmeralda vale 40 CB."
+          },
+          {
+            "raw": "§lTroco§r\n\nColoque nas casas da troca qualquer nota ou moeda que chegue ao preço. O aldeão fica com o preço e o troco vai para o seu inventário.\n\nEscolher a troca na lista já coloca o dinheiro."
+          },
+          {
+            "raw": "§lTudo em CubCoin§r\n\nCom o CubCoin, os terrenos, os impostos e as missões também são em CubCoins. O Cambista continua trocando esmeraldas por notas.\n\nSem o CubCoin, tudo volta para as esmeraldas."
+          },
+          {
+            "raw": "§lLimites§r\n\nCada jogador entrega até 3 missões por dia em cada vila. A tesouraria paga as missões, até 400 CB por dia.\n\nSem dinheiro na tesouraria, a missão espera: os itens não saem do inventário."
+          },
+          {
+            "raw": "§lPreço justo§r\n\nNenhuma missão paga muito mais do que os itens valem no mercado, nem mais do que custa comprá-los dos aldeões.\n\nPedregulho já não vale missão."
+          },
+          {
+            "raw": "§lDecoração da vila§r\n\nOs blocos que valeram uma missão de decorar passam a ser da vila: se você quebrar, não sobra nada para levar."
+          },
+          {
+            "raw": "§lVilas antigas§r\n\nPonha a Mesa numa vila sem Prefeitura, Mercado, Taverna ou Praça: o Prefeito manda construir o que falta, um de cada vez, pago pela tesouraria.\n\nO quadro mostra o que ainda falta."
+          },
+          {
+            "raw": "§lOnde constrói§r\n\nO Construtor escolhe um lugar livre perto do centro, em chão natural. Nunca em cima de casas, ruas ou terrenos de jogadores.\n\nÀ vista ele coloca bloco a bloco; de noite a obra avança sozinha."
+          },
+          {
+            "raw": "§lÁrea cívica§r\n\nA praça da Mesa, a Prefeitura, a Praça, o Mercado e a Taverna são da vila: ninguém quebra nem coloca blocos lá. Explosões, lava e pistões de fora não entram."
+          },
+          {
+            "raw": "§lBichos no terreno§r\n\nOs animais, aldeões e decorações dentro do seu terreno ficam protegidos: quem não é amigo não bate, não prende com laço, não leva no balde nem no barco.\n\nMonstros não são protegidos."
+          },
+          {
+            "raw": "§lPrefeito levado§r\n\nSe alguém levar o Prefeito embora, não chega outro enquanto ele estiver vivo.\n\nClique na Mesa: se ele estiver num lugar carregado, volta para a Prefeitura."
+          },
+          {
             "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"
+          },
+          {
+            "raw": "§lE o resto?§r\n\nTudo o resto está no separador Guias do Receitário (botão no inventário): a receita de cada bloco, uma por página, e as páginas dos mods que estão instalados."
           }
         ],
         "resolved": true

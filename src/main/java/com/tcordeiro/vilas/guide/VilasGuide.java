@@ -99,6 +99,17 @@ public final class VilasGuide {
 			new Page("alloy_smith", null, List.of(ALLOY_ANVIL), "tforja"),
 			new Page("carpenter", null, List.of(CARPENTER_BENCH), "tmoveis"),
 			new Page("money_changer", null, List.of(CHANGER_COUNTER), "cubcoin"),
+			new Page("coin_trades", null, List.of(), "cubcoin"),
+			new Page("coin_change", null, List.of(), "cubcoin"),
+			new Page("coin_more", null, List.of(), "cubcoin"),
+			new Page("mission_limits", null, List.of(), null),
+			new Page("mission_fair", null, List.of(), null),
+			new Page("decor_village", null, List.of(), null),
+			new Page("old_villages", null, List.of(), null),
+			new Page("civic_site", null, List.of(), null),
+			new Page("civic_area", null, List.of(), null),
+			new Page("lot_animals", null, List.of(), null),
+			new Page("mayor_taken", null, List.of(), null),
 			new Page("commands", null, List.of(), null));
 
 	/** As páginas do separador «Guias» do Receitário: sem as dos mods que não estão instalados. */

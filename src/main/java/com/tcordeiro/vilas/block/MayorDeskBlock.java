@@ -66,7 +66,11 @@ public class MayorDeskBlock extends BaseEntityBlock {
 		if (level instanceof ServerLevel sl && player instanceof ServerPlayer sp) {
 			Village v = VillageManager.byDesk(sl, pos);
 			if (v == null) v = VillageManager.found(sl, pos, com.tcordeiro.vilas.VilasConfig.get().radius());
-			if (v != null) TownDialog.open(sp, sl, v);
+			if (v != null) {
+				Component back = com.tcordeiro.vilas.village.VillageEconomy.recallMayor(sl, v); // C6: o Prefeito levado volta pela Mesa
+				if (back != null) sp.sendSystemMessage(back);
+				TownDialog.open(sp, sl, v);
+			}
 		}
 		return InteractionResult.SUCCESS;
 	}

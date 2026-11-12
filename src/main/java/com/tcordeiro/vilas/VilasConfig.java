@@ -27,6 +27,10 @@ import net.fabricmc.loader.api.FabricLoader;
  * que conta);</li>
  * <li>{@code merchant_every_days} (5) e {@code merchant_stay_days} (2): o mercador viajante da vila;</li>
  * <li>{@code wall} (true): o Prefeito encomenda a muralha quando a vila chega a Cidade.</li>
+ * <li>0.3.0 — {@code cubcoin_trades} (true): com o CubCoin, todos os aldeões trocam em CubCoin em vez de esmeraldas;
+ * {@code mission_daily_cap_cents} (40000 = 400 CB: o máximo que a tesouraria paga em missões por dia; 0 = sem teto) e
+ * {@code mission_daily_per_player} (3: missões por jogador e por dia em cada vila); {@code civic_buildings} (true): numa vila
+ * antiga o Prefeito manda construir a Prefeitura, o Mercado, a Taverna e a Praça que faltam.</li>
  * </ul>
  */
 public final class VilasConfig {
@@ -42,6 +46,10 @@ public final class VilasConfig {
 	public int merchant_every_days = com.tcordeiro.vilas.logic.MerchantRules.DEFAULT_EVERY_DAYS;
 	public int merchant_stay_days = com.tcordeiro.vilas.logic.MerchantRules.DEFAULT_STAY_DAYS;
 	public boolean wall = true;
+	public boolean cubcoin_trades = true;
+	public long mission_daily_cap_cents = 40000;
+	public int mission_daily_per_player = com.tcordeiro.vilas.logic.MissionRules.DAILY_PER_PLAYER;
+	public boolean civic_buildings = true;
 
 	private static VilasConfig current = new VilasConfig();
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

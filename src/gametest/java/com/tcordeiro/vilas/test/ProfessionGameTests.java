@@ -44,7 +44,7 @@ public class ProfessionGameTests {
 			var offers = v.getOffers();
 			h.assertValueEqual(offers.size(), 2, "2 trocas no nível 1 de " + prof.identifier());
 			for (MerchantOffer o : offers)
-				h.assertTrue(o.getResult().is(Items.EMERALD) || o.getBaseCostA().is(Items.EMERALD), "troca com esmeraldas: " + prof.identifier());
+				h.assertTrue(com.tcordeiro.vilas.economy.CoinTrades.emeraldsTraded(o) > 0, "troca com esmeraldas (guardadas assim; com o CubCoin mostram-se em CB): " + prof.identifier());
 		}
 		h.killAllEntitiesOfClass(Villager.class);
 		h.succeed();

@@ -26,6 +26,8 @@ public class MayorGameTests {
 		h.setBlock(desk, VilasBlocks.MAYOR_DESK);
 		Village v = VillageManager.found(h.getLevel(), h.absolutePos(desk), TestUtil.RADIUS);
 		h.assertTrue(v != null, "a Mesa funda a vila");
+		// 0.3.0: se o aldeão se afastar da Mesa, chegaria um Prefeito «de fora» (que agora fica com o posto): hoje já veio um
+		v.economy.lastMayorCall = h.getLevel().getGameTime();
 		Villager villager = h.spawn(EntityTypes.VILLAGER, new BlockPos(2, 1, 2));
 		h.assertTrue(villager.getVillagerData().profession().is(VillagerProfession.NONE), "começa desempregado");
 		h.succeedWhen(() -> {
