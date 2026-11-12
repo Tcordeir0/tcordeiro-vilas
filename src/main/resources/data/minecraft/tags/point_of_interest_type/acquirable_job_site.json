@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "tvilas:mayor",
+    "tvilas:baker",
+    "tvilas:florist",
+    "tvilas:innkeeper",
+    "tvilas:beekeeper"
+  ]
+}

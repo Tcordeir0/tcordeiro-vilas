@@ -1,0 +1,98 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+// Testes automáticos num servidor real (fora do jar final).
+sourceSets {
+	gametest {
+		compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+		runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+	}
+}
+
+// Sem código de cliente: as texturas da profissão usam a camada vanilla do aldeão e o quadro é um diálogo do servidor.
+loom {
+	mods {
+		"tvilas" {
+			sourceSet sourceSets.main
+		}
+		"tvilas-gametest" {
+			sourceSet sourceSets.gametest
+		}
+	}
+
+	runs {
+		gametest {
+			server()
+			name "Game Test"
+			source sourceSets.gametest
+			vmArg "-Dfabric-api.gametest"
+			vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.get()}/gametest/junit.xml"
+			runDir "build/gametest"
+		}
+	}
+}
+
+/** O jar atual de um mod irmão (versão do gradle.properties dele); se ainda não foi construído, o mais recente em build/libs. */
+def siblingJar(String dir, String name) {
+	def props = new Properties()
+	def propsFile = file("${rootDir}/../${dir}/gradle.properties")
+	if (propsFile.exists()) propsFile.withInputStream { props.load(it) }
+	def libs = file("${rootDir}/../${dir}/build/libs")
+	def jar = new File(libs, "${name}-${props.getProperty('version')}.jar")
+	if (!jar.exists()) {
+		jar = (libs.listFiles() ?: [] as File[]).findAll { it.name ==~ /${name}-[0-9.]+\.jar/ }.max { it.lastModified() }
+	}
+	return files(jar ?: [])
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// CubCoin (opcional): com ele instalado as missões pagam também em CubCoins.
+	// Só para compilar compat/CubCoinPay, que só é carregada se o CubCoin existir.
+	def cubcoin = siblingJar("cubcoin", "cubcoin")
+	compileOnly cubcoin
+	// ./gradlew runGametest -PnoCubcoin : os mesmos testes sem o CubCoin (só esmeraldas)
+	if (!project.hasProperty('noCubcoin')) gametestRuntimeOnly cubcoin
+
+	// Lógica pura (níveis, preços, lotes, alarme, missões): JUnit, sem servidor.
+	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher:${project.junit_platform_version}"
+}
+
+test {
+	useJUnitPlatform()
+	testLogging { events "failed"; exceptionFormat "full" }
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName"}
+	}
+}

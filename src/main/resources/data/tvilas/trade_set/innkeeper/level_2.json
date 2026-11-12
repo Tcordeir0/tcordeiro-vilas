@@ -1,0 +1,8 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/innkeeper/level_2",
+  "trades": [
+    "tvilas:innkeeper/2/sweet_berries_emerald",
+    "tvilas:innkeeper/2/emerald_baked_potato"
+  ]
+}

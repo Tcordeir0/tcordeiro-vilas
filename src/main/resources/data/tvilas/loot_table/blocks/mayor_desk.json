@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tvilas:mayor_desk"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "tvilas:blocks/mayor_desk"
+}

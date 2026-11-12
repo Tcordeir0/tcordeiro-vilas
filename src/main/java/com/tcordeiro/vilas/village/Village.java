@@ -1,0 +1,178 @@
+package com.tcordeiro.vilas.village;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
+
+/**
+ * Uma vila com Prefeitura: o centro é a Mesa do Prefeito. Guarda o nível, a população contada, a reputação de cada jogador, as 3
+ * missões ativas com o progresso de cada jogador e o estado do alarme. Guardada no mundo ({@link VillageData}).
+ */
+public final class Village {
+	/** Estado do alarme (golens chamados, tempos). Os tempos são o «game time» do mundo; −1 = nunca. */
+	public static final class Alarm {
+		public static final Codec<Alarm> CODEC = RecordCodecBuilder.create(i -> i.group(
+				Codec.BOOL.optionalFieldOf("on", false).forGetter(a -> a.on),
+				Codec.INT.optionalFieldOf("golems", 0).forGetter(a -> a.golems),
+				Codec.LONG.optionalFieldOf("last_golem", -1L).forGetter(a -> a.lastGolem),
+				Codec.LONG.optionalFieldOf("last_danger", -1L).forGetter(a -> a.lastDanger),
+				Codec.LONG.optionalFieldOf("ended", -1L).forGetter(a -> a.ended),
+				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("called", List.of()).forGetter(a -> List.copyOf(a.called)))
+				.apply(i, (on, g, lg, ld, e, c) -> {
+					Alarm a = new Alarm();
+					a.on = on;
+					a.golems = g;
+					a.lastGolem = lg;
+					a.lastDanger = ld;
+					a.ended = e;
+					a.called.addAll(c);
+					return a;
+				}));
+
+		public boolean on;
+		public int golems;
+		public long lastGolem = -1, lastDanger = -1, ended = -1;
+		/** Os golens chamados por este alarme (vão-se embora depois). */
+		public final List<UUID> called = new ArrayList<>();
+	}
+
+	/** Tesouraria: o que os impostos renderam, as dívidas de quem não pôde pagar e os gastos do Prefeito. */
+	public static final class Economy {
+		/** Um gasto do Prefeito: dia, o quê (chave de tradução) e quanto. */
+		public record Expense(long day, String what, long cents) {
+			public static final Codec<Expense> CODEC = RecordCodecBuilder.create(i -> i.group(
+					Codec.LONG.fieldOf("day").forGetter(Expense::day), Codec.STRING.fieldOf("what").forGetter(Expense::what),
+					Codec.LONG.fieldOf("cents").forGetter(Expense::cents)).apply(i, Expense::new));
+		}
+
+		public static final Codec<Economy> CODEC = RecordCodecBuilder.create(i -> i.group(
+				Codec.LONG.optionalFieldOf("treasury", 0L).forGetter(e -> e.treasury),
+				Codec.LONG.optionalFieldOf("collected", 0L).forGetter(e -> e.collected),
+				Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("debts", Map.of()).forGetter(e -> e.debts),
+				Expense.CODEC.listOf().optionalFieldOf("expenses", List.of()).forGetter(e -> e.expenses),
+				Codec.LONG.optionalFieldOf("last_day", -1L).forGetter(e -> e.lastDay),
+				Codec.LONG.optionalFieldOf("last_mayor_call", -1L).forGetter(e -> e.lastMayorCall),
+				Codec.INT.optionalFieldOf("alarm_bonus", 0).forGetter(e -> e.alarmBonus))
+				.apply(i, (t, c, d, ex, ld, lm, ab) -> {
+					Economy e = new Economy();
+					e.treasury = t;
+					e.collected = c;
+					e.debts.putAll(d);
+					e.expenses.addAll(ex);
+					e.lastDay = ld;
+					e.lastMayorCall = lm;
+					e.alarmBonus = ab;
+					return e;
+				}));
+		public static final int MAX_EXPENSES = 6;
+
+		public long treasury, collected;
+		public final Map<UUID, Long> debts = new HashMap<>();
+		/** Os últimos gastos (mais recente no fim). */
+		public final List<Expense> expenses = new ArrayList<>();
+		public long lastDay = -1, lastMayorCall = -1;
+		/** Golens extra por alarme comprados pela tesouraria. */
+		public int alarmBonus;
+
+		public void log(long day, String what, long cents) {
+			expenses.add(new Expense(day, what, cents));
+			while (expenses.size() > MAX_EXPENSES) expenses.remove(0);
+		}
+	}
+
+	public static final Codec<Village> CODEC = RecordCodecBuilder.create(i -> i.group(
+			UUIDUtil.STRING_CODEC.fieldOf("id").forGetter(v -> v.id),
+			BlockPos.CODEC.fieldOf("center").forGetter(v -> v.center),
+			Codec.INT.fieldOf("radius").forGetter(v -> v.radius),
+			Codec.INT.optionalFieldOf("level", 0).forGetter(v -> v.level),
+			Codec.INT.optionalFieldOf("population", 0).forGetter(v -> v.population),
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.INT).optionalFieldOf("reputation", Map.of()).forGetter(v -> v.reputation),
+			Mission.CODEC.listOf().optionalFieldOf("missions", List.of()).forGetter(v -> v.missions),
+			Codec.LONG.optionalFieldOf("mission_counter", 0L).forGetter(v -> v.missionCounter),
+			Codec.STRING.listOf().optionalFieldOf("accepted", List.of()).forGetter(v -> List.copyOf(v.accepted)),
+			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("kills", Map.of()).forGetter(v -> v.kills),
+			Codec.unboundedMap(Codec.STRING, Codec.LONG.listOf()).optionalFieldOf("placed", Map.of()).forGetter(v -> v.placed),
+			Alarm.CODEC.optionalFieldOf("alarm").forGetter(v -> java.util.Optional.of(v.alarm)),
+			Economy.CODEC.optionalFieldOf("economy").forGetter(v -> java.util.Optional.of(v.economy)))
+			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec) -> {
+				Village v = new Village(id, c, r);
+				v.level = lvl;
+				v.population = pop;
+				v.reputation.putAll(rep);
+				v.missions.addAll(ms);
+				v.missionCounter = mc;
+				v.accepted.addAll(acc);
+				v.kills.putAll(k);
+				pl.forEach((key, list) -> v.placed.put(key, new ArrayList<>(list)));
+				v.alarm = al.orElseGet(Alarm::new);
+				v.economy = ec.orElseGet(Economy::new);
+				return v;
+			}));
+
+	public final UUID id;
+	public BlockPos center;
+	public final int radius;
+	public int level;
+	public int population;
+	public final Map<UUID, Integer> reputation = new HashMap<>();
+	/** As 3 casas do quadro (pela ordem de {@code MissionRules.SLOTS}). */
+	public final List<Mission> missions = new ArrayList<>();
+	public long missionCounter;
+	/** «jogador:missão» aceites. */
+	public final Set<String> accepted = new HashSet<>();
+	/** «jogador:missão» → monstros mortos (defesa). */
+	public final Map<String, Integer> kills = new HashMap<>();
+	/** «jogador:missão» → posições (BlockPos.asLong) dos blocos postos (decorar). */
+	public final Map<String, List<Long>> placed = new HashMap<>();
+	public Alarm alarm = new Alarm();
+	public Economy economy = new Economy();
+
+	public Village(UUID id, BlockPos center, int radius) {
+		this.id = id;
+		this.center = center;
+		this.radius = radius;
+	}
+
+	public static String key(UUID player, Mission m) {
+		return player + ":" + m.id();
+	}
+
+	public int reputationOf(UUID player) {
+		return reputation.getOrDefault(player, 0);
+	}
+
+	public int reputationSum() {
+		int s = 0;
+		for (int r : reputation.values()) s += Math.max(0, r);
+		return s;
+	}
+
+	/** A posição (x, z) está dentro do raio (distância horizontal ao centro)? */
+	public boolean covers(int x, int z) {
+		long dx = x - center.getX(), dz = z - center.getZ();
+		return dx * dx + dz * dz <= (long) radius * radius;
+	}
+
+	public double distSqr(int x, int z) {
+		double dx = x - center.getX(), dz = z - center.getZ();
+		return dx * dx + dz * dz;
+	}
+
+	/** Esquece o progresso de todos numa missão (quando é entregue e trocada). */
+	void forget(Mission m) {
+		String suffix = ":" + m.id();
+		accepted.removeIf(k -> k.endsWith(suffix));
+		kills.keySet().removeIf(k -> k.endsWith(suffix));
+		placed.keySet().removeIf(k -> k.endsWith(suffix));
+	}
+}

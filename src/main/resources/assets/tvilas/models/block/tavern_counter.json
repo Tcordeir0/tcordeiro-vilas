@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "tvilas:block/tavern_counter_top",
+    "front": "tvilas:block/tavern_counter_front",
+    "side": "tvilas:block/tavern_counter_side"
+  }
+}

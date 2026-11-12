@@ -1,0 +1,9 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/florist/level_5",
+  "trades": [
+    "tvilas:florist/5/emerald_torchflower_seeds",
+    "tvilas:florist/5/emerald_pitcher_pod",
+    "tvilas:florist/5/emerald_spore_blossom"
+  ]
+}

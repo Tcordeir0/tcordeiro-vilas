@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "tvilas:block/flower_stall"
+    },
+    "facing=east": {
+      "model": "tvilas:block/flower_stall",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "tvilas:block/flower_stall",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "tvilas:block/flower_stall",
+      "y": 270
+    }
+  }
+}

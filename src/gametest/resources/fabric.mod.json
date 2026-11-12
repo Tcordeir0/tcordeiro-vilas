@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "tvilas-gametest",
+	"version": "1.0.0",
+	"name": "Vilas do Tcordeiro — testes",
+	"authors": ["Tcordeiro"],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": [
+			"com.tcordeiro.vilas.test.MayorGameTests",
+			"com.tcordeiro.vilas.test.MissionGameTests",
+			"com.tcordeiro.vilas.test.LotGameTests",
+			"com.tcordeiro.vilas.test.LevelGameTests",
+			"com.tcordeiro.vilas.test.AlarmGameTests",
+			"com.tcordeiro.vilas.test.ProfessionGameTests",
+			"com.tcordeiro.vilas.test.StructureGameTests",
+			"com.tcordeiro.vilas.test.EconomyGameTests",
+			"com.tcordeiro.vilas.test.DataGameTests"
+		]
+	},
+	"depends": {
+		"tvilas": "*",
+		"fabric-gametest-api-v1": "*"
+	}
+}

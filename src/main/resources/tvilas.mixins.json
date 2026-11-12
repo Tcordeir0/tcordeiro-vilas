@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "com.tcordeiro.vilas.mixin",
+	"plugin": "com.tcordeiro.vilas.mixin.VilasMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"BlockItemPlaceMixin",
+		"StructureTemplatePoolAccessor",
+		"AbstractVillagerTradeMixin",
+		"compat.CubCoinTradesMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

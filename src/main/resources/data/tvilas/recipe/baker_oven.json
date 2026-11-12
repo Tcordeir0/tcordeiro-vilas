@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BFB",
+    "BBB"
+  ],
+  "key": {
+    "B": "minecraft:bricks",
+    "F": "minecraft:furnace"
+  },
+  "result": {
+    "id": "tvilas:baker_oven"
+  }
+}

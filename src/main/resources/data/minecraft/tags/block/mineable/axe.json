@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "tvilas:mayor_desk",
+    "tvilas:flower_stall",
+    "tvilas:tavern_counter",
+    "tvilas:apiary_bench"
+  ]
+}

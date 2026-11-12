@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "tvilas:block/baker_oven_top",
+    "front": "tvilas:block/baker_oven_front",
+    "side": "tvilas:block/baker_oven_side"
+  }
+}

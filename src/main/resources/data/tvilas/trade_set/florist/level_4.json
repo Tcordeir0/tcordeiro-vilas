@@ -1,0 +1,9 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/florist/level_4",
+  "trades": [
+    "tvilas:florist/4/emerald_pink_petals",
+    "tvilas:florist/4/emerald_sunflower",
+    "tvilas:florist/4/emerald_peony"
+  ]
+}

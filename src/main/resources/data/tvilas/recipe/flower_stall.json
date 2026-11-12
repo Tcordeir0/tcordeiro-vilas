@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WWW",
+    "SFS"
+  ],
+  "key": {
+    "W": "#minecraft:wool",
+    "S": "#minecraft:wooden_slabs",
+    "F": "minecraft:flower_pot"
+  },
+  "result": {
+    "id": "tvilas:flower_stall"
+  }
+}

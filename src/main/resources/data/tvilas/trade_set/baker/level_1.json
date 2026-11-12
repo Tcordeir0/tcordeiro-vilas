@@ -1,0 +1,8 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/baker/level_1",
+  "trades": [
+    "tvilas:baker/1/wheat_emerald",
+    "tvilas:baker/1/emerald_bread"
+  ]
+}

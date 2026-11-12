@@ -1,0 +1,9 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/florist/level_1",
+  "trades": [
+    "tvilas:florist/1/bone_meal_emerald",
+    "tvilas:florist/1/emerald_poppy",
+    "tvilas:florist/1/emerald_dandelion"
+  ]
+}

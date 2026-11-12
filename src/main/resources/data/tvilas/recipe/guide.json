@@ -1,0 +1,97 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:wheat"
+  ],
+  "result": {
+    "id": "minecraft:written_book",
+    "components": {
+      "minecraft:written_book_content": {
+        "title": {
+          "raw": "Guia das Vilas"
+        },
+        "author": "Tcordeiro",
+        "pages": [
+          {
+            "raw": "§lGuia das Vilas§r\n\nPrefeito, missões, terrenos com dono, vilas que crescem, alarme contra invasões e quatro vendedores novos.\n\nTudo começa na Prefeitura, no centro das vilas novas."
+          },
+          {
+            "raw": "§lO Prefeito§r\n\nUm aldeão sem emprego que ache a Mesa do Prefeito vira Prefeito. Só uma Mesa por vila."
+          },
+          {
+            "raw": "§lA Prefeitura§r\n\nMetade das vilas novas nasce com uma Prefeitura no centro: um salão com a Mesa do Prefeito e um sino na praça.\n\nNas outras vilas, faça a Mesa e ponha-a perto do centro."
+          },
+          {
+            "raw": "§lTerritório§r\n\nA vila vai até 400 blocos à volta da Mesa do Prefeito: casas longe do centro também contam.\n\nQuem gere o servidor muda o raio em config/tvilas.json."
+          },
+          {
+            "raw": "§lVila vazia§r\n\nUma vila sem aldeões renasce: ponha a Mesa do Prefeito e um Prefeito chega.\n\nSe houver camas livres, chega um morador por dia, até três. Depois a tesouraria paga mais."
+          },
+          {
+            "raw": "§lFalar com ele§r\n\nClique direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."
+          },
+          {
+            "raw": "§lMissões§r\n\nHá sempre três: trazer itens, pôr blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos têm de lá estar quando entregar."
+          },
+          {
+            "raw": "§lRecompensas§r\n\nCada missão paga esmeraldas e dá reputação nesta vila. Com o mod CubCoin, paga também em CubCoins.\n\nA reputação deixa os aldeões daqui um pouco mais baratos."
+          },
+          {
+            "raw": "§lDefender§r\n\nA missão de defesa só conta durante um alarme: monstros e invasores derrotados dentro da vila.\n\nDepois de entregar, o Prefeito põe outra missão no lugar."
+          },
+          {
+            "raw": "§lTerrenos§r\n\nNo quadro, compre o terreno onde está: 16 por 16 blocos com você no meio, do fundo do mundo até ao céu.\n\nPaga em esmeraldas. Mais reputação, mais barato."
+          },
+          {
+            "raw": "§lProteção§r\n\nNo seu terreno, só você e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem.\n\nA praça da Prefeitura não se vende."
+          },
+          {
+            "raw": "§lAmigos§r\n\nDentro do seu terreno escreva:\n/vila terreno amigo adicionar Nome\n\nPara tirar, troque adicionar por remover."
+          },
+          {
+            "raw": "§lNível da vila§r\n\nAldeia, depois Vila, depois Cidade.\n\nVila: 8 aldeões e 100 de reputação somada.\nCidade: 16 aldeões e 400.\n\nO nível nunca desce."
+          },
+          {
+            "raw": "§lO que desbloqueia§r\n\nAldeia: 4 terrenos à venda.\nVila: 8 terrenos, missões maiores e 1 reforço do alarme.\nCidade: 16 terrenos, as missões mais bem pagas e 2 reforços.\n\nO terreno fica mais caro em vilas maiores."
+          },
+          {
+            "raw": "§lAlarme§r\n\nNuma invasão, ou com 3 ou mais monstros perto, o Prefeito toca o sino e chama golens de ferro: 2 no máximo (mais com o reforço), um de cada vez.\n\nOs golens da vila ficam mais fortes."
+          },
+          {
+            "raw": "§l⚠ Cuidado§r\n\nOs golens atacam quem ferir aldeões, como no jogo normal.\n\nOs golens chamados vão-se embora um minuto depois do alarme e não largam ferro."
+          },
+          {
+            "raw": "§lImpostos§r\n\nO Prefeito cobra 1 cêntimo por cama e por dia nas casas dos terrenos, e 2 por cento das trocas no território, com aldeões ou entre jogadores.\n\nSem CubCoin, cobra em esmeraldas quando a conta chega a uma."
+          },
+          {
+            "raw": "§lTesouraria§r\n\nOs impostos vão para a tesouraria. Uma vez por dia o Prefeito compra uma melhoria: moradores novos, um golem da vila ou o reforço do alarme.\n\nVeja a tesouraria e os gastos no quadro."
+          },
+          {
+            "raw": "§lDívidas§r\n\nQuem não tiver com que pagar fica a dever. A dívida aparece no quadro e cobra-se quando houver dinheiro."
+          },
+          {
+            "raw": "§lMercado§r\n\nAlgumas vilas novas têm um Mercado: quatro bancas com os postos de trabalho dos vendedores novos.\n\nAldeões sem emprego ficam lá a vender."
+          },
+          {
+            "raw": "§lPadeiro§r\n\nCompra trigo, açúcar, ovos e cacau. Vende pão, biscoitos, tortas e bolo."
+          },
+          {
+            "raw": "§lFlorista§r\n\nVende flores de todo o tipo. No último nível, sementes raras e flor de esporos."
+          },
+          {
+            "raw": "§lTaberneiro§r\n\nSopas, batatas, leite, camas para a pousada e, no fim, maçã dourada e um disco."
+          },
+          {
+            "raw": "§lApicultor§r\n\nMel, favos, velas e colmeias. No último nível vende um ninho de abelhas."
+          },
+          {
+            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info"
+          }
+        ],
+        "resolved": true
+      }
+    }
+  }
+}

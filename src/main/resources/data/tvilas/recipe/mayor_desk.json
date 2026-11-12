@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PPP",
+    "BEB",
+    "P P"
+  ],
+  "key": {
+    "P": "#minecraft:planks",
+    "B": "minecraft:book",
+    "E": "minecraft:emerald"
+  },
+  "result": {
+    "id": "tvilas:mayor_desk"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "tvilas:block/tavern_counter"
+    },
+    "facing=east": {
+      "model": "tvilas:block/tavern_counter",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "tvilas:block/tavern_counter",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "tvilas:block/tavern_counter",
+      "y": 270
+    }
+  }
+}

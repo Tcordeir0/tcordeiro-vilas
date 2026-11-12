@@ -1,0 +1,12 @@
+{
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 12
+  },
+  "gives": {
+    "id": "minecraft:music_disc_cat"
+  },
+  "max_uses": 1,
+  "xp": 30,
+  "reputation_discount": 0.05
+}

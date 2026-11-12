@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "HHH",
+    "PCP"
+  ],
+  "key": {
+    "H": "minecraft:honeycomb",
+    "P": "#minecraft:planks",
+    "C": "minecraft:glass_bottle"
+  },
+  "result": {
+    "id": "tvilas:apiary_bench"
+  }
+}

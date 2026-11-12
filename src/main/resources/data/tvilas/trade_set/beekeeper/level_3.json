@@ -1,0 +1,8 @@
+{
+  "amount": 2,
+  "random_sequence": "tvilas:trade_set/beekeeper/level_3",
+  "trades": [
+    "tvilas:beekeeper/3/glass_bottle_emerald",
+    "tvilas:beekeeper/3/emerald_honey_block"
+  ]
+}
