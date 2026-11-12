@@ -36,6 +36,17 @@ class LotRulesTest {
 	}
 
 	@Test
+	void onlyTheSameOwnerOrAFriendCrossesIntoALot() {
+		Set<UUID> friends = Set.of(FRIEND);
+		assertTrue(LotRules.mayCross(null, null, Set.of()), "fora de terrenos para fora de terrenos");
+		assertTrue(LotRules.mayCross(OWNER, null, Set.of()), "de um terreno para fora");
+		assertTrue(LotRules.mayCross(OWNER, OWNER, friends), "dentro do mesmo dono");
+		assertTrue(LotRules.mayCross(FRIEND, OWNER, friends), "do terreno de um amigo");
+		assertFalse(LotRules.mayCross(null, OWNER, friends), "de fora (sem dono) para dentro");
+		assertFalse(LotRules.mayCross(STRANGER, OWNER, friends), "do terreno de outro dono");
+	}
+
+	@Test
 	void overlapAndVillageBounds() {
 		LotRules.Area a = LotRules.around(0, 0);
 		assertTrue(a.overlaps(LotRules.around(15, 15)));

@@ -33,7 +33,7 @@
   "guide.tvilas.innkeeper.title": "Innkeeper",
   "guide.tvilas.levels.text": "Hamlet, then Village, then Town.\n\nVillage: 8 villagers and 100 total reputation.\nTown: 16 villagers and 400.\n\nThe level never goes down.",
   "guide.tvilas.levels.title": "Village level",
-  "guide.tvilas.lot_rules.text": "On your lot, only you and your friends break or place blocks. Machines from the Industrial mod obey too.\n\nThe Town Hall square is not for sale.",
+  "guide.tvilas.lot_rules.text": "On your lot, only you and your friends break or place blocks. Machines from the Industrial mod obey too. Lava, fire, explosions and pistons from outside stay out.\n\nThe Town Hall square is not for sale.",
   "guide.tvilas.lot_rules.title": "Protection",
   "guide.tvilas.lots.text": "On the board, buy the lot you stand on: 16 by 16 blocks with you in the middle, from the bottom of the world to the sky.\n\nPaid in emeralds. More reputation, cheaper.",
   "guide.tvilas.lots.title": "Lots",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1 — 12/11/2026
+
+Correções de segurança (revisão automática).
+
+- Terrenos protegidos também «por fora»: água e lava de fora não escorrem para dentro; o fogo de fora não queima nem se espalha para dentro, e a lava de fora não acende fogo lá dentro; explosões só partem blocos de um terreno se forem do dono/amigo (ou sem causador e nascidas no próprio terreno) — creepers e outros monstros nunca; as decorações (molduras, quadros, suportes de armadura) também ficam; pistões não empurram para dentro nem puxam de dentro de um terreno de outro dono; ejetores de fora não disparam para dentro. Dentro do próprio terreno tudo funciona como antes.
+- Procura de terrenos por índice por chunk (sem alocações), para estas verificações frequentes.
+- Missão de decorar/construir: as posições pagas ficam registadas por vila (até 4096, expiram em 30 dias de jogo) e não voltam a contar — nem partindo e repondo, nem noutra missão, nem para outro jogador. O quadro não repete logo o mesmo bloco/item (ex.: 6 lanternas seguidas de 12 lanternas).
+- Missões de trazer: 18 pães (eram 10) e 10 garrafas de mel (eram 4) — comprá-los ao Padeiro/Apicultor e entregar dava lucro. Nova regra testada: nenhuma missão paga mais do que custa comprar os itens aos aldeões.
+- Missão de defesa: monstros de geradores (spawner e trial spawner) não contam.
+- Guia: a página «Proteção» fala da proteção contra lava, fogo, explosões e pistões vindos de fora.
+
 ## 0.1.0 — 12/11/2026
 
 Primeira versão.

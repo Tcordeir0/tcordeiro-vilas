@@ -96,4 +96,116 @@ public class MissionGameTests {
 		h.assertValueEqual(v.reputationOf(p.getUUID()), 20, "dá 20 de reputação");
 		h.succeed();
 	}
+	static final MissionRules.Template LANTERNS_2 = new MissionRules.Template(MissionRules.Kind.DECORATE, "minecraft:lantern", 2, 2, 8, 1);
+
+	@GameTest
+	public void decorateBreakAndReplaceDoesNotPayAgain(GameTestHelper h) {
+		Village v = TestUtil.village(h);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
+		p.getInventory().clearContent();
+		BlockPos a = new BlockPos(2, 1, 2), b = new BlockPos(6, 1, 2), c = new BlockPos(2, 1, 6), d = new BlockPos(6, 1, 6);
+		VillageManager.setMission(h.getLevel(), v, 1, LANTERNS_2);
+		VillageManager.accept(p, v, 1);
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), a);
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), b);
+		h.assertTrue(VillageManager.deliver(p, v, 1).ok(), "1.ª entrega");
+		h.assertValueEqual(count(p, Items.EMERALD), 2, "pagou 2");
+
+		// a mesma missão outra vez: partir e repor as lanternas nos mesmos sítios não conta
+		VillageManager.setMission(h.getLevel(), v, 1, LANTERNS_2);
+		VillageManager.accept(p, v, 1);
+		h.setBlock(a, Blocks.AIR);
+		h.setBlock(b, Blocks.AIR);
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), a);
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), b);
+		h.assertBlockPresent(Blocks.LANTERN, a);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(1)), 0, "posições já pagas não contam");
+		h.assertTrue(!VillageManager.deliver(p, v, 1).ok(), "partir e repor não paga outra vez");
+		h.assertValueEqual(count(p, Items.EMERALD), 2, "continua com 2");
+		// em sítios novos conta normalmente
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), c);
+		TestUtil.placeWithItem(h, p, new ItemStack(Items.LANTERN), d);
+		h.assertTrue(VillageManager.deliver(p, v, 1).ok(), "sítios novos pagam");
+		h.assertValueEqual(count(p, Items.EMERALD), 4, "agora 4");
+		h.succeed();
+	}
+
+	@GameTest
+	public void samePositionDoesNotCountInTwoMissions(GameTestHelper h) {
+		Village v = TestUtil.village(h);
+		ServerPlayer first = TestUtil.playerAt(h, new BlockPos(3, 1, 4));
+		ServerPlayer second = TestUtil.playerAt(h, new BlockPos(5, 1, 4));
+		first.getInventory().clearContent();
+		second.getInventory().clearContent();
+		BlockPos a = new BlockPos(2, 1, 2), b = new BlockPos(6, 1, 2), c = new BlockPos(2, 1, 6), d = new BlockPos(6, 1, 6);
+		VillageManager.setMission(h.getLevel(), v, 1, LANTERNS_2);
+		VillageManager.accept(first, v, 1);
+		TestUtil.placeWithItem(h, first, new ItemStack(Items.LANTERN), a);
+		TestUtil.placeWithItem(h, first, new ItemStack(Items.LANTERN), b);
+		h.assertTrue(VillageManager.deliver(first, v, 1).ok(), "o primeiro entrega");
+
+		// noutra missão, outro jogador reaproveita as posições pagas (parte e volta a pôr): não conta
+		VillageManager.setMission(h.getLevel(), v, 1, LANTERNS_2);
+		VillageManager.accept(second, v, 1);
+		h.setBlock(a, Blocks.AIR);
+		h.setBlock(b, Blocks.AIR);
+		TestUtil.placeWithItem(h, second, new ItemStack(Items.LANTERN), a);
+		TestUtil.placeWithItem(h, second, new ItemStack(Items.LANTERN), b);
+		TestUtil.placeWithItem(h, second, new ItemStack(Items.LANTERN), c);
+		h.assertValueEqual(VillageManager.progress(second, v, v.missions.get(1)), 1, "só a posição nova conta");
+		h.assertTrue(!VillageManager.deliver(second, v, 1).ok(), "1 de 2");
+		TestUtil.placeWithItem(h, second, new ItemStack(Items.LANTERN), d);
+		h.assertTrue(VillageManager.deliver(second, v, 1).ok(), "com 2 posições novas entrega");
+		h.assertValueEqual(count(second, Items.EMERALD), 2, "paga 2 ao segundo");
+		h.succeed();
+	}
+
+	@GameTest
+	public void spawnerMobsDoNotCountForDefense(GameTestHelper h) {
+		Village v = TestUtil.village(h);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
+		VillageManager.setMission(h.getLevel(), v, 2, new MissionRules.Template(MissionRules.Kind.DEFEND, MissionRules.INVADERS, 2, 5, 20, 1));
+		VillageManager.accept(p, v, 2);
+		v.alarm.on = true;
+		Husk farmed = h.spawn(EntityTypes.HUSK, new BlockPos(2, 1, 2));
+		farmed.addTag(VillageManager.FROM_SPAWNER_TAG);
+		farmed.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 0, "monstro de gerador não conta");
+		Husk raider = h.spawn(EntityTypes.HUSK, new BlockPos(6, 1, 6));
+		raider.hurtServer(h.getLevel(), h.getLevel().damageSources().playerAttack(p), 1000);
+		h.assertValueEqual(VillageManager.progress(p, v, v.missions.get(2)), 1, "monstro normal conta");
+		v.alarm.on = false;
+		h.succeed();
+	}
+	@GameTest
+	public void spawnerMarksItsMobs(GameTestHelper h) {
+		// a etiqueta vem do gerador, seja qual for o monstro: um gerador de porcos (nascem à luz do dia, em relva) chega para o testar
+		TestUtil.clean(h);
+		for (int x = 0; x <= 8; x++)
+			for (int z = 0; z <= 8; z++) h.setBlock(new BlockPos(x, 0, z), Blocks.GRASS_BLOCK);
+		TestUtil.playerAt(h, new BlockPos(4, 1, 1)); // o gerador só trabalha com um jogador perto
+		var level = h.getLevel();
+		var rules = level.getGameRules();
+		boolean enabled = rules.get(net.minecraft.world.level.gamerules.GameRules.SPAWNER_BLOCKS_WORK);
+		rules.set(net.minecraft.world.level.gamerules.GameRules.SPAWNER_BLOCKS_WORK, true, level.getServer());
+		BlockPos spawner = new BlockPos(4, 2, 4);
+		h.setBlock(new BlockPos(4, 1, 4), Blocks.STONE);
+		h.setBlock(spawner, Blocks.SPAWNER);
+		BlockPos abs = h.absolutePos(spawner);
+		var be = (net.minecraft.world.level.block.entity.SpawnerBlockEntity) level.getBlockEntity(abs);
+		be.setEntityId(EntityTypes.PIG, level.getRandom());
+		try {
+			h.assertTrue(level.hasNearbyAlivePlayer(abs.getX(), abs.getY(), abs.getZ(), 16), "há um jogador perto do gerador");
+			// os ticks do gerador, à mão (o primeiro lote sai ao fim de 20)
+			for (int i = 0; i < 400 && h.getEntities(EntityTypes.PIG).isEmpty(); i++) be.getSpawner().serverTick(level, abs);
+			var pigs = h.getEntities(EntityTypes.PIG);
+			h.assertTrue(!pigs.isEmpty(), "o gerador não fez porcos");
+			for (var pig : pigs) h.assertTrue(pig.entityTags().contains(VillageManager.FROM_SPAWNER_TAG), "bicho do gerador marcado");
+			for (var pig : pigs) pig.discard();
+		} finally {
+			rules.set(net.minecraft.world.level.gamerules.GameRules.SPAWNER_BLOCKS_WORK, enabled, level.getServer());
+			h.setBlock(spawner, Blocks.AIR);
+		}
+		h.succeed();
+	}
 }

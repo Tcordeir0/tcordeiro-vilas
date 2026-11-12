@@ -32,7 +32,8 @@ final class TestUtil {
 		VillageData d = VillageData.get(h.getLevel());
 		BlockPos c = h.absolutePos(new BlockPos(4, 1, 4));
 		d.villages.removeIf(v -> Math.abs(v.center.getX() - c.getX()) <= 12 && Math.abs(v.center.getZ() - c.getZ()) <= 12);
-		d.lots.removeIf(l -> l.area.overlaps(new com.tcordeiro.vilas.logic.LotRules.Area(c.getX() - 12, c.getZ() - 12, c.getX() + 12, c.getZ() + 12)));
+		// só os terrenos dentro deste teste (x/z relativos 0..8): os testes vizinhos podem ter terrenos vivos à espera de ticks
+		d.lots.removeIf(l -> l.area.overlaps(new com.tcordeiro.vilas.logic.LotRules.Area(c.getX() - 4, c.getZ() - 4, c.getX() + 4, c.getZ() + 4)));
 	}
 
 	/** Chão de pedra 9×9 (y=0) — onde os testes põem coisas. */
@@ -72,7 +73,12 @@ final class TestUtil {
 	}
 
 	static Lot lotOverTest(GameTestHelper h, Village v, ServerPlayer owner) {
-		BlockPos a = h.absolutePos(new BlockPos(1, 0, 1)), b = h.absolutePos(new BlockPos(7, 0, 7));
+		return lot(h, v, owner, 1, 1, 7, 7);
+	}
+
+	/** Um terreno do {@code owner} que cobre as posições relativas x0..x1, z0..z1 (toda a altura). */
+	static Lot lot(GameTestHelper h, Village v, ServerPlayer owner, int x0, int z0, int x1, int z1) {
+		BlockPos a = h.absolutePos(new BlockPos(x0, 0, z0)), b = h.absolutePos(new BlockPos(x1, 0, z1));
 		var area = new com.tcordeiro.vilas.logic.LotRules.Area(Math.min(a.getX(), b.getX()), Math.min(a.getZ(), b.getZ()),
 				Math.max(a.getX(), b.getX()), Math.max(a.getZ(), b.getZ()));
 		Lot lot = new Lot(java.util.UUID.randomUUID(), v.id, area, owner.getUUID(), owner.getGameProfile().name(), new java.util.HashSet<>());

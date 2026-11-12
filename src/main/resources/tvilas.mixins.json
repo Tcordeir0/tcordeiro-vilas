@@ -7,7 +7,14 @@
 		"BlockItemPlaceMixin",
 		"StructureTemplatePoolAccessor",
 		"AbstractVillagerTradeMixin",
-		"compat.CubCoinTradesMixin"
+		"compat.CubCoinTradesMixin",
+		"protect.DispenserBlockMixin",
+		"protect.FireBlockMixin",
+		"protect.FlowingFluidMixin",
+		"protect.LavaFluidMixin",
+		"protect.PistonStructureResolverMixin",
+		"protect.ServerExplosionMixin",
+		"protect.SpawnerMobsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

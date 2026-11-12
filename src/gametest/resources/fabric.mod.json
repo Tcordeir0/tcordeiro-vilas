@@ -11,6 +11,7 @@
 			"com.tcordeiro.vilas.test.MayorGameTests",
 			"com.tcordeiro.vilas.test.MissionGameTests",
 			"com.tcordeiro.vilas.test.LotGameTests",
+			"com.tcordeiro.vilas.test.ProtectionGameTests",
 			"com.tcordeiro.vilas.test.LevelGameTests",
 			"com.tcordeiro.vilas.test.AlarmGameTests",
 			"com.tcordeiro.vilas.test.ProfessionGameTests",

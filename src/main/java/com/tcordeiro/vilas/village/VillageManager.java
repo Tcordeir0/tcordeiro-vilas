@@ -181,9 +181,42 @@ public final class VillageManager {
 
 	// ------------------------------------------------------------------ terrenos
 
+	/** O terreno em (x, z), ou null (procura rápida pelo índice por chunk de {@link VillageData#lotAt}). */
 	public static Lot lotAt(ServerLevel level, int x, int z) {
-		for (Lot l : data(level).lots) if (l.contains(x, z)) return l;
-		return null;
+		return data(level).lotAt(x, z);
+	}
+
+	/**
+	 * REGRA DE SEGURANÇA no mundo, para o que vem de fora (líquidos, fogo, pistões, explosões sem jogador): algo que nasce em
+	 * {@code from} pode mexer em {@code to}? Fora de terrenos, sim; dentro de um terreno, só se {@code from} estiver num terreno do
+	 * mesmo dono (ou de um amigo do terreno de destino) — ver {@link LotRules#mayCross}. Corre muitas vezes (cada passo de um
+	 * fluido, cada tick do fogo): sem alocações, e sai logo se não houver terrenos.
+	 */
+	public static boolean mayCross(ServerLevel level, BlockPos from, BlockPos to) {
+		VillageData d = data(level);
+		if (d.lots.isEmpty()) return true;
+		Lot target = d.lotAt(to.getX(), to.getZ());
+		if (target == null) return true;
+		Lot source = d.lotAt(from.getX(), from.getZ());
+		if (source == target) return true;
+		return LotRules.mayCross(source == null ? null : source.owner, target.owner, target.friends);
+	}
+
+	/**
+	 * REGRA DE SEGURANÇA para explosões: esta explosão pode partir o bloco em {@code pos}? Fora de terrenos, sim. Num terreno:
+	 * <ul>
+	 * <li>causada por um jogador (TNT que ele acendeu, cristal em que bateu, bola de fogo que devolveu): só se ele puder mexer
+	 * no terreno (dono, amigo, operador);</li>
+	 * <li>causada por um monstro (creeper, wither, ghast): nunca — os terrenos ficam a salvo dos monstros;</li>
+	 * <li>sem causador (TNT acesa por redstone ou fogo, camas, âncoras): pela origem, como os líquidos ({@link #mayCross}).</li>
+	 * </ul>
+	 */
+	public static boolean explosionMayBreak(ServerLevel level, LivingEntity cause, BlockPos origin, BlockPos pos) {
+		Lot hit = lotAt(level, pos.getX(), pos.getZ());
+		if (hit == null) return true;
+		if (cause instanceof Player player) return isAdmin(player) || hit.mayModify(player.getUUID());
+		if (cause != null) return false;
+		return mayCross(level, origin, pos);
 	}
 
 	public static List<Lot> lotsOf(ServerLevel level, Village v) {
@@ -291,16 +324,23 @@ public final class VillageManager {
 		return switch (m.kind()) {
 			case DELIVER -> count(p.getInventory(), item(m.target()));
 			case DEFEND -> v.kills.getOrDefault(Village.key(p.getUUID(), m), 0);
-			case DECORATE -> {
-				Block b = block(m.target());
-				int n = 0;
-				for (long l : v.placed.getOrDefault(Village.key(p.getUUID(), m), List.of())) {
-					BlockPos pos = BlockPos.of(l);
-					if (p.level().isLoaded(pos) && p.level().getBlockState(pos).is(b)) n++;
-				}
-				yield n;
-			}
+			case DECORATE -> decorateSpots(p, v, m).size();
 		};
+	}
+
+	/**
+	 * As posições que contam para a missão de decorar deste jogador: postas por ele depois de aceitar, com o bloco ainda lá, e
+	 * que NUNCA foram pagas antes (por ele ou por outro, nesta ou noutra missão — {@link Village#paidSpots}).
+	 */
+	static List<Long> decorateSpots(ServerPlayer p, Village v, Mission m) {
+		Block b = block(m.target());
+		long now = p.level().getGameTime();
+		List<Long> out = new ArrayList<>();
+		for (long l : v.placed.getOrDefault(Village.key(p.getUUID(), m), List.of())) {
+			BlockPos pos = BlockPos.of(l);
+			if (!v.paidSpots.isPaid(l, now) && p.level().isLoaded(pos) && p.level().getBlockState(pos).is(b)) out.add(l);
+		}
+		return out;
 	}
 
 	public static Result accept(ServerPlayer p, Village v, int slot) {
@@ -319,6 +359,12 @@ public final class VillageManager {
 		int done = progress(p, v, m);
 		if (!MissionRules.complete(m.template(), done)) return Result.fail("tvilas.mission.not_done", done, m.count());
 		if (m.kind() == MissionRules.Kind.DELIVER) take(p.getInventory(), item(m.target()), m.count());
+		if (m.kind() == MissionRules.Kind.DECORATE) {
+			// as posições pagas ficam marcadas: partir e repor, ou usá-las noutra missão, já não conta
+			long now = p.level().getGameTime();
+			List<Long> spots = decorateSpots(p, v, m);
+			for (int i = 0; i < m.count() && i < spots.size(); i++) v.paidSpots.markPaid(spots.get(i), now);
+		}
 		pay(p, m);
 		addReputation(p.level(), v, p, m.reputation());
 		v.forget(m);
@@ -362,6 +408,7 @@ public final class VillageManager {
 	/** Um monstro/invasor morto por um jogador dentro de uma vila em alarme conta para a missão de defesa dele. */
 	public static void onKill(ServerPlayer killer, LivingEntity victim) {
 		if (!(victim instanceof Enemy)) return;
+		if (victim.entityTags().contains(FROM_SPAWNER_TAG)) return; // monstros de gerador não contam (seria uma quinta de missões)
 		ServerLevel level = killer.level();
 		Village v = villageAt(level, victim.blockPosition());
 		if (v == null || !v.alarm.on) return;
@@ -372,7 +419,10 @@ public final class VillageManager {
 			}
 	}
 
-	/** Um bloco posto por um jogador dentro da vila conta para a missão de decorar dele (cada posição só uma vez). */
+	/** Etiqueta (entity tag) dos monstros nascidos de um gerador (spawner ou trial spawner): não contam para as missões de defesa. */
+	public static final String FROM_SPAWNER_TAG = "tvilas_from_spawner";
+
+	/** Um bloco posto por um jogador dentro da vila conta para a missão de decorar dele (cada posição só uma vez; as já pagas são filtradas em {@link #decorateSpots}). */
 	public static void onPlaced(ServerPlayer p, BlockPos pos, BlockState state) {
 		ServerLevel level = p.level();
 		Village v = villageAt(level, pos);

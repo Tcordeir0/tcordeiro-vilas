@@ -63,6 +63,17 @@ public final class LotRules {
 		return actor.equals(owner) || friends.contains(actor);
 	}
 
+	/**
+	 * REGRA DE SEGURANÇA (de fora para dentro): algo que nasce numa posição — líquido a escorrer, fogo a espalhar, pistão,
+	 * explosão sem jogador — pode mexer numa posição de um terreno? {@code sourceOwner} é o dono do terreno de onde vem (null =
+	 * fora de terrenos); {@code targetOwner} o do terreno de destino (null = fora de terrenos: aí tudo pode). Só passa se a
+	 * origem for do mesmo dono ou de um amigo do terreno de destino. Dentro do próprio terreno, tudo funciona normalmente.
+	 */
+	public static boolean mayCross(UUID sourceOwner, UUID targetOwner, Set<UUID> targetFriends) {
+		if (targetOwner == null) return true;
+		return mayModify(targetOwner, targetFriends, sourceOwner);
+	}
+
 	/** Preço base em esmeraldas por nível (Aldeia, Vila, Cidade). */
 	public static final int[] BASE_PRICE = {12, 20, 32};
 

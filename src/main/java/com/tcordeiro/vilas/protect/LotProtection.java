@@ -31,6 +31,8 @@ import net.minecraft.world.phys.HitResult;
  * (com um jogador falso com o UUID do dono), por isso as mineradoras/lenhador também respeitam o terreno.</li>
  * <li>Pôr: {@code UseBlockCallback} com um item de bloco (na posição onde o bloco iria ficar) e itens que mudam blocos (baldes,
  * isqueiro, carga de fogo, enxadas, pás, machados); {@code UseItemCallback} para baldes apontados ao terreno.</li>
+ * <li>De fora (0.1.1): líquidos, fogo, lava a acender, explosões, pistões e ejetores — mixins em {@code mixin/protect},
+ * com {@link VillageManager#mayCross} e {@link VillageManager#explosionMayBreak}.</li>
  * </ul>
  */
 public final class LotProtection {

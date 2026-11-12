@@ -33,7 +33,7 @@
   "guide.tvilas.innkeeper.title": "Taberneiro",
   "guide.tvilas.levels.text": "Aldeia, depois Vila, depois Cidade.\n\nVila: 8 aldeões e 100 de reputação somada.\nCidade: 16 aldeões e 400.\n\nO nível nunca desce.",
   "guide.tvilas.levels.title": "Nível da vila",
-  "guide.tvilas.lot_rules.text": "No seu terreno, só você e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem.\n\nA praça da Prefeitura não se vende.",
+  "guide.tvilas.lot_rules.text": "No seu terreno, só você e os amigos partem ou põem blocos. Máquinas do mod Industrial também obedecem. Lava, fogo, explosões e pistões de fora não entram.\n\nA praça da Prefeitura não se vende.",
   "guide.tvilas.lot_rules.title": "Proteção",
   "guide.tvilas.lots.text": "No quadro, compre o terreno onde está: 16 por 16 blocos com você no meio, do fundo do mundo até ao céu.\n\nPaga em esmeraldas. Mais reputação, mais barato.",
   "guide.tvilas.lots.title": "Terrenos",

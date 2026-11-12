@@ -103,8 +103,10 @@ public final class Village {
 			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("kills", Map.of()).forGetter(v -> v.kills),
 			Codec.unboundedMap(Codec.STRING, Codec.LONG.listOf()).optionalFieldOf("placed", Map.of()).forGetter(v -> v.placed),
 			Alarm.CODEC.optionalFieldOf("alarm").forGetter(v -> java.util.Optional.of(v.alarm)),
-			Economy.CODEC.optionalFieldOf("economy").forGetter(v -> java.util.Optional.of(v.economy)))
-			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec) -> {
+			Economy.CODEC.optionalFieldOf("economy").forGetter(v -> java.util.Optional.of(v.economy)),
+			Codec.LONG.listOf().optionalFieldOf("paid_spots", List.of())
+					.forGetter(v -> java.util.Arrays.stream(v.paidSpots.toArray()).boxed().toList()))
+			.apply(i, (id, c, r, lvl, pop, rep, ms, mc, acc, k, pl, al, ec, ps) -> {
 				Village v = new Village(id, c, r);
 				v.level = lvl;
 				v.population = pop;
@@ -116,6 +118,7 @@ public final class Village {
 				pl.forEach((key, list) -> v.placed.put(key, new ArrayList<>(list)));
 				v.alarm = al.orElseGet(Alarm::new);
 				v.economy = ec.orElseGet(Economy::new);
+				v.paidSpots = com.tcordeiro.vilas.logic.PaidSpots.fromArray(ps.stream().mapToLong(Long::longValue).toArray());
 				return v;
 			}));
 
@@ -136,6 +139,8 @@ public final class Village {
 	public final Map<String, List<Long>> placed = new HashMap<>();
 	public Alarm alarm = new Alarm();
 	public Economy economy = new Economy();
+	/** Posições já pagas por missões de decorar/construir: não voltam a contar (nem partindo e repondo, nem noutra missão). */
+	public com.tcordeiro.vilas.logic.PaidSpots paidSpots = new com.tcordeiro.vilas.logic.PaidSpots();
 
 	public Village(UUID id, BlockPos center, int radius) {
 		this.id = id;

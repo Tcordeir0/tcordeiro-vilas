@@ -35,7 +35,7 @@ public final class MissionRules {
 	public static final List<Template> TEMPLATES = List.of(
 			// trazer
 			new Template(Kind.DELIVER, "minecraft:wheat", 24, 3, 10, 1),
-			new Template(Kind.DELIVER, "minecraft:bread", 10, 3, 10, 1),
+			new Template(Kind.DELIVER, "minecraft:bread", 18, 3, 10, 1), // 0.1.1: eram 10 (comprados ao Padeiro por 2 esmeraldas, pagavam 3)
 			new Template(Kind.DELIVER, "minecraft:white_wool", 12, 3, 10, 1),
 			new Template(Kind.DELIVER, "minecraft:oak_log", 24, 3, 10, 1),
 			new Template(Kind.DELIVER, "minecraft:carrot", 24, 2, 8, 1),
@@ -43,7 +43,7 @@ public final class MissionRules {
 			new Template(Kind.DELIVER, "minecraft:cobblestone", 64, 2, 8, 1),
 			new Template(Kind.DELIVER, "minecraft:iron_ingot", 8, 6, 20, 2),
 			new Template(Kind.DELIVER, "minecraft:pumpkin", 10, 5, 18, 2),
-			new Template(Kind.DELIVER, "minecraft:honey_bottle", 4, 5, 18, 2),
+			new Template(Kind.DELIVER, "minecraft:honey_bottle", 10, 5, 18, 2), // 0.1.1: eram 4 (2 esmeraldas no Apicultor, pagavam 5)
 			new Template(Kind.DELIVER, "minecraft:glass", 32, 5, 18, 2),
 			new Template(Kind.DELIVER, "minecraft:leather", 10, 5, 18, 2),
 			new Template(Kind.DELIVER, "minecraft:gold_ingot", 10, 9, 30, 3),
@@ -76,15 +76,45 @@ public final class MissionRules {
 	}
 
 	/**
-	 * Escolhe a missão para a casa {@code slot}: {@code roll} é um número aleatório ≥ 0. Evita repetir o modelo que estava lá
-	 * ({@code avoid}), se houver alternativa.
+	 * Escolhe a missão para a casa {@code slot}: {@code roll} é um número aleatório ≥ 0. Evita repetir o ALVO (item/bloco) do
+	 * modelo que estava lá ({@code avoid}) — não só o mesmo modelo: «6 lanternas» não é seguida de «12 lanternas» — se houver
+	 * alternativa.
 	 */
 	public static Template pick(int slot, int tier, int roll, Set<Template> avoid) {
 		List<Template> list = eligible(slot, tier);
 		List<Template> fresh = new ArrayList<>(list);
-		fresh.removeAll(avoid);
+		for (Template a : avoid) fresh.removeIf(t -> t.target.equals(a.target));
 		List<Template> from = fresh.isEmpty() ? list : fresh;
 		return from.get(Math.floorMod(roll, from.size()));
+	}
+
+	/**
+	 * Itens das missões que os aldeões VENDEM (vanilla e os vendedores deste mod): item → quantos dão por 1 esmeralda, no melhor
+	 * caso. Uma troca nunca custa menos de 1 esmeralda, mesmo com descontos de reputação.
+	 */
+	public static final java.util.Map<String, Integer> VILLAGER_SALES = java.util.Map.of(
+			"minecraft:bread", 6, // Padeiro (tvilas) e Agricultor
+			"minecraft:honey_bottle", 2, // Apicultor (tvilas)
+			"minecraft:glass", 4, // Bibliotecário
+			"minecraft:lantern", 1, // Bibliotecário (o Taberneiro vende 2 por 4)
+			"minecraft:white_wool", 1, // Pastor
+			"minecraft:pumpkin", 1, // Vendedor ambulante
+			"minecraft:oak_log", 8); // Vendedor ambulante
+
+	/** Quanto custa, em esmeraldas, comprar aos aldeões tudo o que a missão pede (−1 = ninguém vende). */
+	public static int villagerCost(Template t) {
+		Integer per = VILLAGER_SALES.get(t.target);
+		if (per == null || t.kind == Kind.DEFEND) return -1;
+		return (t.count + per - 1) / per;
+	}
+
+	/**
+	 * REGRA DE SEGURANÇA (economia): nenhuma missão paga mais esmeraldas do que custa comprar aos aldeões o que ela pede — senão
+	 * comprar e entregar era dinheiro infinito (pão do Padeiro, mel do Apicultor).
+	 */
+	public static boolean noVillagerProfit(Template t) {
+		int cost = villagerCost(t);
+		return cost < 0 || t.emeralds <= cost;
 	}
 
 	/** A missão está cumprida com {@code progress} feito? */
