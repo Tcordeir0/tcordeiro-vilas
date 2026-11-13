@@ -142,7 +142,7 @@ public class BuilderGameTests {
 		h.succeed();
 	}
 
-	@GameTest
+	@GameTest(skyAccess = true) // 0.3.0: a fonte precisa de céu aberto (sem o teto de barreiras do teste)
 	public void streetLightsBesideTheStreetsWithLanterns(GameTestHelper h) {
 		TestUtil.clean(h);
 		TestUtil.floor(h, 4);
@@ -207,11 +207,16 @@ public class BuilderGameTests {
 	}
 
 	/** 0.2.0 (12/11, visto no jogo): o poste nunca à frente de uma porta, a fonte nunca no ar nem num telhado, e nenhum fio solto. */
-	@GameTest
+	// 0.3.0: a fonte vai para campo aberto (≥ 2 blocos de construções, céu aberto): o teste precisa de chão livre à volta — mais
+	// espaço (padding) para não tocar nos vizinhos
+	@GameTest(padding = 24, skyAccess = true)
 	public void streetLightsKeepDoorsClearSourcesOnTheGroundAndNoLooseWires(GameTestHelper h) {
 		TestUtil.clean(h);
-		TestUtil.floor(h, 4);
-		Village v = com.tcordeiro.vilas.village.VillageManager.found(h.getLevel(), h.absolutePos(new BlockPos(4, 1, 4)), 4);
+		TestUtil.floor(h, 12);
+		for (int x = -8; x <= 16; x++)
+			for (int z = -8; z <= 16; z++)
+				if (x < 0 || x > 8 || z < 0 || z > 8) for (int y = 1; y <= 6; y++) h.setBlock(new BlockPos(x, y, z), Blocks.AIR);
+		Village v = com.tcordeiro.vilas.village.VillageManager.found(h.getLevel(), h.absolutePos(new BlockPos(4, 1, 4)), 12);
 		var level = h.getLevel();
 		for (int x = 0; x <= 8; x++) h.setBlock(new BlockPos(x, 0, 4), Blocks.DIRT_PATH);
 		// uma porta virada para a rua (a casa da frente) e um pilar ao lado da Mesa (o «telhado» onde a fonte não pode ir)

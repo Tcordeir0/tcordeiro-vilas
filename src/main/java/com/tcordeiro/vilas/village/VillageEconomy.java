@@ -303,7 +303,8 @@ public final class VillageEconomy {
 		e.lastDay = day;
 		// 0.3.0: o fundo das missões recebe 50 CB por dia, até 400 CB
 		VilasConfig cf = VilasConfig.get();
-		v.civic.missionFund = com.tcordeiro.vilas.logic.FundRules.topUp(v.civic.missionFund, days, cf.mission_fund_daily_cents, cf.mission_fund_cap_cents);
+		if (v.civic.meta.real) // revisão de segurança: só numa vila de verdade
+			v.civic.missionFund = com.tcordeiro.vilas.logic.FundRules.topUp(v.civic.missionFund, days, cf.mission_fund_daily_cents, cf.mission_fund_cap_cents);
 		long perBed = VilasConfig.get().bed_tax_cents;
 		for (Lot lot : VillageManager.lotsOf(level, v)) charge(level, v, lot.owner, TreasuryRules.bedTax(bedsIn(level, lot), days, perBed));
 		for (UUID who : new ArrayList<>(e.debts.keySet())) settle(level, v, who);

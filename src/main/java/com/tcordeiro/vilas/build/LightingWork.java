@@ -117,13 +117,25 @@ public final class LightingWork {
 
 	/**
 	 * Onde pôr a fonte: os 3 blocos JUNTOS (painel, painel e a bateria ao meio, pela ordem de {@link StreetLightKit#sources()}) no chão
-	 * à altura da Mesa (±1), apoiados num bloco sólido (nunca no ar nem num telhado), em espaço aberto (≥ {@link #SOURCE_CLEARANCE}
-	 * blocos de construções), fora de terrenos e longe de portas. Primeiro os que veem o céu (os painéis), depois os mais perto da Mesa.
+	 * à altura da Mesa (±1), apoiados num bloco sólido (nunca no ar nem num telhado), fora de terrenos e longe de portas. 0.3.0:
+	 * TODAS as partes veem o céu e ficam a ≥ {@link #SOURCE_CLEARANCE} blocos de QUALQUER bloco que não seja natural (casas, poços e
+	 * os seus telhados, vedações, água…) — {@link #sourceClear}. Procura a ≤ {@link #SOURCE_RANGE} blocos da Mesa; se não houver,
+	 * até {@link #SOURCE_FAR}. Os mais perto da Mesa primeiro.
 	 */
 	public static List<BlockPos[]> sourceGroups(ServerLevel level, Village v) {
+		for (int r : new int[] {SOURCE_RANGE, SOURCE_FAR}) {
+			List<BlockPos[]> out = sourceGroups(level, v, r);
+			if (!out.isEmpty()) return out;
+		}
+		return List.of();
+	}
+
+	/** Até onde se alarga a procura da fonte, se a ≤ {@link #SOURCE_RANGE} da Mesa não houver sítio. */
+	public static final int SOURCE_FAR = 16;
+
+	static List<BlockPos[]> sourceGroups(ServerLevel level, Village v, int r) {
 		BlockPos c = v.center;
 		List<BlockPos[]> out = new ArrayList<>();
-		int r = SOURCE_RANGE + 6;
 		for (int dx = -r; dx <= r; dx++)
 			for (int dz = -r; dz <= r; dz++) {
 				if (Math.max(Math.abs(dx), Math.abs(dz)) < 2) continue;
@@ -133,8 +145,9 @@ public final class LightingWork {
 					BlockPos[] g = null;
 					for (Direction d : new Direction[] {Direction.EAST, Direction.SOUTH}) {
 						BlockPos p1 = at.relative(d), p2 = at.relative(d.getOpposite());
-						if (sourceSpot(level, v, p1) && sourceSpot(level, v, p2) && open(level, at, SOURCE_CLEARANCE, 3)) {
-							g = new BlockPos[] {p1.immutable(), p2.immutable(), at.immutable()};
+						BlockPos[] cand = {p1.immutable(), p2.immutable(), at.immutable()};
+						if (sourceSpot(level, v, p1) && sourceSpot(level, v, p2) && sourceClear(level, cand)) {
+							g = cand;
 							break;
 						}
 					}
@@ -142,8 +155,33 @@ public final class LightingWork {
 					break;
 				}
 			}
-		out.sort(Comparator.<BlockPos[]>comparingInt(g -> level.canSeeSky(g[2]) ? 0 : 1).thenComparingDouble(g -> g[2].distSqr(c)));
+		out.sort(Comparator.<BlockPos[]>comparingDouble(g -> g[2].distSqr(c)));
 		return out;
+	}
+
+	/** Céu aberto por cima (nada que bloqueie, folhas incluídas): pelo mapa de alturas, que está sempre em dia (a luz do céu não). */
+	public static boolean openSky(ServerLevel level, BlockPos p) {
+		return level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, p.getX(), p.getZ()) <= p.getY();
+	}
+
+	/**
+	 * REGRA (0.3.0): a fonte em campo aberto — cada parte vê o céu e não há nenhum bloco não natural (nem erva, flores, neve) a ≤
+	 * {@link #SOURCE_CLEARANCE} blocos na horizontal, do chão até 4 acima. O chão por baixo de cada parte já foi visto em
+	 * {@link #sourceSpot} (natural); ruas ao nível do chão à volta não contam.
+	 */
+	public static boolean sourceClear(ServerLevel level, BlockPos[] parts) {
+		java.util.Set<BlockPos> own = java.util.Set.of(parts);
+		for (BlockPos p : parts) {
+			if (!openSky(level, p)) return false;
+			int r = SOURCE_CLEARANCE;
+			for (BlockPos q : BlockPos.betweenClosed(p.offset(-r, 0, -r), p.offset(r, 4, r))) {
+				if (own.contains(q)) continue;
+				BlockState s = level.getBlockState(q);
+				if (s.isAir() || Ground.grassOrFlower(s) || s.is(net.minecraft.world.level.block.Blocks.SNOW)) continue;
+				if (!Ground.natural(s) || !level.getFluidState(q).isEmpty()) return false;
+			}
+		}
+		return true;
 	}
 
 	/** Acabaram os postes: o fio entre eles (cada um ao mais perto já ligado) e da fonte ao primeiro. Devolve os postes postos. */

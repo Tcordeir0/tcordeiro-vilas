@@ -19,7 +19,7 @@ import net.minecraft.world.item.ItemStack;
 /** O Prefeito: um aldeão desempregado apanha a Mesa do Prefeito; só há uma Mesa (e uma vaga) por vila; o Prefeito não troca. */
 public class MayorGameTests {
 	// depende da IA do aldeão (caminho até à Mesa, com as Mesas dos testes vizinhos por perto): até 3 tentativas, basta 1
-	@GameTest(maxTicks = 3000, maxAttempts = 3, requiredSuccesses = 1)
+	@GameTest(maxTicks = 3000)
 	public void joblessVillagerBecomesMayor(GameTestHelper h) {
 		TestUtil.clean(h);
 		TestUtil.floor(h, 4);
@@ -29,7 +29,8 @@ public class MayorGameTests {
 		h.assertTrue(v != null, "a Mesa funda a vila");
 		// 0.3.0: se o aldeão se afastar da Mesa, chegaria um Prefeito «de fora» (que agora fica com o posto): hoje já veio um
 		v.economy.lastMayorCall = h.getLevel().getGameTime();
-		Villager villager = h.spawn(EntityTypes.VILLAGER, new BlockPos(2, 1, 2));
+		// determinístico: o aldeão já encostado à Mesa (não depende de achar caminho por entre os testes vizinhos)
+		Villager villager = h.spawn(EntityTypes.VILLAGER, new BlockPos(4, 1, 5));
 		h.assertTrue(villager.getVillagerData().profession().is(VillagerProfession.NONE), "começa desempregado");
 		h.succeedWhen(() -> {
 			h.assertTrue(VillageManager.isMayor(villager), "o aldeão passou a Prefeito (está " + villager.getVillagerData().profession().unwrapKey()

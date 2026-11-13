@@ -46,7 +46,14 @@ final class TestUtil {
 	static Village village(GameTestHelper h) {
 		clean(h);
 		floor(h, 4);
-		return VillageManager.found(h.getLevel(), h.absolutePos(new BlockPos(4, 1, 4)), RADIUS);
+		Village v = VillageManager.found(h.getLevel(), h.absolutePos(new BlockPos(4, 1, 4)), RADIUS);
+		// uma vila «de verdade» já com os 200 CB do fundo (os testes de missões); a regra real tem o seu teste (ReviewFixGameTests)
+		v.civic.meta.real = true;
+		if (!v.civic.meta.fundSeeded) {
+			v.civic.meta.fundSeeded = true;
+			v.civic.missionFund = com.tcordeiro.vilas.logic.FundRules.START_CENTS;
+		}
+		return v;
 	}
 
 	/** 0.3.0: dinheiro que vale {@code emeralds} esmeraldas: notas/moedas com o CubCoin, esmeraldas sem ele. */

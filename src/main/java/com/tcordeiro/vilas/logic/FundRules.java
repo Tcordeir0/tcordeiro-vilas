@@ -17,6 +17,15 @@ public final class FundRules {
 		return Math.min(cap, fund + Math.min(days, cap / Math.max(1, daily) + 1) * daily);
 	}
 
+	/**
+	 * REGRA DE SEGURANÇA (economia, revisão): o fundo só recebe dinheiro numa vila de verdade ({@link CivicRules#realVillage}); os
+	 * 200 CB do início entram UMA vez por vila ({@code seeded}). Devolve o fundo novo.
+	 */
+	public static long seed(long fund, boolean real, boolean seeded, long start, long cap) {
+		if (!real || seeded) return fund;
+		return Math.min(Math.max(cap, fund), fund + start);
+	}
+
 	/** Quanto sai do fundo para pagar {@code reward} (o resto sai da tesouraria). */
 	public static long fromFund(long fund, long reward) {
 		return Math.max(0, Math.min(fund, reward));

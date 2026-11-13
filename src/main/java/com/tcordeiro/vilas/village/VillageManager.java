@@ -519,6 +519,7 @@ public final class VillageManager {
 	 * jogador em cada lote, dinheiro no fundo das missões + tesouraria, teto do dia.
 	 */
 	static Result mayPay(ServerLevel level, Village v, boolean alreadyDone, long reward) {
+		if (!v.civic.meta.real) return Result.fail("tvilas.mission.not_real"); // revisão de segurança: Mesa no mato não paga nada
 		Civic c = missionDay(level, v);
 		VilasConfig cfg = VilasConfig.get();
 		long available = v.economy.treasury + c.missionFund; // 0.3.0: o fundo das missões e depois a tesouraria

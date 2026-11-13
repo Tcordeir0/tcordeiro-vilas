@@ -103,6 +103,7 @@ public final class VillagerRequests {
 
 	/** Escolhe 1 em cada 4 aldeões com profissão para fazer um pedido neste lote. */
 	public static void choose(ServerLevel level, Village v) {
+		if (!v.civic.meta.real) return; // revisão de segurança: sem vila de verdade, sem pedidos
 		List<Villager> all = new ArrayList<>(candidates(level, v));
 		java.util.Collections.shuffle(all, new java.util.Random(level.getRandom().nextLong()));
 		int n = MissionRules.requesters(all.size());
@@ -119,7 +120,7 @@ public final class VillagerRequests {
 		long available = v.economy.treasury + v.civic.missionFund;
 		for (var e : b.requests.entrySet()) {
 			if (!(level.getEntity(e.getKey()) instanceof Villager vi) || !vi.isAlive()) continue;
-			boolean show = available >= MissionRules.rewardCents(e.getValue().emeralds(), VilasConfig.get().emerald_value_cents);
+			boolean show = v.civic.meta.real && available >= MissionRules.rewardCents(e.getValue().emeralds(), VilasConfig.get().emerald_value_cents);
 			if (show && !vi.entityTags().contains(TAG)) {
 				vi.addTag(TAG);
 				vi.setCustomName(Component.literal("!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));

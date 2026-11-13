@@ -154,4 +154,54 @@ public class CivicBuildGameTests {
 		clear(level, c);
 		h.succeed();
 	}
+
+	/** 0.3.0: a fonte da iluminação fica em campo aberto — ≥ 2 blocos de qualquer construção (um poço com telhado ao lado da Mesa) e céu aberto. */
+	@GameTest
+	public void lightingSourceAvoidsTheWell(GameTestHelper h) {
+		ServerLevel level = h.getLevel();
+		BlockPos c = h.absolutePos(new BlockPos(4, 1, 4)).offset(-30000, 0, 30000); // longe dos outros testes
+		Village v = oldVillage(h, c);
+		// um poço 3×3 de pedregulho com água e um telhado de lajes, 3 blocos a leste da Mesa
+		BlockPos w = c.offset(3, 0, -1);
+		for (int x = 0; x < 3; x++)
+			for (int z = 0; z < 3; z++) {
+				level.setBlock(w.offset(x, 0, z), (x == 1 && z == 1 ? Blocks.WATER : Blocks.COBBLESTONE).defaultBlockState(), 2);
+				level.setBlock(w.offset(x, 3, z), Blocks.OAK_SLAB.defaultBlockState(), 2);
+			}
+		for (int y = 1; y <= 2; y++) {
+			level.setBlock(w.offset(0, y, 0), Blocks.OAK_FENCE.defaultBlockState(), 2);
+			level.setBlock(w.offset(2, y, 2), Blocks.OAK_FENCE.defaultBlockState(), 2);
+		}
+		var groups = com.tcordeiro.vilas.build.LightingWork.sourceGroups(level, v);
+		h.assertTrue(!groups.isEmpty(), "há sítio para a fonte");
+		BlockPos[] g = groups.get(0);
+		for (BlockPos part : g) {
+			h.assertTrue(com.tcordeiro.vilas.build.LightingWork.openSky(level, part), "céu aberto por cima de " + part.toShortString());
+			for (BlockPos q : BlockPos.betweenClosed(part.offset(-2, 0, -2), part.offset(2, 4, 2)))
+				h.assertTrue(!(q.getX() >= w.getX() && q.getX() <= w.getX() + 2 && q.getZ() >= w.getZ() && q.getZ() <= w.getZ() + 2 && q.getY() >= w.getY()
+						&& q.getY() <= w.getY() + 3), "a fonte fica a ≥ 2 blocos do poço (" + part.toShortString() + ")");
+		}
+		h.assertTrue(Math.max(Math.abs(g[2].getX() - c.getX()), Math.abs(g[2].getZ() - c.getZ())) <= com.tcordeiro.vilas.build.LightingWork.SOURCE_RANGE,
+				"com sítio perto, fica a ≤ 8 blocos da Mesa");
+		// um telhado alto (7 acima) por cima desse sítio: já não vale (os painéis precisam de céu aberto)
+		for (int x = -6; x <= 6; x++)
+			for (int z = -6; z <= 6; z++) level.setBlock(g[2].offset(x, 7, z), Blocks.OAK_PLANKS.defaultBlockState(), 2);
+		var roofed = com.tcordeiro.vilas.build.LightingWork.sourceGroups(level, v);
+		h.assertTrue(!roofed.isEmpty(), "há outro sítio");
+		for (BlockPos part : roofed.get(0)) h.assertTrue(com.tcordeiro.vilas.build.LightingWork.openSky(level, part), "debaixo de um telhado não: " + part.toShortString());
+		for (int x = -6; x <= 6; x++)
+			for (int z = -6; z <= 6; z++) level.setBlock(g[2].offset(x, 7, z), Blocks.AIR.defaultBlockState(), 2);
+		// o centro todo ocupado (pilares de 3 em 3 até 8 blocos): a procura alarga até 16
+		for (int x = -9; x <= 9; x += 3)
+			for (int z = -9; z <= 9; z += 3)
+				if (x != 0 || z != 0) level.setBlock(c.offset(x, 0, z), Blocks.COBBLESTONE.defaultBlockState(), 2);
+		var far = com.tcordeiro.vilas.build.LightingWork.sourceGroups(level, v);
+		h.assertTrue(!far.isEmpty(), "alarga a procura até 16 blocos");
+		int d = Math.max(Math.abs(far.get(0)[2].getX() - c.getX()), Math.abs(far.get(0)[2].getZ() - c.getZ()));
+		h.assertTrue(d > com.tcordeiro.vilas.build.LightingWork.SOURCE_RANGE && d <= com.tcordeiro.vilas.build.LightingWork.SOURCE_FAR,
+				"fonte entre 9 e 16 blocos da Mesa (" + d + ")");
+		VillageData.get(level).villages.remove(v);
+		clear(level, c);
+		h.succeed();
+	}
 }

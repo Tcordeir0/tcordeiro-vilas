@@ -357,6 +357,92 @@ public class ReviewFixGameTests {
 		h.succeed();
 	}
 
+	/** Revisão de segurança: Mesa num descampado não cria dinheiro (fundo 0, sem missões pagas, sem pedidos); os 200 CB só uma vez. */
+	@GameTest
+	public void missionFundOnlyForRealVillagesAndOnce(GameTestHelper h) {
+		TestUtil.clean(h);
+		TestUtil.floor(h, 4);
+		var level = h.getLevel();
+		BlockPos desk = new BlockPos(4, 1, 4);
+		h.setBlock(desk, VilasBlocks.MAYOR_DESK);
+		Village v = VillageManager.found(level, h.absolutePos(desk), TestUtil.RADIUS);
+		CivicWork.refresh(level, v);
+		h.assertTrue(!v.civic.meta.real, "uma Mesa no descampado não é uma vila de verdade");
+		h.assertValueEqual(v.civic.missionFund, 0L, "fundo a 0");
+		v.economy.treasury = 1_000_000; // nem com tesouraria: sem vila de verdade não há missões pagas
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(2, 1, 2));
+		p.getInventory().clearContent();
+		p.getInventory().add(new ItemStack(Items.WHEAT, 64));
+		VillageManager.setMission(level, v, 0, new MissionRules.Template(MissionRules.Kind.DELIVER, "minecraft:wheat", 2, 1, 1, 1));
+		h.assertTrue(!VillageManager.deliver(p, v, 0).ok(), "sem missões pagas");
+		h.assertValueEqual(TestUtil.money(p), 0L, "nada pago");
+		java.util.List<Villager> smiths = new java.util.ArrayList<>();
+		for (int i = 0; i < 4; i++) { // 4 aldeões com profissão (ainda não chega para ser vila: são precisos 5)
+			Villager e = h.spawn(EntityTypes.VILLAGER, new BlockPos(1 + 2 * i, 1, 1));
+			e.setNoAi(true);
+			e.setVillagerData(e.getVillagerData().withProfession(level.registryAccess(), net.minecraft.world.entity.npc.villager.VillagerProfession.ARMORER));
+			smiths.add(e);
+		}
+		CivicWork.refresh(level, v);
+		h.assertTrue(!v.civic.meta.real, "4 aldeões ainda não fazem uma vila");
+		com.tcordeiro.vilas.village.VillagerRequests.tick(level, v);
+		h.assertTrue(v.civic.batch.requests.isEmpty(), "sem pedidos «!»");
+		smiths.forEach(Villager::discard);
+		long day = VillageEconomy.day(level);
+		v.economy.lastDay = day;
+		VillageEconomy.daily(level, v, day + 3);
+		h.assertValueEqual(v.civic.missionFund, 0L, "nem os 50 CB por dia");
+		// chegam 5 moradores: agora é uma vila
+		java.util.List<Villager> people = new java.util.ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			Villager e = h.spawn(EntityTypes.VILLAGER, new BlockPos(1 + i, 1, 7));
+			e.setNoAi(true);
+			people.add(e);
+		}
+		CivicWork.refresh(level, v);
+		h.assertTrue(v.civic.meta.real, "com 5 aldeões é uma vila de verdade");
+		h.assertValueEqual(v.civic.missionFund, com.tcordeiro.vilas.logic.FundRules.START_CENTS, "recebe os 200 CB");
+		v.civic.missionFund = 0; // gastos
+		// partir e repor a Mesa: os 200 não voltam
+		h.setBlock(desk, Blocks.AIR);
+		h.setBlock(desk, VilasBlocks.MAYOR_DESK);
+		h.assertTrue(VillageManager.found(level, h.absolutePos(desk), TestUtil.RADIUS) == v, "a Mesa nova adota a mesma vila");
+		CivicWork.refresh(level, v);
+		h.assertValueEqual(v.civic.missionFund, 0L, "os 200 CB entram uma vez por vila");
+		people.forEach(Villager::discard);
+		h.setBlock(desk, Blocks.AIR);
+		VillageData.get(level).villages.remove(v);
+		h.succeed();
+	}
+
+	/** Revisão de segurança: partir e repor a Mesa (ou pô-la numa vila que já existia) não dá a posse a um estranho. */
+	@GameTest
+	public void strangerCannotTakeOverByReplacingTheDesk(GameTestHelper h) {
+		TestUtil.clean(h);
+		TestUtil.floor(h, 4);
+		var level = h.getLevel();
+		BlockPos desk = new BlockPos(4, 1, 4);
+		ServerPlayer owner = TestUtil.playerAt(h, new BlockPos(4, 1, 2));
+		TestUtil.placeWithItem(h, owner, new ItemStack(VilasBlocks.MAYOR_DESK), desk);
+		Village v = VillageManager.byDesk(level, h.absolutePos(desk));
+		h.assertTrue(v != null && owner.getUUID().equals(v.civic.owner), "quem pôs a primeira Mesa é o dono");
+		h.setBlock(desk, Blocks.AIR); // partida (por quem for)
+		ServerPlayer stranger = TestUtil.playerAt(h, new BlockPos(4, 1, 6));
+		TestUtil.placeWithItem(h, stranger, new ItemStack(VilasBlocks.MAYOR_DESK), desk);
+		h.assertBlockPresent(VilasBlocks.MAYOR_DESK, desk);
+		h.assertTrue(VillageManager.byDesk(level, h.absolutePos(desk)) == v, "a Mesa reposta é a mesma vila");
+		h.assertValueEqual(v.civic.owner, owner.getUUID(), "o estranho não fica dono; o dono antigo mantém-se");
+		// uma vila que já existia sem dono (como a da Mesa gerada com a vila): repor a Mesa também não dá a posse
+		h.setBlock(desk, Blocks.AIR);
+		v.civic.owner = null;
+		v.civic.meta.ownerHistory.clear();
+		TestUtil.placeWithItem(h, stranger, new ItemStack(VilasBlocks.MAYOR_DESK), desk);
+		h.assertTrue(v.civic.owner == null, "vila já existente sem dono: só os operadores");
+		h.setBlock(desk, Blocks.AIR);
+		VillageData.get(level).villages.remove(v);
+		h.succeed();
+	}
+
 	// ------------------------------------------------------------------ M18: amigo desligado
 
 	@GameTest

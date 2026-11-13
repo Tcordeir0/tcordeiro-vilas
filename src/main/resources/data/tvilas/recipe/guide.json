@@ -168,7 +168,7 @@
             "raw": "§lLimites§r\n\nA cada 4 dias o quadro troca todas as missões. Cada missão vale uma vez por jogador nesse tempo; o quadro mostra quanto falta.\n\nA vila paga até 400 CB por dia: primeiro do fundo das missões, depois da tesouraria."
           },
           {
-            "raw": "§lFundo das missões§r\n\nUma vila nova começa com 200 CB no fundo das missões e ganha 50 CB por dia, até 400.\n\nAssim uma vila nova já tem missões pagas."
+            "raw": "§lFundo das missões§r\n\nUma vila de verdade (do jogo, ou com 5 aldeões ou mais) recebe uma vez 200 CB no fundo das missões e ganha 50 CB por dia, até 400.\n\nUma Mesa no mato não paga missões."
           },
           {
             "raw": "§lPedidos§r\n\nEm cada lote, um em cada quatro aldeões com profissão faz um pedido e mostra um «!» na cabeça: o ferreiro quer ferro, o agricultor trigo ou batatas, o bibliotecário papel ou livros."

@@ -79,6 +79,18 @@ public final class CivicWork {
 			scan(level, v);
 			changed = true;
 		}
+		// revisão de segurança: só uma vila de verdade tem fundo de missões, missões pagas e pedidos; os 200 CB entram uma vez
+		boolean real = realVillage(level, v);
+		if (real != c.meta.real) {
+			c.meta.real = real;
+			changed = true;
+		}
+		if (real && !c.meta.fundSeeded) {
+			c.missionFund = com.tcordeiro.vilas.logic.FundRules.seed(c.missionFund, true, false, com.tcordeiro.vilas.logic.FundRules.START_CENTS,
+					VilasConfig.get().mission_fund_cap_cents);
+			c.meta.fundSeeded = true;
+			changed = true;
+		}
 		if (changed) VillageData.get(level).changed();
 	}
 

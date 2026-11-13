@@ -22,6 +22,8 @@
 - **A vila cresce com as missões**: cada missão ou pedido feito dá 1 de prestígio; a cada 3 (`prestige_per_resident`) chega um
   morador novo a pé pela borda da vila, se houver cama livre; sem cama, o Prefeito encomenda uma casa simples (casa pequena da vila
   do jogo, 50 CB, regras de sítio das obras). Teto `population_cap` (40). O quadro mostra o progresso.
+- **Fonte da iluminação em campo aberto**: os painéis e a bateria a ≥ 2 blocos de qualquer bloco não natural (casas, poços e os seus
+  telhados, vedações, água) e com céu aberto por cima de todas as partes; a ≤ 8 blocos da Mesa, ou até 16 se não houver sítio.
 - **Postes de 4 blocos**: com a API de colunas do Industrial 0.12.2+ (`placeColumn`, por reflexão) os postes da iluminação pública
   têm 4 blocos e as folgas contam essa altura; sem ela, a altura antiga.
 - **Correções da revisão**:
@@ -29,12 +31,16 @@
   flechas/poções), trela, balde, barco, tesoura, nome ou tirar itens; monstros não; trocar com aldeões continua livre. O Prefeito
   levado (vivo e carregado noutro sítio) não é substituído: volta pela Mesa; morto, convertido, noutra dimensão ou sumido há 3 dias
   de jogo, chega outro (no máximo 1 por dia) e o antigo perde a profissão quando voltar a carregar.
-  A1 — missões pagas primeiro por um fundo das missões (a vila nasce com 200 CB nele, +50 CB por dia, até 400 CB:
+  A1 — missões pagas primeiro por um fundo das missões (começa a 0; uma vila de verdade — estrutura de vila do jogo ou 5+ aldeões —
+  recebe 200 CB UMA vez e +50 CB por dia, até 400 CB:
   `mission_fund_daily_cents`, `mission_fund_cap_cents`) e depois pela tesouraria, com teto diário (`mission_daily_cap_cents`, 400 CB) e
   cada missão uma vez por jogador em cada lote; recompensa nunca acima do valor de mercado ×1,25 nem do custo de comprar aos aldeões; sem
   pedregulho; decoração paga é da vila (partida, não larga nada); a defesa só conta numa invasão a sério.
   M3 — dono em dívida: a automação congela nos terrenos dele (pistões, ejetores, água, lava, máquinas do Industrial).
   M14 — codecs estritos (obras, missões, áreas cívicas): um elemento estragado é ignorado com aviso, a vila carrega.
+  Revisão de segurança: uma Mesa no mato não cria dinheiro (sem fundo, missões pagas nem pedidos fora de uma vila de verdade; os
+  200 CB não voltam ao repor a Mesa); a posse da Mesa só se ganha com a PRIMEIRA Mesa de uma vila que nasce agora, num sítio onde o
+  jogador pode construir — repor a Mesa numa vila que já existia não muda o dono (histórico guardado).
   M15 — área cívica protegida (praça da Mesa, Prefeitura, Praça, Mercado, Taverna): só quem pôs a Mesa e os amigos dele
   (`/vila civica amigo adicionar|remover`) e os operadores mexem; de fora nada entra.
   M18 — `/vila terreno amigo remover <nome>` funciona com o amigo desligado (nome guardado no terreno).
@@ -44,9 +50,10 @@
   relva) e o teste no jogo.
 - Trocas: o preço base riscado (descontos) aparece na mesma nota de 20 CB; o desconto do Herói da Aldeia conta em esmeraldas.
 - Guia: 17 páginas novas (65), livro escrito com a página final «E o resto?» (66); pt-BR, pt-PT e en.
-- Testes: 80 GameTests (28 novos) com o CubCoin, `-PnoCubcoin` e `-PnoMods` (com o Industrial 0.12.2); 61 JUnit (16 novos:
-  CoinRules, CivicRules, FundRules, GrowthRules, missões, API dos postes); 60 mutações novas (121); teste no jogo
-  (`runClientGameTest`, Vilas030NoJogoClientTest).
+- Testes: 83 GameTests (31 novos), 5 corridas seguidas em cada modo sem falhas; o teste do aldeão que vira Prefeito ficou
+  determinístico (já junto à Mesa).
+- 62 JUnit (17 novos: CoinRules, CivicRules, FundRules, GrowthRules, missões, API dos postes); 71 mutações novas (132), todas
+  mortas; teste no jogo (`runClientGameTest`, Vilas030NoJogoClientTest).
 
 
 ## 0.2.0 — 12/11/2026

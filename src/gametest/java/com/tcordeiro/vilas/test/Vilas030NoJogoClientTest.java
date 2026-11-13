@@ -537,7 +537,7 @@ public class Vilas030NoJogoClientTest implements FabricClientGameTest {
 				for (int y = 6; y >= 0; y--) if (s.overworld().getBlockState(q.above(y)).getLightEmission() > 0) return q.above(y);
 				return q.above(3);
 			});
-			cam(ctx, q.getX() + 3.5, lamp.getY() + 0.5, q.getZ() + 3.5, lamp.getX() + 0.5, lamp.getY() + 0.3, lamp.getZ() + 0.5, 20);
+			camAround(ctx, lamp.getX() + 0.5, lamp.getY(), lamp.getZ() + 0.5, 3.5, 0.2, 0.4, 20); // de perto, em ar livre, a ver o lampião
 			shot(ctx, "06b_poste_" + k + "_aceso_de_noite_perto");
 		}
 		if (!poles.isEmpty()) {

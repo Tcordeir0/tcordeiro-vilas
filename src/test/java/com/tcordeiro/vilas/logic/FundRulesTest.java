@@ -19,6 +19,14 @@ class FundRulesTest {
 	}
 
 	@Test
+	void startMoneyOnlyOnceAndOnlyForRealVillages() {
+		assertEquals(0, FundRules.seed(0, false, false, 20000, 40000), "Mesa no mato: nada");
+		assertEquals(20000, FundRules.seed(0, true, false, 20000, 40000), "vila de verdade: os 200 CB");
+		assertEquals(0, FundRules.seed(0, true, true, 20000, 40000), "já recebeu: não volta a receber");
+		assertEquals(40000, FundRules.seed(30000, true, false, 20000, 40000), "nunca passa o teto");
+	}
+
+	@Test
 	void missionPaysFromTheFundFirst() {
 		assertEquals(4000, FundRules.fromFund(20000, 4000));
 		assertEquals(1000, FundRules.fromFund(1000, 4000), "o resto sai da tesouraria");

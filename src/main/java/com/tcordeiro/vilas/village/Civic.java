@@ -54,11 +54,12 @@ public final class Civic {
 			Batch.CODEC.optionalFieldOf("batch").forGetter(c -> java.util.Optional.of(c.batch)),
 			Codec.LONG.optionalFieldOf("mayor_seen", -1L).forGetter(c -> c.mayorSeen),
 			UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("retired", List.of()).forGetter(c -> List.copyOf(c.retired)),
-			Codec.LONG.optionalFieldOf("mission_fund", com.tcordeiro.vilas.logic.FundRules.START_CENTS).forGetter(c -> c.missionFund),
+			Codec.LONG.optionalFieldOf("mission_fund", 0L).forGetter(c -> c.missionFund),
 			UUIDUtil.STRING_CODEC.optionalFieldOf("owner").forGetter(c -> java.util.Optional.ofNullable(c.owner)),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.string(0, 32)).optionalFieldOf("friends", Map.of()).forGetter(c -> c.friends),
-			Codec.intRange(0, 1_000_000).optionalFieldOf("prestige", 0).forGetter(c -> c.prestige))
-			.apply(i, (m, t, b, s, bu, md, pt, dt, ms, rt, mf, ow, fr, pr) -> {
+			Codec.intRange(0, 1_000_000).optionalFieldOf("prestige", 0).forGetter(c -> c.prestige),
+			Meta.CODEC.optionalFieldOf("meta").forGetter(c -> java.util.Optional.of(c.meta)))
+			.apply(i, (m, t, b, s, bu, md, pt, dt, ms, rt, mf, ow, fr, pr, me) -> {
 				Civic c = new Civic();
 				c.mayor = m.orElse(null);
 				c.mayorTaken = t;
@@ -74,6 +75,7 @@ public final class Civic {
 				c.owner = ow.orElse(null);
 				c.friends.putAll(fr);
 				c.prestige = pr;
+				c.meta = me.orElseGet(Meta::new);
 				return c;
 			}));
 
@@ -96,14 +98,48 @@ public final class Civic {
 	public long mayorSeen = -1;
 	/** Antigos Prefeitos (sumidos 3 dias): quando voltarem a carregar perdem a profissão. */
 	public final Set<UUID> retired = new HashSet<>();
-	/** Fundo das missões (cêntimos): a vila nasce com 200 CB e recebe 50 CB por dia, até 400 CB ({@link com.tcordeiro.vilas.logic.FundRules}). */
-	public long missionFund = com.tcordeiro.vilas.logic.FundRules.START_CENTS;
+	/**
+	 * Fundo das missões (cêntimos): começa a 0; quando a vila é de verdade recebe 200 CB UMA vez e depois 50 CB por dia, até 400 CB
+	 * ({@link com.tcordeiro.vilas.logic.FundRules}).
+	 */
+	public long missionFund;
+	/**
+	 * 0.3.0 (revisão de segurança): é uma vila de verdade (estrutura de vila do jogo ou ≥ 5 aldeões, revisto a cada 5 s pela Mesa)?
+	 * Os 200 CB do fundo já entraram (uma vez por vila)? Quem foi dono (o dono nunca se perde por partir a Mesa).
+	 */
+	public static final class Meta {
+		public static final Codec<Meta> CODEC = RecordCodecBuilder.create(i -> i.group(
+				Codec.BOOL.optionalFieldOf("real", false).forGetter(m -> m.real),
+				Codec.BOOL.optionalFieldOf("fund_seeded", false).forGetter(m -> m.fundSeeded),
+				UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("owner_history", List.of()).forGetter(m -> List.copyOf(m.ownerHistory)))
+				.apply(i, (r, f, h) -> {
+					Meta m = new Meta();
+					m.real = r;
+					m.fundSeeded = f;
+					m.ownerHistory.addAll(h);
+					return m;
+				}));
+
+		public boolean real, fundSeeded;
+		public final List<UUID> ownerHistory = new ArrayList<>();
+	}
+
+	public Meta meta = new Meta();
+
 	/** 0.3.0: prestígio das missões concluídas (a cada {@code prestige_per_resident} chega um morador). */
 	public int prestige;
 	/** Quem pôs a Mesa (manda na área cívica, com os amigos); null = só os operadores (Mesas das vilas geradas). */
 	public UUID owner;
 	/** Amigos do dono da Mesa na área cívica: UUID → nome. */
 	public final Map<UUID, String> friends = new HashMap<>();
+
+	/**
+	 * REGRA DE SEGURANÇA (revisão): quem põe a Mesa fica dono? Só se a vila nasceu agora com esta Mesa (nunca adotada), nunca teve
+	 * dono e o jogador pode construir ali. Repor a Mesa numa vila que já existia não muda nada.
+	 */
+	public static boolean mayTakeOwnership(boolean villageExisted, Civic c, boolean mayBuildHere) {
+		return !villageExisted && c.owner == null && c.meta.ownerHistory.isEmpty() && mayBuildHere;
+	}
 
 	/** REGRA DE SEGURANÇA (M15): pode este jogador mexer na área cívica? O dono da Mesa e os amigos dele (os operadores à parte). */
 	public boolean mayBuild(UUID actor) {

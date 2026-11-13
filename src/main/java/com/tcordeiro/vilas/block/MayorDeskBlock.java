@@ -66,10 +66,15 @@ public class MayorDeskBlock extends BaseEntityBlock {
 	public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.LivingEntity placer, net.minecraft.world.item.ItemStack stack) {
 		super.setPlacedBy(level, pos, state, placer, stack);
 		if (level instanceof ServerLevel sl && placer instanceof ServerPlayer p && !(p instanceof net.fabricmc.fabric.api.entity.FakePlayer)) {
+			// revisão de segurança: só a PRIMEIRA Mesa de uma vila (a vila nasce agora) dá a posse, e só a quem pode construir ali; uma
+			// vila que já existia (Mesa partida e reposta, Mesa gerada com a vila) mantém o dono que tinha — ou nenhum (só operadores)
+			boolean existed = VillageManager.byDesk(sl, pos) != null || com.tcordeiro.vilas.village.VillageData.get(sl).villages.stream()
+					.anyMatch(x -> x.covers(pos.getX(), pos.getZ()));
 			Village v = VillageManager.byDesk(sl, pos);
 			if (v == null) v = VillageManager.found(sl, pos, com.tcordeiro.vilas.VilasConfig.get().radius());
-			if (v != null && v.civic.owner == null) {
+			if (v != null && com.tcordeiro.vilas.village.Civic.mayTakeOwnership(existed, v.civic, VillageManager.mayModify(sl, pos, p))) {
 				v.civic.owner = p.getUUID();
+				v.civic.meta.ownerHistory.add(p.getUUID());
 				com.tcordeiro.vilas.village.VillageData.get(sl).changed();
 			}
 		}
