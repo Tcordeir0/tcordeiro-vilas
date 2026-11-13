@@ -11,6 +11,7 @@
 		"MerchantMenuMixin",
 		"MerchantResultSlotMixin",
 		"VillagerSpecialPricesMixin",
+		"VillagerLifeMixin",
 		"StructureTemplateAccessor",
 		"compat.CubCoinTradesMixin",
 		"protect.DispenserBlockMixin",

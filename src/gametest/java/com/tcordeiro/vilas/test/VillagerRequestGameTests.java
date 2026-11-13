@@ -56,8 +56,11 @@ public class VillagerRequestGameTests {
 		h.assertValueEqual(UseEntityCallback.EVENT.invoker().interact(p, level, InteractionHand.MAIN_HAND, r, null), InteractionResult.SUCCESS,
 				"clicar abre o pedido");
 		p.setShiftKeyDown(true);
-		h.assertValueEqual(UseEntityCallback.EVENT.invoker().interact(p, level, InteractionHand.MAIN_HAND, r, null), InteractionResult.PASS,
-				"Shift+clique: as trocas normais");
+		int menus = com.tcordeiro.vilas.life.Resident.menus;
+		// 0.4.0: Shift+clique (mão vazia) abre o menu do morador, que tem «Trocar» e «Ver o pedido»
+		h.assertValueEqual(UseEntityCallback.EVENT.invoker().interact(p, level, InteractionHand.MAIN_HAND, r, null), InteractionResult.SUCCESS,
+				"Shift+clique: o menu do morador");
+		h.assertValueEqual(com.tcordeiro.vilas.life.Resident.menus, menus + 1, "abriu o menu do morador");
 		p.setShiftKeyDown(false);
 		h.assertTrue(!VillagerRequests.deliver(p, r.getUUID()).ok(), "sem os itens não entrega");
 		p.getInventory().add(new ItemStack(VillageManager.item(m.target()), 64));

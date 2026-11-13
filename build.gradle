@@ -11,11 +11,14 @@ sourceSets {
 	}
 }
 
-// Sem código de cliente: as texturas da profissão usam a camada vanilla do aldeão e o quadro é um diálogo do servidor.
+// 0.4.0: primeiro código de cliente (balões de emoção e falas por cima dos aldeões); o resto continua no servidor.
 loom {
+	splitEnvironmentSourceSets()
+
 	mods {
 		"tvilas" {
 			sourceSet sourceSets.main
+			sourceSet sourceSets.client
 		}
 		"tvilas-gametest" {
 			sourceSet sourceSets.gametest
@@ -41,8 +44,20 @@ loom {
 	}
 }
 
+// testes de cliente: precisam das classes do cliente
+sourceSets.gametest {
+	compileClasspath += sourceSets.client.compileClasspath + sourceSets.client.output
+	runtimeClasspath += sourceSets.client.runtimeClasspath + sourceSets.client.output
+}
+
 /** O jar atual de um mod irmão (versão do gradle.properties dele); se ainda não foi construído, o mais recente em build/libs. */
 def siblingJar(String dir, String name) {
+	// 0.4.0: -Ppublished usa os jars publicados para os amigos (~/Downloads/Mods_Tcordeiro_MC26.3), os do jogo do Talys
+	if (project.hasProperty('published')) {
+		def pub = file("${System.getProperty('user.home')}/Downloads/Mods_Tcordeiro_MC26.3")
+		def j = (pub.listFiles() ?: [] as File[]).findAll { it.name ==~ /${name}-[0-9.]+\.jar/ }.max { it.lastModified() }
+		return files(j ?: [])
+	}
 	def props = new Properties()
 	def propsFile = file("${rootDir}/../${dir}/gradle.properties")
 	if (propsFile.exists()) propsFile.withInputStream { props.load(it) }
@@ -73,6 +88,7 @@ dependencies {
 		gametestRuntimeOnly siblingJar("tcordeiro-industrial", "tcordeiro-industrial") // 0.11+: postes e fio aéreo
 		gametestRuntimeOnly siblingJar("tcordeiro-forja", "tcordeiro-forja")
 		gametestRuntimeOnly siblingJar("tcordeiro-moveis", "tcordeiro-moveis")
+		gametestRuntimeOnly siblingJar("tcordeiro-clima", "tcordeiro-clima") // 0.4.0: frio → lareira (ClimaApi por reflexão)
 	}
 
 	// Lógica pura (níveis, preços, lotes, alarme, missões): JUnit, sem servidor.

@@ -48,6 +48,14 @@ public final class VilaCommand {
 								.executes(c -> request(c, true))))
 						.then(Commands.literal("trocar").then(Commands.argument("aldeao", StringArgumentType.word())
 								.executes(c -> request(c, false)))))
+				// 0.4.0: os botões do menu do morador (Shift+clique) e a reunião na Praça
+				.then(Commands.literal("morador").then(Commands.argument("aldeao", StringArgumentType.word())
+						.then(Commands.literal("trocar").executes(c -> resident(c, "trocar", null)))
+						.then(Commands.literal("conversar").executes(c -> resident(c, "conversar", null)))
+						.then(Commands.literal("pedido").executes(c -> resident(c, "pedido", null)))
+						.then(Commands.literal("caminho").then(Commands.argument("sitio", StringArgumentType.word())
+								.executes(c -> resident(c, "caminho", StringArgumentType.getString(c, "sitio")))))))
+				.then(Commands.literal("reuniao").executes(VilaCommand::meeting))
 				.then(Commands.literal("terreno")
 						.then(Commands.literal("comprar").executes(c -> result(c, VillageManager.buyLot(c.getSource().getPlayerOrException()))))
 						.then(Commands.literal("info").executes(VilaCommand::lotInfo))
@@ -87,6 +95,26 @@ public final class VilaCommand {
 		var r = deliver ? com.tcordeiro.vilas.village.VillagerRequests.deliver(p, id) : com.tcordeiro.vilas.village.VillagerRequests.trade(p, id);
 		if (!deliver && r.ok()) return 1; // abriu as trocas: sem mensagem
 		return result(c, r);
+	}
+
+	private static int resident(CommandContext<CommandSourceStack> c, String what, String arg) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		java.util.UUID id;
+		try {
+			id = java.util.UUID.fromString(StringArgumentType.getString(c, "aldeao"));
+		} catch (IllegalArgumentException e) {
+			return result(c, VillageManager.Result.fail("tvilas.request.none"));
+		}
+		var r = com.tcordeiro.vilas.life.Resident.command(p, id, what, arg);
+		if (r.ok() && r.message().getString().isEmpty()) return 1;
+		return result(c, r);
+	}
+
+	private static int meeting(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, com.tcordeiro.vilas.life.Life.callMeeting(p, v));
 	}
 
 	private static Village here(ServerPlayer p) {

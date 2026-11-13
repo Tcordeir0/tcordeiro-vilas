@@ -91,6 +91,14 @@ public final class TownDialog {
 			body.add(new PlainMessage(Component.translatable("tvilas.dialog.requests", civic.batch.requests.size()).withStyle(ChatFormatting.GRAY), 300));
 		body.add(new PlainMessage(Component.translatable("tvilas.dialog.mission_fund", VillageManager.money(civic.missionFund),
 				VillageManager.money(cfg3.mission_fund_cap_cents)).withStyle(ChatFormatting.GRAY), 300));
+		// 0.4.0: o que a vila acha de ti, a festa e os guardas
+		int tier = com.tcordeiro.vilas.logic.LifeRules.villageTier(v.reputationOf(p.getUUID()));
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.rep_tier", Component.translatable(com.tcordeiro.vilas.logic.LifeRules.TIER_KEYS[tier])), 300));
+		var life = civic.life;
+		if (life.festa.day >= 0) body.add(new PlainMessage(Component.translatable("tvilas.dialog.festa", life.festa.day,
+				Component.translatable("tvilas.festa." + life.festa.reason)).withStyle(ChatFormatting.LIGHT_PURPLE), 300));
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.guards", life.guards.size(),
+				com.tcordeiro.vilas.logic.LifeRules.guardPosts(v.level), VillageManager.money(com.tcordeiro.vilas.life.Care.wage())).withStyle(ChatFormatting.GRAY), 300));
 		if (civic.mayorTaken) body.add(new PlainMessage(Component.translatable("tvilas.dialog.mayor_taken").withStyle(ChatFormatting.RED), 300));
 		List<ActionButton> buttons = new ArrayList<>();
 		for (int i = 0; i < v.missions.size(); i++) {
@@ -113,6 +121,8 @@ public final class TownDialog {
 			buttons.add(button(Component.translatable("tvilas.dialog.wall_cancel"), "/vila muralha cancelar"));
 		else if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_CANCELLED)
 			buttons.add(button(Component.translatable("tvilas.dialog.wall_resume"), "/vila muralha retomar"));
+		if (com.tcordeiro.vilas.VilasConfig.get().villager_life && life.meetingDay != com.tcordeiro.vilas.village.VillageEconomy.day(level))
+			buttons.add(button(Component.translatable("tvilas.dialog.meeting"), "/vila reuniao"));
 		Lot here = VillageManager.lotAt(level, p.getBlockX(), p.getBlockZ());
 		if (here == null) {
 			buttons.add(button(Component.translatable("tvilas.dialog.buy", VillageManager.price(VillageManager.lotPrice(v, p.getUUID()))), "/vila terreno comprar"));

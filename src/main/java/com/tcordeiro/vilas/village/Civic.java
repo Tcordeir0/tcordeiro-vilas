@@ -58,8 +58,9 @@ public final class Civic {
 			UUIDUtil.STRING_CODEC.optionalFieldOf("owner").forGetter(c -> java.util.Optional.ofNullable(c.owner)),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.string(0, 32)).optionalFieldOf("friends", Map.of()).forGetter(c -> c.friends),
 			Codec.intRange(0, 1_000_000).optionalFieldOf("prestige", 0).forGetter(c -> c.prestige),
-			Meta.CODEC.optionalFieldOf("meta").forGetter(c -> java.util.Optional.of(c.meta)))
-			.apply(i, (m, t, b, s, bu, md, pt, dt, ms, rt, mf, ow, fr, pr, me) -> {
+			Meta.CODEC.optionalFieldOf("meta").forGetter(c -> java.util.Optional.of(c.meta)),
+			com.tcordeiro.vilas.life.LifeData.CODEC.optionalFieldOf("life").forGetter(c -> java.util.Optional.of(c.life)))
+			.apply(i, (m, t, b, s, bu, md, pt, dt, ms, rt, mf, ow, fr, pr, me, li) -> {
 				Civic c = new Civic();
 				c.mayor = m.orElse(null);
 				c.mayorTaken = t;
@@ -76,6 +77,7 @@ public final class Civic {
 				c.friends.putAll(fr);
 				c.prestige = pr;
 				c.meta = me.orElseGet(Meta::new);
+				c.life = li.orElseGet(com.tcordeiro.vilas.life.LifeData::new);
 				return c;
 			}));
 
@@ -125,6 +127,9 @@ public final class Civic {
 	}
 
 	public Meta meta = new Meta();
+
+	/** 0.4.0: a vida dos aldeões (factos, opiniões, presentes, aprendizes, festa, guardas, sino). */
+	public com.tcordeiro.vilas.life.LifeData life = new com.tcordeiro.vilas.life.LifeData();
 
 	/** 0.3.0: prestígio das missões concluídas (a cada {@code prestige_per_resident} chega um morador). */
 	public int prestige;

@@ -207,7 +207,91 @@
             "raw": "§lPrefeito levado§r\n\nSe alguém levar o Prefeito embora, clique na Mesa: se ele estiver num lugar carregado, volta para a Prefeitura.\n\nSumido há 3 dias, chega um novo e o antigo deixa de ser Prefeito."
           },
           {
-            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"
+            "raw": "§lAldeões vivos§r\n\nNa vila com Prefeitura, os aldeões têm rotina: trabalham, conversam, vão à Praça e à Taverna, fogem do perigo e dormem cada um à sua hora.\n\nLonge de você, voltam ao jeito do jogo."
+          },
+          {
+            "raw": "§lBalões§r\n\nPor cima da cabeça aparecem balões: coração, «!», «?», gota de chuva, floco de neve, nota musical, «Zz» e falas curtas.\n\nSó se veem de perto."
+          },
+          {
+            "raw": "§lFim de tarde§r\n\nA partir das 16 h os aldeões vão para a Praça ou para a Taverna. Sentam nas cadeiras e bancos e conversam.\n\nDepois das 18 h vão deitando aos poucos, cada um à sua hora."
+          },
+          {
+            "raw": "§lSentar§r\n\nCom o mod Móveis eles sentam nas cadeiras, bancos e sofás. Sem ele, sentam nos degraus de escada.\n\nDois não sentam no mesmo lugar, e se você já estiver sentado eles procuram outro."
+          },
+          {
+            "raw": "§lCama de casal§r\n\nQuem não tem cama dorme na cama de casal da Taverna (mod Móveis): um de cada lado.\n\nDe manhã cedo acordam e voltam ao trabalho."
+          },
+          {
+            "raw": "§lChuva e frio§r\n\nQuando chove, quem está na rua corre para a Taverna (ou a Prefeitura).\n\nCom o mod Clima, abaixo de 5 °C vão para perto de uma lareira ou fogueira acesa. Sem o Clima, só nos biomas de neve."
+          },
+          {
+            "raw": "§lPortas§r\n\nOs aldeões abrem as portas de madeira do caminho e fecham quando ninguém mais vai passar.\n\nSe ficam presos, refazem o caminho; se dois se encontram numa porta, um espera o outro."
+          },
+          {
+            "raw": "§lConversas§r\n\nQuando dois aldeões se encontram, param e conversam. Falam do que aconteceu na vila: imposto, obras, o Mercador, festas.\n\nQuem ouve fica sabendo e conta para outros."
+          },
+          {
+            "raw": "§lFofoca§r\n\nEles também falam de você: missões feitas, pedidos entregues, presentes, terrenos comprados.\n\nE se você bater num aldeão, a vila inteira acaba sabendo."
+          },
+          {
+            "raw": "§lMenu do morador§r\n\nShift+clique com a mão vazia num aldeão abre o menu: Trocar, Conversar, Onde fica…? e o pedido «!», se houver.\n\nO clique normal continua abrindo as trocas."
+          },
+          {
+            "raw": "§lO que pensam§r\n\nCada aldeão te vê como Desconfiado, Neutro, Simpático ou Amigo. O menu mostra.\n\nO quadro do Prefeito mostra o que a vila inteira acha de você."
+          },
+          {
+            "raw": "§lPresentes§r\n\nShift+clique com um item na mão dá um presente. Cada profissão tem gostos: o bibliotecário adora livros, o ferreiro, lingotes, a florista, flores.\n\nDois presentes por aldeão por semana."
+          },
+          {
+            "raw": "§lGostou ou não?§r\n\nAdorou: coração e mais reputação. Gostou: um pouco. Detestou (carne podre, olho de aranha…): balança a cabeça e devolve, sem castigo.\n\nA reputação dos presentes tem limite por dia."
+          },
+          {
+            "raw": "§lPresente de volta§r\n\nUm aldeão que é seu Amigo, de vez em quando, joga um presente da profissão para você (no máximo um por semana).\n\nNunca é dinheiro."
+          },
+          {
+            "raw": "§lOnde fica?§r\n\nNo menu, «Onde fica…?» faz o aldeão se virar para a Prefeitura, o Mercado, a Taverna ou a Praça e dizer a distância e o rumo.\n\nUm rastro de luz, só para você, mostra o caminho."
+          },
+          {
+            "raw": "§lTrabalho à vista§r\n\nNa bancada os aldeões seguram a ferramenta da profissão e soltam faíscas, fumaça ou brilhos: o ferreiro martela, o bibliotecário lê, o padeiro tira pão do forno."
+          },
+          {
+            "raw": "§lLanterna à noite§r\n\nQuem anda na rua de noite leva uma lanterna na mão.\n\nAo entrar ou ao amanhecer, guarda a lanterna. Ela nunca cai no chão."
+          },
+          {
+            "raw": "§lArmas à vista§r\n\nChegue perto com uma espada ou um machado e os aldeões recuam e olham desconfiados («?»).\n\nCom armadura de ferro ou melhor, quem gosta de você acena: «Um guarda!»"
+          },
+          {
+            "raw": "§lPânico§r\n\nSe um monstro ataca um aldeão, ele grita «!» e os vizinhos até 15 blocos correm para o golem ou guarda mais perto, ou para um jogador amigo."
+          },
+          {
+            "raw": "§lGuardas§r\n\nOs golens da vila ficam em postos fixos: a Praça, os postes de luz e os cantos da muralha. Não andam patrulhando: voltam ao posto depois de lutar.\n\nAldeia 1 posto, Vila 2, Cidade 4."
+          },
+          {
+            "raw": "§lSalários§r\n\nCada guarda ganha 3 CB por dia, pagos pela tesouraria. Se a tesouraria não tiver dinheiro, o posto fica vazio.\n\nO quadro mostra quantos guardas há."
+          },
+          {
+            "raw": "§lCurandeiros§r\n\nO clérigo vai até quem está ferido e dá regeneração, 3 vezes por dia.\n\nO armeiro, o ferramenteiro e o armeiro de armas consertam golens machucados, 3 vezes por dia cada um."
+          },
+          {
+            "raw": "§lFesta na Praça§r\n\nQuando a vila sobe de nível, ou na véspera do Mercador, o Prefeito avisa: amanhã tem festa!\n\nDas 12 h às 17 h todos vão para a Praça: pulam, cantam e soltam fogos."
+          },
+          {
+            "raw": "§lDesconto da festa§r\n\nNa festa, a tesouraria devolve 10% do que você paga aos aldeões.\n\nAté 20 CB por jogador e 100 CB por festa, e só se a tesouraria tiver."
+          },
+          {
+            "raw": "§lAprendizes§r\n\nAs crianças escolhem um mestre e, de dia, andam atrás dele no trabalho.\n\nQuando crescem, ficam com a profissão do mestre."
+          },
+          {
+            "raw": "§lO sino§r\n\nO sino da Prefeitura toca às 8 h, às 12 h e às 18 h, só o som: ninguém se esconde.\n\nNo quadro, «Convocar reunião» chama os aldeões à Praça e o Prefeito conta as novidades (uma vez por dia)."
+          },
+          {
+            "raw": "§lBoas-vindas§r\n\nFicou 3 dias fora? Um aldeão que gosta de você vem até você: «Bem-vindo de volta!»"
+          },
+          {
+            "raw": "§lLonge e perto§r\n\nPara não pesar no jogo, tudo isso só acontece perto de jogadores: completo até 48 blocos, só o essencial até 96, e nada mais longe.\n\nNuma invasão, eles se escondem como no jogo."
+          },
+          {
+            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"
           },
           {
             "raw": "§lE o resto?§r\n\nTudo o resto está no separador Guias do Receitário (botão no inventário): a receita de cada bloco, uma por página, e as páginas dos mods que estão instalados."

@@ -27,6 +27,7 @@ public final class VillageNews {
 		MutableComponent msg = line(icon, key, args);
 		List<ServerPlayer> to = VillageManager.playersIn(level, v);
 		for (ServerPlayer p : to) p.sendSystemMessage(msg);
+		com.tcordeiro.vilas.life.Talk.news(level, v, key, args); // 0.4.0: os aldeões falam das novidades
 		return msg;
 	}
 

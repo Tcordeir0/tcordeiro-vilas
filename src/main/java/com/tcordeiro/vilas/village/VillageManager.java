@@ -150,6 +150,7 @@ public final class VillageManager {
 		if (up) {
 			v.level = next;
 			broadcast(level, v, Component.translatable("tvilas.level.up", Component.translatable(VillageRules.levelKey(next))));
+			com.tcordeiro.vilas.life.Life.levelUp(level, v); // 0.4.0: festa amanhã
 		}
 		data(level).changed();
 		return up;
@@ -311,6 +312,7 @@ public final class VillageManager {
 		Lot lot = new Lot(UUID.randomUUID(), v.id, area, p.getUUID(), p.getGameProfile().name(), new HashSet<>());
 		data(level).lots.add(lot);
 		data(level).changed();
+		com.tcordeiro.vilas.life.Talk.fact(level, v, p.blockPosition(), "lot", p.getGameProfile().name()); // 0.4.0
 		return Result.ok("tvilas.lot.bought", price(price), area.minX(), area.minZ(), area.maxX(), area.maxZ());
 	}
 
@@ -497,6 +499,7 @@ public final class VillageManager {
 		pay(p, m);
 		addReputation(p.level(), v, p, m.reputation());
 		missionDone(p.level(), v);
+		com.tcordeiro.vilas.life.Talk.fact(p.level(), v, p.blockPosition(), "mission", p.getGameProfile().name()); // 0.4.0: fofoca
 		v.forget(p.getUUID(), m); // 0.3.0: a missão fica no quadro até ao lote seguinte (os outros jogadores ainda a podem fazer)
 		data(p.level()).changed();
 		updateLevel(p.level(), v);

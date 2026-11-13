@@ -56,6 +56,10 @@ public final class VilasConfig {
 	public int population_cap = com.tcordeiro.vilas.logic.GrowthRules.DEFAULT_CAP;
 	public long mission_fund_daily_cents = com.tcordeiro.vilas.logic.FundRules.DAILY_CENTS;
 	public long mission_fund_cap_cents = com.tcordeiro.vilas.logic.FundRules.CAP_CENTS;
+	/** 0.4.0: a vida dos aldeões no território (rotina, conversas, festa, menu do morador…); false desliga tudo. */
+	public boolean villager_life = true;
+	/** 0.4.0: salário diário de cada guarda (cêntimos), pago pela tesouraria. */
+	public long guard_wage_cents = com.tcordeiro.vilas.logic.LifeRules.GUARD_WAGE_CENTS;
 
 	private static VilasConfig current = new VilasConfig();
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

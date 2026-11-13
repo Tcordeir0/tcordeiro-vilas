@@ -122,6 +122,7 @@ public final class VillageEconomy {
 		int emeralds = com.tcordeiro.vilas.economy.CoinTrades.emeraldsTraded(offer);
 		long tax = TreasuryRules.tradeTax(emeralds * VilasConfig.get().emerald_value_cents, taxRate(v).percent());
 		charge(level, v, p.getUUID(), tax);
+		com.tcordeiro.vilas.life.Festa.onTrade(p, v, offer); // 0.4.0: reembolso da festa (da tesouraria)
 	}
 
 	/** Venda entre jogadores (CubCoin) no território: 2 % do preço, pago pelo vendedor (que acabou de receber). */
@@ -316,6 +317,7 @@ public final class VillageEconomy {
 		commissionWall(level, v);
 		com.tcordeiro.vilas.build.CivicWork.commissionNext(level, v); // 0.3.0: Prefeitura/Mercado/Taverna/Praça que faltam
 		Growth.step(level, v); // 0.3.0: o prestígio das missões traz moradores (ou encomenda uma casa)
+		com.tcordeiro.vilas.life.Life.daily(level, v, day); // 0.4.0: guardas (salário), festa na véspera do Mercador
 
 		int pop = VillageManager.countPopulation(level, v);
 		int beds = bedsNear(level, v);

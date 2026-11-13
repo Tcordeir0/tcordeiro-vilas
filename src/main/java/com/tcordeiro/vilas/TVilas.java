@@ -35,6 +35,7 @@ public class TVilas implements ModInitializer {
 		VilasProfessions.init();
 		LotProtection.init();
 		MissionEvents.init();
+		com.tcordeiro.vilas.life.LifeEvents.init(); // 0.4.0: depois dos cliques do Prefeito e dos pedidos
 		VilaCommand.init();
 		VillagePoolInjector.init();
 	}

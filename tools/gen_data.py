@@ -527,7 +527,8 @@ def gen_lang_names():
          "%s · população %s · reputação da povoação %s (tua: %s) · terrenos %s/%s · Mesa em %s %s %s",
          "%s · population %s · village reputation %s (yours: %s) · lots %s/%s · Desk at %s %s %s"),
     ]
-    T += T_020 + T_030
+    from life_040 import T_040
+    T += T_020 + T_030 + T_040
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
@@ -920,10 +921,15 @@ GUIDE = [
       ("Presidente levado", "Se alguém levar o Presidente embora, clica na Mesa: se ele estiver num sítio carregado, volta à Câmara.\n\nSumido há 3 dias, chega um novo e o antigo deixa de ser Presidente."),
       ("Mayor taken", "If someone carries the Mayor away, click the Desk: if he is somewhere loaded, he comes back to the Town Hall.\n\nGone for 3 days, a new one comes and the old one stops being Mayor.")),
     P("commands", None,
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"),
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"),
-      ("Commands", "/vila opens the board\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar")),
+      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"),
+      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"),
+      ("Commands", "/vila opens the board\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao")),
 ]
+
+
+import life_040 as _life  # noqa: E402  (0.4.0: aldeões vivos)
+
+GUIDE[-1:-1] = _life.pages(P)
 
 
 def _grid(r):

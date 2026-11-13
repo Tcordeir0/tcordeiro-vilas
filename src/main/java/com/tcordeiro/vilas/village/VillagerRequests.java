@@ -89,7 +89,7 @@ public final class VillagerRequests {
 		VillageManager.fillMissions(level, v);
 	}
 
-	static String profession(Villager e) {
+	public static String profession(Villager e) {
 		return e.getVillagerData().profession().unwrapKey().map(k -> k.identifier().getPath()).orElse("none");
 	}
 
@@ -224,6 +224,7 @@ public final class VillagerRequests {
 		VillageManager.pay(p, m);
 		VillageManager.addReputation(level, v, p, m.reputation());
 		VillageManager.missionDone(level, v);
+		com.tcordeiro.vilas.life.Talk.fact(level, v, vi.blockPosition(), "request", p.getGameProfile().name(), profession(vi)); // 0.4.0: fofoca
 		showNames(level, v);
 		VillageData.get(level).changed();
 		return VillageManager.Result.ok("tvilas.mission.paid", VillageManager.reward(m.emeralds()), m.reputation());
