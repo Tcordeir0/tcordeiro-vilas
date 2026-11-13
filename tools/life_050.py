@@ -237,8 +237,4 @@ def pages(P):
           ("Gestos", "Com o Entity Model Features, os aldeões acenam, dizem sim e não, apontam, batem palmas, martelam, comem e festejam.\n\nO Fresh Animations continua a animá-los."),
           ("Gestos", "Com o Entity Model Features, os aldeões acenam, dizem sim e não, apontam, batem palmas, martelam, comem e festejam.\n\nO Fresh Animations continua a animá-los."),
           ("Gestures", "With Entity Model Features, villagers wave, nod, shake their head, point, clap, hammer, eat and cheer.\n\nFresh Animations keeps animating them.")),
-        P("gestures_pack", None,
-          ("Pacote dos gestos", "Ponha o pacote tvilas_animacoes na pasta resourcepacks e ative-o ACIMA do Fresh Animations.\n\nSem ele, o mod faz os gestos sozinho."),
-          ("Pacote dos gestos", "Põe o pacote tvilas_animacoes na pasta resourcepacks e ativa-o ACIMA do Fresh Animations.\n\nSem ele, o mod faz os gestos sozinho."),
-          ("Gesture pack", "Put the tvilas_animacoes pack in resourcepacks and enable it ABOVE Fresh Animations.\n\nWithout it, the mod does the gestures by itself.")),
     ]

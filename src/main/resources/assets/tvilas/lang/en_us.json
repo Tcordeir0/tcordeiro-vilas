@@ -95,8 +95,6 @@
   "guide.tvilas.furniture.title": "With Móveis",
   "guide.tvilas.gestures.text": "With Entity Model Features, villagers wave, nod, shake their head, point, clap, hammer, eat and cheer.\n\nFresh Animations keeps animating them.",
   "guide.tvilas.gestures.title": "Gestures",
-  "guide.tvilas.gestures_pack.text": "Put the tvilas_animacoes pack in resourcepacks and enable it ABOVE Fresh Animations.\n\nWithout it, the mod does the gestures by itself.",
-  "guide.tvilas.gestures_pack.title": "Gesture pack",
   "guide.tvilas.gifts.text": "Shift+click with an item in hand to give a gift. Each job has tastes: librarians love books, smiths love ingots, florists love flowers.\n\nTwo gifts per villager per week.",
   "guide.tvilas.gifts.title": "Gifts",
   "guide.tvilas.gifts_more.text": "Loved: a heart and more reputation. Liked: a little. Hated (rotten flesh, spider eye…): shakes the head and gives it back, no penalty.\n\nGift reputation has a daily limit.",

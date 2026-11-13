@@ -100,9 +100,10 @@ class TownRulesTest {
 		assertEquals(0.5f, GestureRules.progress(100, 120, 110), 1e-6);
 		assertEquals(0f, GestureRules.progress(100, 100, 100));
 		for (int c = 0; c <= 6; c++) for (float v : GestureRules.deltas(c, 0f)) assertEquals(0f, v, "nada antes do gesto");
-		assertTrue(GestureRules.deltas(1, 0.5f)[GestureRules.ARMS_X] < -1f, "acenar levanta os braços");
+		assertTrue(GestureRules.deltas(1, 0.5f)[GestureRules.ARMS_X] < -2f, "acenar levanta os braços acima da cabeça");
+		assertTrue(GestureRules.deltas(2, 0.25f)[GestureRules.JUMP] < -3f, "festejar dá um saltinho");
 		assertTrue(Math.abs(GestureRules.deltas(5, 0.125f)[GestureRules.HEAD_Y]) > 0.3f, "«não» vira a cabeça");
 		for (float v : GestureRules.deltas(0, 0.5f)) assertEquals(0f, v, "código 0: nada");
-		for (int c = 1; c <= 9; c++) for (float v : GestureRules.deltas(c, 0.5f)) assertTrue(Math.abs(v) <= 3.0f, "pequeno: não desmonta o modelo");
+		for (int c = 1; c <= 9; c++) for (float v : GestureRules.deltas(c, 0.5f)) assertTrue(Math.abs(v) <= 4.0f, "não desmonta o modelo");
 	}
 }

@@ -14,9 +14,12 @@ martelar, comer, festejar e encolher os ombros.
 - **Sem o pacote**, o mod faz os mesmos gestos sozinho: um gancho no fim da animação do EMF soma um pouco à cabeça e aos braços
   (o FA continua a animar). Volta a ver se o pacote está ativo em cada recarga dos pacotes de recursos (ouvinte de recarga).
   Sem o EMF, nada disto carrega e nada se parte.
+- Gestos bem visíveis: acenar com os braços acima da cabeça a balançar 3 vezes, festejar com saltinhos e braços no ar, bater
+  palmas a abrir e fechar os braços, martelar com 3 golpes, encolher os ombros, sim/não com a cabeça; rx negativo levanta os braços
+  e ty negativo sobe (confirmado no jogo).
 - Onde aparecem: palmas na festa, martelar no trabalho dos ferreiros/pedreiro/marceneiro/mecânico, comer na Taverna ao fim da
   tarde, acenar nas boas-vindas e à armadura, encolher os ombros perante uma arma, apontar ao pedir caminho, sim/não nas conversas.
-- Guia: «Gestos» e «Pacote dos gestos» (111 páginas no separador Guias).
+- Guia: a página «Gestos» explica o que os aldeões fazem (110 páginas no separador Guias).
 
 
 ## 0.5.0 — 13/11/2026

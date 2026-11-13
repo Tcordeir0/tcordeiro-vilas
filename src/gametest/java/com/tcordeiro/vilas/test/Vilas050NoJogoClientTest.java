@@ -886,48 +886,57 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 				String[][] gestures = {{"1", "acenar"}, {"4", "sim"}, {"5", "nao"}, {"6", "apontar"}, {"7", "bater_palmas"}, {"8", "martelar"}, {"9", "comer"},
 						{"2", "festejar"}, {"3", "encolher_os_ombros"}};
 				String[] labels = {"", "acenar", "festejar", "encolher os ombros", "sim", "não", "apontar", "bater palmas", "martelar", "comer"};
-				Runnable face = () -> sp.getServer().runOnServer(s -> {
+				java.util.function.IntConsumer face = off -> sp.getServer().runOnServer(s -> {
 					var e = (Villager) s.overworld().getEntity(eid);
 					var pl = player(s);
-					float yaw = (float) Math.toDegrees(Math.atan2(-(pl.getX() - e.getX()), pl.getZ() - e.getZ())) + 40; // de 3/4: vê-se o braço a subir
+					float yaw = (float) Math.toDegrees(Math.atan2(-(pl.getX() - e.getX()), pl.getZ() - e.getZ())) + off; // 0 = de frente, 40 = três quartos
 					e.setYRot(yaw);
 					e.setYBodyRot(yaw);
 					e.setYHeadRot(yaw);
 				});
-				camAround(ctx, c.add(0, 1.2, 0), 3.4, 0.5, 20);
-				face.run();
-				ctx.waitTicks(10);
+				look(ctx, c.add(0, 1.6, -3.2), c.add(0, 1.15, 0), 20); // 3,2 blocos de frente, à altura dos olhos: o aldeão ocupa ~1/3 do ecrã
 				log("gestos: câmara a " + sp.getServer().computeOnServer(s -> String.format("%.1f", player(s).distanceTo(s.overworld().getEntity(eid)))) + " blocos");
 				for (String[] g : gestures) {
 					int code = Integer.parseInt(g[0]);
-					com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring = Float.MAX_VALUE;
-					com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside = Float.MAX_VALUE;
-					film(ctx, "gestos_" + g[1], 110, i -> {
-						if (i == 10 || i == 60) sp.getServer().runOnServer(s -> {
-							var e = s.overworld().getEntity(eid);
-							com.tcordeiro.vilas.life.Balloons.gesture(e, code, 40);
-							com.tcordeiro.vilas.life.Balloons.say(e, null, net.minecraft.network.chat.Component.literal(labels[code]), 40);
+					for (int angle : new int[] {0, 40}) {
+						face.accept(angle);
+						ctx.waitTicks(5);
+						com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring = com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside = Float.MAX_VALUE;
+						com.tcordeiro.vilas.client.EmfGestureHook.minArmsYDuring = com.tcordeiro.vilas.client.EmfGestureHook.minArmsYOutside = Float.MAX_VALUE;
+						String dir = "gestos_" + g[1] + (angle == 0 ? "_frente" : "_tres_quartos");
+						long[] start = {0};
+						film(ctx, dir, 90, i -> {
+							if (i == 15) start[0] = sp.getServer().computeOnServer(s -> {
+								var e = s.overworld().getEntity(eid);
+								com.tcordeiro.vilas.life.Balloons.gesture(e, code, 70);
+								com.tcordeiro.vilas.life.Balloons.say(e, null, net.minecraft.network.chat.Component.literal(labels[code]), 70);
+								return s.overworld().getGameTime();
+							});
 						});
-						if (i == 30) shot(ctx, "gestos_" + g[1]);
-					});
-					log("gestos (pacote) " + g[1] + ": braços durante " + com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring + " fora "
-							+ com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside + " · pacote ativo "
-							+ ctx.computeOnClient(mc -> com.tcordeiro.vilas.client.EmfGestureHook.packActiveForTest()));
+						try { // o tick em que o gesto começou (para tirar os quadros «antes | durante»)
+							java.nio.file.Files.writeString(Path.of("video", dir, "gesto.txt"), start[0] + " 70\n");
+						} catch (java.io.IOException e) {
+							throw new RuntimeException(e);
+						}
+						log("gestos (pacote) " + dir + ": braços rx durante " + com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring + " fora "
+								+ com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside + " · y durante " + com.tcordeiro.vilas.client.EmfGestureHook.minArmsYDuring + " fora "
+								+ com.tcordeiro.vilas.client.EmfGestureHook.minArmsYOutside);
+					}
 				}
 				// só o FA (sem o nosso pacote): o gancho do mod faz o gesto por cima
 				log("gestos: só o FA " + packs(ctx, fa).replaceAll("^.*?file/", "file/"));
-				face.run();
+				face.accept(40);
 				int before = com.tcordeiro.vilas.client.GestureClient.applied;
-				film(ctx, "gestos_so_com_o_fa_gancho_do_mod", 110, i -> {
-					if (i == 10 || i == 60) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 40));
+				film(ctx, "gestos_so_com_o_fa_gancho_do_mod", 90, i -> {
+					if (i == 15) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 70));
 				});
 				log("gestos (só FA): gancho aplicado " + (com.tcordeiro.vilas.client.GestureClient.applied - before) + " vezes · pacote ativo "
 						+ ctx.computeOnClient(mc -> com.tcordeiro.vilas.client.EmfGestureHook.packActiveForTest()));
 				// sem pacotes nenhuns: nada se parte
 				log("gestos: sem pacotes " + packs(ctx).replaceAll("^.*?tvilas", "tvilas"));
-				face.run();
-				film(ctx, "gestos_sem_pacotes_nada_parte", 110, i -> {
-					if (i == 10 || i == 60) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 40));
+				face.accept(40);
+				film(ctx, "gestos_sem_pacotes_nada_parte", 90, i -> {
+					if (i == 15) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 70));
 				});
 				log("gestos (sem pacotes): sem erros; gancho aplicado no total " + com.tcordeiro.vilas.client.GestureClient.applied);
 			}

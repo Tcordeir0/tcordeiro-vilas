@@ -20,7 +20,7 @@ public final class EmfGestureHook extends EMFAnimationApi.EMFAnimationHook {
 	public static int calls, noEntity, noGesture, noParts;
 	private static volatile boolean packActive;
 	/** Para o teste no jogo: com o pacote ativo, os valores dos braços/cabeça vistos durante e fora dos gestos (prova de que o EMF os lê). */
-	public static float minArmsDuring = Float.MAX_VALUE, minArmsOutside = Float.MAX_VALUE;
+	public static float minArmsDuring = Float.MAX_VALUE, minArmsOutside = Float.MAX_VALUE, minArmsYDuring = Float.MAX_VALUE, minArmsYOutside = Float.MAX_VALUE;
 
 	/**
 	 * Chamado em cada recarga dos pacotes de recursos (ouvinte registado pelo {@link GestureClient}): o pacote «tvilas_animacoes»
@@ -39,7 +39,7 @@ public final class EmfGestureHook extends EMFAnimationApi.EMFAnimationHook {
 			}
 		}
 		packActive = found;
-		minArmsDuring = minArmsOutside = Float.MAX_VALUE;
+		minArmsDuring = minArmsOutside = minArmsYDuring = minArmsYOutside = Float.MAX_VALUE;
 		com.tcordeiro.vilas.TVilas.LOGGER.info("Vilas: pacote de gestos {}", found ? "ATIVO (o pacote anima; o gancho fica de lado)" : "ausente (o gancho anima)");
 	}
 
@@ -78,9 +78,14 @@ public final class EmfGestureHook extends EMFAnimationApi.EMFAnimationHook {
 			}
 			if (packActive()) { // o pacote anima: só se observa (o teste compara os braços durante e fora do gesto)
 				if (id != null && GestureClient.ACTIVE.containsKey(id)) {
-					float ax = r.getChild("arms").xRot;
-					if (code > 0) minArmsDuring = Math.min(minArmsDuring, ax);
-					else minArmsOutside = Math.min(minArmsOutside, ax);
+					float ax = r.getChild("arms").xRot, ay = r.getChild("arms").y;
+					if (code > 0) {
+						minArmsDuring = Math.min(minArmsDuring, ax);
+						minArmsYDuring = Math.min(minArmsYDuring, ay);
+					} else {
+						minArmsOutside = Math.min(minArmsOutside, ax);
+						minArmsYOutside = Math.min(minArmsYOutside, ay);
+					}
 				}
 				return;
 			}
@@ -96,6 +101,10 @@ public final class EmfGestureHook extends EMFAnimationApi.EMFAnimationHook {
 			arms.xRot += d[GestureRules.ARMS_X];
 			arms.zRot += d[GestureRules.ARMS_Z];
 			arms.y += d[GestureRules.ARMS_Y];
+			arms.xScale += d[GestureRules.ARMS_SX];
+			float jump = d[GestureRules.JUMP];
+			if (jump != 0) for (String part : new String[] {"head", "body", "arms", "right_leg", "left_leg"})
+				if (r.hasChild(part)) r.getChild(part).y += jump;
 			GestureClient.applied++;
 		} catch (ReflectiveOperationException | RuntimeException e) {
 			// um modelo de aldeão sem estas peças (outro pacote): fica como está
