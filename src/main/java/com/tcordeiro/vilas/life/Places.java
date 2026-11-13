@@ -101,11 +101,12 @@ public final class Places {
 		spots.clear();
 		bells.clear();
 		for (Civic.Box b : v.civic.boxes) {
-			if (b.kind().equals(Civic.DESK) && !v.civic.boxes.stream().anyMatch(o -> o.kind().equals("plaza"))) {
+			if (b.kind().equals(Civic.DESK) && v.civic.boxes.stream().noneMatch(o -> "plaza".equals(building(o.kind())))) {
 				spots.put(Civic.DESK, scan(level, b.kind(), b.area(), v.center.getY()));
 				continue;
 			}
-			if (Civic.BUILDINGS.contains(b.kind())) spots.put(b.kind(), scan(level, b.kind(), b.area(), v.center.getY()));
+			String k = building(b.kind());
+			if (k != null && !spots.containsKey(k)) spots.put(k, scan(level, k, b.area(), v.center.getY()));
 		}
 		if (plaza() == null) { // sem área cívica conhecida: a praça da Mesa
 			LotRules.Area a = new LotRules.Area(v.center.getX() - 6, v.center.getZ() - 6, v.center.getX() + 6, v.center.getZ() + 6);
@@ -113,6 +114,12 @@ public final class Places {
 		}
 		for (BlockPos p : BlockPos.betweenClosed(v.center.offset(-12, -4, -12), v.center.offset(12, 6, 12)))
 			if (level.isLoaded(p) && level.getBlockState(p).getBlock() instanceof BellBlock) bells.add(p.immutable());
+	}
+
+	/** O edifício de uma área cívica: as áreas chamam-se «tavern_0», «plaza_built»… (ou só «tavern» nos testes). */
+	public static String building(String kind) {
+		for (String k : Civic.BUILDINGS) if (kind.equals(k) || kind.startsWith(k + "_")) return k;
+		return null;
 	}
 
 	static Spot scan(ServerLevel level, String kind, LotRules.Area a, int refY) {

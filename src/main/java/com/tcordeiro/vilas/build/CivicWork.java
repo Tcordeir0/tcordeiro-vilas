@@ -194,6 +194,10 @@ public final class CivicWork {
 		for (var b : blocks) {
 			BlockState s = b.state();
 			if (s.is(Blocks.JIGSAW)) s = finalState(level, b.nbt()); // como na geração: o bloco de encaixe vira o «final_state» (ex.: rua)
+			if (!house && s != null && com.tcordeiro.vilas.compat.Mods.loaded(com.tcordeiro.vilas.compat.Mods.MOVEIS)) { // 0.4.0: os móveis também nas obras
+				BlockState f = com.tcordeiro.vilas.worldgen.FurnitureProcessor.swap(s);
+				if (f != null) s = f;
+			}
 			if (s == null || s.isAir() || s.is(Blocks.STRUCTURE_VOID) || s.is(Blocks.JIGSAW) || s.is(VilasBlocks.MAYOR_DESK)) continue;
 			p.pending.add(new Project.Placement(origin.offset(b.pos()), s));
 		}

@@ -89,7 +89,7 @@ public class LifeGameTests {
 	@GameTest(maxTicks = 400)
 	public void eveningSitsOnAChairOrStairs(GameTestHelper h) {
 		Village v = village(h);
-		civic(h, v, "plaza");
+		civic(h, v, "plaza_0"); // como as vilas do jogo guardam as áreas («plaza_0», «tavern_built»…)
 		Block chair = moveis("oak_chair");
 		BlockState seat = chair != null ? chair.defaultBlockState() : Blocks.OAK_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.NORTH);
 		h.setBlock(new BlockPos(6, 1, 6), seat);

@@ -169,6 +169,7 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 		Climate.forced = Double.NaN;
 		Climate.forcedRain = null;
 		Festa.forceActive = null;
+		Life.rescan(v); // a luz do céu já assentou: os sítios cobertos contam
 	}
 
 	/** O centro de um sítio da vila (Praça, Taverna…), ou a Mesa. */
@@ -237,6 +238,8 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 			perf(ctx);
 			String[] scenes = {"social", "rain", "cold", "night", "guards", "panic", "care", "chat", "festa", "apprentice", "menu", "gift", "work", "weapon",
 					"meeting", "welcome"};
+			String only = System.getenv("VILAS040_SCENES");
+			if (only != null && !only.isBlank()) scenes = only.split(",");
 			for (String sc : scenes) {
 				try {
 					sp.getServer().runOnServer(this::reset);
@@ -278,10 +281,25 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 				return v == null ? "?" : String.join(",", v.civic.built) + " caixas " + v.civic.boxes.size();
 			});
 			log("vila " + i + " em " + vx + "," + vz + ": Mesa " + d.toShortString() + " edifícios " + built);
-			if (built.contains("tavern") && built.contains("plaza")) {
-				desk = d;
-				return true;
-			}
+			desk = d;
+			// o que falta (Taverna, Praça) é encomendado pelo Prefeito e feito «de noite» de uma vez (a obra da 0.3.0)
+			String made = sp.getServer().computeOnServer(s -> {
+				ServerLevel l = s.overworld();
+				Village v = village(s);
+				v.economy.treasury = 1_000_000;
+				v.civic.meta.real = true;
+				StringBuilder o = new StringBuilder();
+				for (String k : new String[] {"tavern", "plaza"})
+					if (!v.civic.built.contains(k)) {
+						var pr = com.tcordeiro.vilas.build.CivicWork.commission(l, v, k);
+						o.append(k).append(pr == null ? "=sem sítio " : "=encomendada ");
+						for (int n = 0; n < 6 && !v.extra.projects.isEmpty(); n++) com.tcordeiro.vilas.build.Builders.overnight(l, v);
+					}
+				Life.rescan(v);
+				return o + "agora " + String.join(",", v.civic.built) + "; sítios " + places(s).spots.keySet();
+			});
+			log("vila " + i + ": " + made);
+			if (made.contains("tavern") && made.contains("plaza") && !made.contains("sem sítio")) return true;
 		}
 		return false;
 	}
@@ -364,7 +382,7 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 				if (seated != null) {
 					String[] p = seated.split(";");
 					Vec3 t = new Vec3(Double.parseDouble(p[0]), Double.parseDouble(p[1]) + 0.8, Double.parseDouble(p[2]));
-					camAround(ctx, t, 4, 1.5, 15);
+					camAround(ctx, t, 6, 2.5, 15);
 					shot(ctx, "02_sentados_na_praca");
 					film(ctx, "02_sentados_na_praca_a_conversar", 120, null);
 				}
@@ -498,7 +516,7 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 				});
 				String[] p = r.split(";");
 				Vec3 c = new Vec3(Integer.parseInt(p[0]) + 3, Integer.parseInt(p[1]), Integer.parseInt(p[2]) + 3);
-				look(ctx, c.add(8, 8, 8), c, 3);
+				look(ctx, c.add(5, 5, 5), c, 3);
 				film(ctx, "09_clerigo_cura_e_ferreiro_repara_o_golem", 220, null);
 				UUID gid = UUID.fromString(p[5]);
 				log("cura " + p[3] + ", reparação " + p[4] + "; vida do golem agora " + sp.getServer().computeOnServer(s -> ((IronGolem) s.overworld().getEntity(gid)).getHealth())
@@ -520,7 +538,7 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 				});
 				String[] p = r.split(";");
 				Vec3 c = new Vec3(Integer.parseInt(p[0]) + 1.5, Integer.parseInt(p[1]) + 1.6, Integer.parseInt(p[2]) + 0.5);
-				look(ctx, c.add(0, 1.2, 5), c, 1);
+				look(ctx, c.add(0, 1.0, 3.6), c, 1);
 				film(ctx, "10_conversa_sobre_a_missao_do_jogador", 130, null);
 				log("conversa: " + Talk.lastLine.getString() + " (conversas " + Talk.talks + ")");
 				ctx.waitTicks(40);
