@@ -52,7 +52,7 @@ def mail_bag():
     for i in range(0, 16, 2):                          # costuras
         d.point((i, 1), fill=shade(LEATHER, 1.35))
         d.point((i, 14), fill=shade(LEATHER, 1.35))
-    save(img, "item/mail_bag.png")
+    save(img, "block/mail_bag.png")
     flap = noisy((16, 16), shade(LEATHER, 0.82), 0.05, 504)
     d = ImageDraw.Draw(flap)
     rect(d, 4, 4, 12, 10, rgb("#f0e6c8"))              # o envelope
@@ -60,7 +60,7 @@ def mail_bag():
     d.line([(11, 4), (8, 7)], fill=rgb("#b8a882"))
     rect(d, 7, 8, 9, 10, YELLOW)                       # selo amarelo dos correios
     frame(flap, shade(LEATHER, 0.6))
-    save(flap, "item/mail_bag_flap.png")
+    save(flap, "block/mail_bag_flap.png")
 
 
 def postman(d):

@@ -427,6 +427,8 @@ MUTATIONS = [
      "\t\tdecor(level, v, day); // 0.5.0: missão temporária «decorar a festa»", "\t\tdecor(level, v, day); v.civic.batch.id = -7;", "runGametest"),
     ("0.5.0 boia: fica no mundo", J + "life/Tasks.java",
      "\t\t\tStage.remove(t.prop);\n\t\t\tt.prop = null;\n\t\t}\n\t\tif (t.kind == Task.Kind.PLAY)", "\t\t}\n\t\tif (t.kind == Task.Kind.PLAY)", "runGametest"),
+    ("0.5.0 ajudante: sem plano B (tenta a mesma planta para sempre)", J + "life/Helper.java",
+     "if (crop != null && crop.asLong() == h.tryPos && now - h.trySince > HARVEST_TIMEOUT) {", "if (false) {", "runGametest"),
     ("0.5.0 «!»: volta a mexer no nome", J + "village/VillagerRequests.java",
      "boolean nameTag = VilasConfig.get().request_name_tag;", "boolean nameTag = true;", "runGametest"),
 ]

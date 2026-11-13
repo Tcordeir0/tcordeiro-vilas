@@ -100,6 +100,9 @@ T_050 = [
      "Your helper died: the bag came back to you."),
     ("tvilas.helper.none", "Você não tem nenhum ajudante.", "Não tens nenhum ajudante.", "You have no helper."),
     ("tvilas.helper.bag", "Bolsa do ajudante (%s)", "Bolsa do ajudante (%s)", "Helper's bag (%s)"),
+    ("tvilas.helper.cant_reach", "Não consigo chegar aí!", "Não consigo chegar aí!", "I can't get there!"),
+    ("tvilas.helper.cant_reach_msg", "O seu ajudante não consegue chegar até você: espere por ele ou volte para perto.",
+     "O teu ajudante não consegue chegar até ti: espera por ele ou volta para perto.", "Your helper can't reach you: wait for them or come back closer."),
     # mercado
     ("tvilas.news.market_today", "Hoje há mercado na Praça, das 7 h às 15 h!", "Hoje há mercado na Praça, das 7 h às 15 h!", "Market day at the Plaza today, 7 am to 3 pm!"),
     ("tvilas.news.market_eve", "Amanhã há mercado na Praça.", "Amanhã há mercado na Praça.", "Tomorrow is market day at the Plaza."),

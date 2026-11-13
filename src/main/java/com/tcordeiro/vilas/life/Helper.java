@@ -113,7 +113,9 @@ public final class Helper {
 		return VillageManager.Result.ok("tvilas.helper.hired", priceText());
 	}
 
-	public static int hires, harvests;
+	public static int hires, harvests, giveUps, warnings;
+	/** Plano B: 10 s para chegar a uma planta; 15 s longe do patrão antes de avisar. */
+	static final long HARVEST_TIMEOUT = 200, FOLLOW_TIMEOUT = 300;
 
 	// ---------------------------------------------------------------- a cada segundo (pela vila)
 
@@ -213,15 +215,33 @@ public final class Helper {
 		if ("harvest".equals(t.role) && t.target != null) {
 			if (vi.distanceToSqr(Vec3.atBottomCenterOf(t.target)) <= 2.2 * 2.2) {
 				harvest(level, vi, h, t.target);
+				h.tryPos = Long.MIN_VALUE;
 				t.role = null;
 				t.holdUntil = now + 10;
+			} else if (now - h.trySince > HARVEST_TIMEOUT) { // plano B: não chega à planta em 10 s (mesmo refazendo a tarefa) → esquece-a e tenta outra
+				h.skip.add(t.target.asLong());
+				t.role = null;
+				t.target = null;
+				vi.getNavigation().stop();
+				Balloons.show(vi, Balloons.QUESTION, 40);
+				giveUps++;
 			}
 			return;
 		}
 		if (Tasks.every(t, now, 20) && h.openBy == null && free(h)) {
-			BlockPos crop = crop(level, vi.blockPosition(), h.player);
+			BlockPos crop = crop(level, vi.blockPosition(), h.player, h.skip);
+			if (crop != null && crop.asLong() == h.tryPos && now - h.trySince > HARVEST_TIMEOUT) { // plano B: já tentou esta há 10 s
+				h.skip.add(crop.asLong());
+				Balloons.show(vi, Balloons.QUESTION, 40);
+				giveUps++;
+				crop = crop(level, vi.blockPosition(), h.player, h.skip);
+			}
 			if (crop != null) {
 				t.role = "harvest";
+				if (h.tryPos != crop.asLong()) { // a mesma planta conta o tempo desde a 1.ª tentativa (o anti-preso pode refazer a tarefa)
+					h.tryPos = crop.asLong();
+					h.trySince = now;
+				}
 				t.target = crop;
 				t.reach = 1.6;
 				t.arrived = false;
@@ -229,11 +249,23 @@ public final class Helper {
 			}
 		}
 		BlockPos want = p.blockPosition();
-		if (vi.distanceToSqr(p) <= 3 * 3) {
+		double d2 = vi.distanceToSqr(p);
+		if (d2 <= 3 * 3) {
 			t.target = null;
 			vi.getNavigation().stop();
+			h.farSince = -1;
 			return;
 		}
+		// plano B a seguir: 15 s sem conseguir chegar perto do patrão → avisa (balão e mensagem), no máximo de 30 em 30 s, e continua a tentar
+		if (d2 > 8 * 8) {
+			if (h.farSince < 0) h.farSince = now;
+			else if (now - h.farSince > FOLLOW_TIMEOUT && now >= h.nextWarn) {
+				h.nextWarn = now + 600;
+				Balloons.say(vi, Balloons.QUESTION, Component.translatable("tvilas.helper.cant_reach"), 60);
+				VillageNews.tell(p, "🤝", "tvilas.helper.cant_reach_msg");
+				warnings++;
+			}
+		} else h.farSince = -1;
 		if (mayStand(level, want, h.player)) {
 			if (t.target != null && t.target.distSqr(want) > 4) vi.getNavigation().stop(); // o patrão andou: refaz o caminho
 			t.target = want;
@@ -261,7 +293,12 @@ public final class Helper {
 
 	/** Uma planta madura a 4 blocos, num terreno de quem o contratou (REGRA {@link TownRules#helperMayHarvest}). */
 	static BlockPos crop(ServerLevel level, BlockPos at, UUID employer) {
+		return crop(level, at, employer, Set.of());
+	}
+
+	static BlockPos crop(ServerLevel level, BlockPos at, UUID employer, Set<Long> skip) {
 		for (BlockPos q : BlockPos.betweenClosed(at.offset(-4, -1, -4), at.offset(4, 1, 4))) {
+			if (skip.contains(q.asLong())) continue;
 			BlockState s = level.getBlockState(q);
 			if (!(s.getBlock() instanceof CropBlock c) || !c.isMaxAge(s)) continue;
 			Lot lot = VillageManager.lotAt(level, q.getX(), q.getZ());

@@ -35,8 +35,8 @@ POST_COUNTER = {
 }
 
 MAIL_BAG = {
-    "textures": {"leather": "tvilas:item/mail_bag", "flap": "tvilas:item/mail_bag_flap", "brass": "minecraft:block/gold_block",
-                 "strap": "minecraft:block/brown_wool", "paper": "minecraft:block/white_concrete", "particle": "tvilas:item/mail_bag"},
+    "textures": {"leather": "tvilas:block/mail_bag", "flap": "tvilas:block/mail_bag_flap", "brass": "minecraft:block/gold_block",
+                 "strap": "minecraft:block/brown_wool", "paper": "minecraft:block/white_concrete", "particle": "tvilas:block/mail_bag"},
     "boxes": [
         (3, 2, 6, 13, 11, 10, "leather"),                             # o saco
         (3, 5, 5, 13, 11.5, 6, "flap"),                               # a aba com o envelope

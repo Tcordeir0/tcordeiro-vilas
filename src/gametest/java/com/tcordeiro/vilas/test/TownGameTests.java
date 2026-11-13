@@ -457,6 +457,39 @@ public class TownGameTests {
 		});
 	}
 
+	@GameTest(maxTicks = 500)
+	public void helperGivesUpOnACropItCannotReach(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		ServerPlayer me = TestUtil.playerAt(h, new BlockPos(1, 1, 5));
+		me.getInventory().clearContent();
+		TestUtil.giveEmeralds(me, 3);
+		TestUtil.lot(h, v, me, 0, 0, 8, 8);
+		BlockPos crop = new BlockPos(5, 1, 5);
+		h.setBlock(crop.below(), Blocks.FARMLAND);
+		h.setBlock(crop, ((CropBlock) Blocks.WHEAT).getStateForAge(7));
+		for (int x = 3; x <= 7; x++) // vidro em volta (a 2 blocos), 2 de altura: vê-se mas não se chega
+			for (int z = 3; z <= 7; z++)
+				if (x == 3 || x == 7 || z == 3 || z == 7) for (int y = 1; y <= 2; y++) h.setBlock(new BlockPos(x, y, z), Blocks.GLASS);
+		Villager a = villager(h, new BlockPos(1, 1, 1), VillagerProfession.FARMER);
+		Life.relist(v);
+		h.assertTrue(Helper.hire(me, level, v, a).ok(), "contratado");
+		TownData.Helper hm = v.civic.life.town.helperOf(me.getUUID());
+		h.onEachTick(() -> {
+			if (level.getGameTime() % 20 == 0) Life.tick(level, v);
+		});
+		h.succeedWhen(() -> {
+			Task t0 = Tasks.get(a);
+			h.assertTrue(hm.skip.contains(h.absolutePos(crop).asLong()), "plano B: desistiu da planta a que não chega: tarefa=" + (t0 == null ? null
+					: t0.kind + "/" + t0.role + "/" + t0.target + "/" + t0.endReason) + " tentou=" + BlockPos.of(hm.tryPos) + " desde " + hm.trySince + " agora "
+					+ level.getGameTime() + " está=" + a.blockPosition() + " contrato=" + hm.ended);
+			h.assertTrue(level.getBlockState(h.absolutePos(crop)).getValue(CropBlock.AGE) == 7, "e não a colheu através do vidro");
+			Task t = Tasks.get(a);
+			h.assertTrue(t == null || !"harvest".equals(t.role), "já não está a tentar");
+			Helper.dismiss(me, v);
+		});
+	}
+
 	// ---------------------------------------------------------------- 8) «!» em balão
 
 	@GameTest(maxTicks = 60)

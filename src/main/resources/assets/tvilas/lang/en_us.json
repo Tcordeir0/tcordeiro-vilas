@@ -350,6 +350,8 @@
   "tvilas.helper.bag": "Helper's bag (%s)",
   "tvilas.helper.busy": "This villager can't help right now.",
   "tvilas.helper.bye": "See you next time!",
+  "tvilas.helper.cant_reach": "I can't get there!",
+  "tvilas.helper.cant_reach_msg": "Your helper can't reach you: wait for them or come back closer.",
   "tvilas.helper.distrust": "They don't trust you and refuse.",
   "tvilas.helper.ended.died": "Your helper died: the bag came back to you.",
   "tvilas.helper.ended.fired": "Helper dismissed: the bag came back to you.",

@@ -162,6 +162,9 @@ public final class TownData {
 		/** Não guardados: quem tem a bolsa aberta (não se colhe entretanto) e o último sítio permitido onde esteve. */
 		public transient UUID openBy;
 		public transient net.minecraft.core.BlockPos safe;
+		/** Não guardados (plano B): plantas a que não conseguiu chegar, desde quando está longe do patrão, próximo aviso. */
+		public final transient java.util.Set<Long> skip = new java.util.HashSet<>();
+		public transient long farSince = -1, nextWarn, tryPos = Long.MIN_VALUE, trySince;
 
 		public Helper(UUID player, String playerName, UUID villager, long until) {
 			this.player = player;

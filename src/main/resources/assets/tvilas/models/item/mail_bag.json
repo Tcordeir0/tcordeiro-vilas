@@ -1,12 +1,12 @@
 {
  "parent": "minecraft:block/block",
  "textures": {
-  "leather": "tvilas:item/mail_bag",
-  "flap": "tvilas:item/mail_bag_flap",
+  "leather": "tvilas:block/mail_bag",
+  "flap": "tvilas:block/mail_bag_flap",
   "brass": "minecraft:block/gold_block",
   "strap": "minecraft:block/brown_wool",
   "paper": "minecraft:block/white_concrete",
-  "particle": "tvilas:item/mail_bag"
+  "particle": "tvilas:block/mail_bag"
  },
  "elements": [
   {

@@ -350,6 +350,8 @@
   "tvilas.helper.bag": "Bolsa do ajudante (%s)",
   "tvilas.helper.busy": "Este aldeão não pode ajudar agora.",
   "tvilas.helper.bye": "Até à próxima!",
+  "tvilas.helper.cant_reach": "Não consigo chegar aí!",
+  "tvilas.helper.cant_reach_msg": "O teu ajudante não consegue chegar até ti: espera por ele ou volta para perto.",
   "tvilas.helper.distrust": "Ele desconfia de ti e não aceita.",
   "tvilas.helper.ended.died": "O teu ajudante morreu: a bolsa voltou para ti.",
   "tvilas.helper.ended.fired": "Ajudante dispensado: a bolsa voltou para ti.",

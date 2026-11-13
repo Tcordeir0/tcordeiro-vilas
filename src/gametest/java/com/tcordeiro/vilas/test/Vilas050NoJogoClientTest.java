@@ -430,6 +430,23 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 		ctx.waitTicks(8);
 	}
 
+	/** Liga estes pacotes de recursos (os que existirem na pasta do jogo de teste) e recarrega; devolve os ligados. */
+	private String packs(ClientGameTestContext ctx, String... ids) {
+		String out = ctx.computeOnClient(mc -> {
+			var repo = mc.getResourcePackRepository();
+			repo.reload();
+			java.util.List<String> sel = new java.util.ArrayList<>();
+			sel.add("vanilla");
+			for (String id : repo.getSelectedIds()) if (!id.startsWith("file/") && !sel.contains(id)) sel.add(id);
+			for (String id : ids) if (repo.getAvailableIds().contains(id)) sel.add(id);
+			repo.setSelected(sel);
+			return String.join(",", repo.getSelectedIds());
+		});
+		ctx.runOnClient(mc -> mc.reloadResourcePacks());
+		ctx.waitTicks(100);
+		return out;
+	}
+
 	static Vec3 pos(String s) {
 		String[] p = s.split(";");
 		return new Vec3(Double.parseDouble(p[0]), Double.parseDouble(p[1]), Double.parseDouble(p[2]));
@@ -764,18 +781,26 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 				if (p.length >= 3) {
 					int tx = Integer.parseInt(p[1]), tz = Integer.parseInt(p[2]);
 					Vec3 from = sp.getServer().computeOnServer(s -> player(s).position());
-					film(ctx, "24_ajudante_segue_e_colhe_no_meu_terreno", 520, i -> {
-						if (i < 200 && i % 10 == 0) sp.getServer().runOnServer(s -> {
-							double k = Math.min(1, (i + 10) / 200.0);
-							double x = from.x + (tx + 0.5 - from.x) * k, z = from.z + (tz + 3.5 - from.z) * k;
-							ServerLevel l = s.overworld();
-							int y = Places.ground(l, (int) Math.floor(x), (int) Math.floor(z), (int) from.y);
-							player(s).teleportTo(l, x, y, z, java.util.Set.of(), 180, 20, false);
-						});
-						if (i % 20 == 0) {
+					// a câmara É o jogador (o patrão): ele anda até à beira do trigo e fica lá a olhar (antes a câmara saltava para longe
+					// do ajudante — o look() teleporta o jogador — e o ajudante seguia a câmara para o meio do campo)
+					int gy = sp.getServer().computeOnServer(s -> Places.ground(s.overworld(), tx, tz + 4, (int) from.y));
+					Vec3 stand = new Vec3(tx + 0.5, gy, tz + 4.5), field = new Vec3(tx + 0.5, gy, tz + 0.5);
+					film(ctx, "24_ajudante_segue_e_colhe_no_meu_terreno", 640, i -> {
+						if (i < 200 && i % 5 == 0) {
+							double k = Math.min(1, (i + 5) / 200.0);
+							double x = from.x + (stand.x - from.x) * k, z = from.z + (stand.z - from.z) * k;
+							int y = sp.getServer().computeOnServer(s -> Places.ground(s.overworld(), (int) Math.floor(x), (int) Math.floor(z), (int) from.y));
 							Vec3 hv = sp.getServer().computeOnServer(s -> s.overworld().getEntity(id).position());
-							look(ctx, hv.add(5, 7, 5), hv.add(0, 0.8, 0), 0);
+							look(ctx, new Vec3(x, y + 1.62, z), hv.add(0, 1.2, 0), 0); // a andar, a olhar para trás para o ajudante
+						} else if (i >= 200 && i % 10 == 0) {
+							look(ctx, stand.add(0, 1.62, 0), field.add(0, 0.3, 0), 0); // parado à beira do trigo
 						}
+						if (i % 100 == 0) log("ajudante (diag) f" + i + ": " + sp.getServer().computeOnServer(s -> {
+							var e = (Villager) s.overworld().getEntity(id);
+							Task t = Tasks.get(e);
+							return "jogador " + player(s).blockPosition().toShortString() + " ajudante " + e.blockPosition().toShortString() + " tarefa "
+									+ (t == null ? "-" : t.kind + "/" + t.role + "/" + (t.target == null ? "-" : t.target.toShortString())) + " colheitas " + Helper.harvests;
+						}));
 					});
 					log("ajudante: colheitas " + Helper.harvests + " " + sp.getServer().computeOnServer(s -> {
 						var h = village(s).civic.life.town.helperOf(player(s).getUUID());
@@ -813,6 +838,32 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 					if (i % 40 == 0) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.village.VillagerRequests.tick(s.overworld(), village(s)));
 				});
 				log("pedido: nome no aldeão? " + p[3]);
+			}
+			case "market_day" -> {
+				// sem forçar: o mercado a cada 2 dias (config) e o tempo avança de verdade (tick sprint) até ao dia dele
+				long[] need = sp.getServer().computeOnServer(s -> {
+					Market.forceActive = null;
+					VilasConfig.get().market_every_days = 2;
+					ServerLevel l = s.overworld();
+					long today = VillageEconomy.day(l), next = Market.next(village(s), today + (Market.today(l, village(s)) ? 0 : 0));
+					return new long[] {today, next, l.getGameTime()};
+				});
+				log("dia de mercado: hoje " + need[0] + ", próximo " + need[1]);
+				// o relógio do jogo avança dia a dia (como se o tempo passasse); a Mesa faz as contas de cada dia sozinha
+				boolean ok = false;
+				for (long d = need[0] + 1; d <= need[1] && !ok; d++) {
+					long day = d;
+					sp.getServer().runOnServer(s -> s.getWorldData().overworldData().setGameTime(day * 24000 + 600));
+					sp.getServer().runCommand("time set 1500");
+					for (int k = 0; k < 20 && !ok; k++) {
+						ctx.waitTicks(20);
+						ok = sp.getServer().computeOnServer(s -> Market.today(s.overworld(), village(s)));
+					}
+				}
+				ctx.waitTicks(40);
+				log("dia de mercado: " + sp.getServer().computeOnServer(s -> "dia " + VillageEconomy.day(s.overworld()) + " hoje há mercado? "
+						+ Market.today(s.overworld(), village(s))));
+				boardBoth(ctx, "27_quadro_hoje_ha_mercado");
 			}
 			case "gestures" -> {
 				log("EMF neste jogo de teste: " + net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("entity_model_features")
