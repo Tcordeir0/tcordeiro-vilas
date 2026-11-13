@@ -142,7 +142,15 @@ public final class MissionRules {
 			java.util.Map.entry("minecraft:hay_block", 1800), // 9 trigos
 			java.util.Map.entry("minecraft:stone_bricks", 200), // Pedreiro: 20 pedras por 1 esmeralda
 			java.util.Map.entry("minecraft:glass_pane", 375), // 6 vidros dão 16 vidraças
-			java.util.Map.entry("minecraft:bricks", 400)); // ninguém compra; o Pedreiro vende 10 por 1 esmeralda
+			java.util.Map.entry("minecraft:bricks", 400), // ninguém compra; o Pedreiro vende 10 por 1 esmeralda
+			// 0.3.0 — pedidos dos aldeões
+			java.util.Map.entry("minecraft:paper", 167), // Bibliotecário/Cartógrafo: 24 por 1 esmeralda
+			java.util.Map.entry("minecraft:string", 200), // Pescador: 20 por 1 esmeralda
+			java.util.Map.entry("minecraft:chicken", 286), // Talhante: 14 por 1 esmeralda
+			java.util.Map.entry("minecraft:rotten_flesh", 125), // Clérigo: 32 por 1 esmeralda
+			java.util.Map.entry("minecraft:clay_ball", 400), // Pedreiro: 10 por 1 esmeralda
+			java.util.Map.entry("minecraft:stick", 125), // Flecheiro: 32 por 1 esmeralda
+			java.util.Map.entry("minecraft:glass_bottle", 1000)); // ninguém compra: uma garrafa custa um vidro (Bibliotecário: 4 vidros por esmeralda)
 
 	/** Teto da recompensa: valor de mercado ×1,25 (em centésimos para as contas serem inteiras). */
 	public static final int FAIR_PERCENT = 125;
@@ -166,15 +174,28 @@ public final class MissionRules {
 		return (long) t.emeralds * emeraldCents * 100 <= market * FAIR_PERCENT;
 	}
 
-	/** 0.3.0 (A1): missões por jogador e por vila num dia de jogo. */
-	public static final int DAILY_PER_PLAYER = 3;
+	/** 0.3.0: o quadro (e os pedidos dos aldeões) renova-se todo a cada tantos dias de jogo — um «lote». */
+	public static final int BATCH_DAYS = 4;
+
+	/** O lote de um dia de jogo. */
+	public static long batchOf(long day, int batchDays) {
+		return Math.floorDiv(day, Math.max(1, batchDays));
+	}
+
+	/** Ticks até ao próximo lote (para o quadro mostrar quanto falta). */
+	public static long ticksToNextBatch(long gameTime, long dayTicks, int batchDays) {
+		long len = dayTicks * Math.max(1, batchDays);
+		return len - Math.floorMod(gameTime, len);
+	}
 
 	/**
-	 * REGRA DE SEGURANÇA (economia, 0.3.0): a tesouraria paga esta missão? Só se tiver o dinheiro, se a vila não passar o teto do
-	 * dia ({@code dailyCap} cêntimos; 0 = sem teto) e se o jogador ainda tiver missões hoje.
+	 * REGRA DE SEGURANÇA (economia, 0.3.0): a tesouraria paga esta missão (ou pedido)? Só se o jogador ainda não a fez neste lote,
+	 * se houver dinheiro (fundo das missões + tesouraria) e se a vila não passar o teto do dia ({@code dailyCap}; 0 = sem teto).
+	 * Com cada missão uma vez por jogador por lote e cada recompensa ≤ mercado ×1,25, um jogador nunca tira de uma vila, num lote,
+	 * mais do que 1,25× o valor do que lhe entregou.
 	 */
-	public static boolean mayPay(long treasury, long paidToday, long dailyCap, int doneToday, int perPlayer, long reward) {
-		if (reward < 0 || doneToday >= perPlayer) return false;
+	public static boolean mayPay(long treasury, long paidToday, long dailyCap, boolean alreadyDone, long reward) {
+		if (reward < 0 || alreadyDone) return false;
 		if (treasury < reward) return false;
 		return dailyCap <= 0 || paidToday + reward <= dailyCap;
 	}
@@ -182,6 +203,46 @@ public final class MissionRules {
 	/** REGRA (0.3.0): a defesa só conta numa invasão a sério — um invasor da invasão que está nesta vila. */
 	public static boolean defenseCounts(boolean victimInRaid, boolean raidHere, boolean raidOver, boolean fromSpawner) {
 		return victimInRaid && raidHere && !raidOver && !fromSpawner;
+	}
+
+	/**
+	 * 0.3.0 — Pedidos dos aldeões comuns, pela profissão (vanilla e deste mod): o que pedem e quanto pagam. Todos cumprem
+	 * {@link #fairReward} (≤ mercado ×1,25) e nenhum se compra aos aldeões mais barato do que paga ({@link #noVillagerProfit}).
+	 */
+	public static final java.util.Map<String, List<Template>> REQUESTS = java.util.Map.ofEntries(
+			java.util.Map.entry("armorer", List.of(new Template(Kind.DELIVER, "minecraft:iron_ingot", 8, 2, 5, 1),
+					new Template(Kind.DELIVER, "minecraft:coal", 16, 1, 5, 1))),
+			java.util.Map.entry("weaponsmith", List.of(new Template(Kind.DELIVER, "minecraft:iron_ingot", 8, 2, 5, 1),
+					new Template(Kind.DELIVER, "minecraft:coal", 16, 1, 5, 1))),
+			java.util.Map.entry("toolsmith", List.of(new Template(Kind.DELIVER, "minecraft:iron_ingot", 8, 2, 5, 1),
+					new Template(Kind.DELIVER, "minecraft:coal", 16, 1, 5, 1))),
+			java.util.Map.entry("farmer", List.of(new Template(Kind.DELIVER, "minecraft:wheat", 24, 1, 5, 1),
+					new Template(Kind.DELIVER, "minecraft:potato", 24, 1, 5, 1), new Template(Kind.DELIVER, "minecraft:carrot", 24, 1, 5, 1))),
+			java.util.Map.entry("librarian", List.of(new Template(Kind.DELIVER, "minecraft:paper", 24, 1, 5, 1),
+					new Template(Kind.DELIVER, "minecraft:book", 12, 3, 5, 1))),
+			java.util.Map.entry("cartographer", List.of(new Template(Kind.DELIVER, "minecraft:paper", 24, 1, 5, 1))),
+			java.util.Map.entry("fisherman", List.of(new Template(Kind.DELIVER, "minecraft:string", 20, 1, 5, 1))),
+			java.util.Map.entry("shepherd", List.of(new Template(Kind.DELIVER, "minecraft:white_wool", 24, 1, 5, 1))),
+			java.util.Map.entry("butcher", List.of(new Template(Kind.DELIVER, "minecraft:chicken", 14, 1, 5, 1))),
+			java.util.Map.entry("leatherworker", List.of(new Template(Kind.DELIVER, "minecraft:leather", 10, 2, 5, 1))),
+			java.util.Map.entry("cleric", List.of(new Template(Kind.DELIVER, "minecraft:rotten_flesh", 32, 1, 5, 1))),
+			java.util.Map.entry("mason", List.of(new Template(Kind.DELIVER, "minecraft:clay_ball", 10, 1, 5, 1))),
+			java.util.Map.entry("fletcher", List.of(new Template(Kind.DELIVER, "minecraft:stick", 32, 1, 5, 1))),
+			java.util.Map.entry("baker", List.of(new Template(Kind.DELIVER, "minecraft:wheat", 24, 1, 5, 1))),
+			java.util.Map.entry("beekeeper", List.of(new Template(Kind.DELIVER, "minecraft:glass_bottle", 12, 1, 5, 1))));
+
+	/** Um em cada tantos aldeões com profissão faz um pedido em cada lote. */
+	public static final int REQUEST_ONE_IN = 4;
+
+	/** Quantos aldeões (de {@code withJob} com profissão que pede) fazem pedidos neste lote: 1 em cada 4, arredondado para cima. */
+	public static int requesters(int withJob) {
+		return withJob <= 0 ? 0 : (withJob + REQUEST_ONE_IN - 1) / REQUEST_ONE_IN;
+	}
+
+	/** O pedido de um aldeão desta profissão ({@code roll} ≥ 0 escolhe), ou null se a profissão não pede nada. */
+	public static Template request(String profession, int roll) {
+		List<Template> list = REQUESTS.get(profession);
+		return list == null || list.isEmpty() ? null : list.get(Math.floorMod(roll, list.size()));
 	}
 
 	/** A missão está cumprida com {@code progress} feito? */

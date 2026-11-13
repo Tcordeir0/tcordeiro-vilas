@@ -36,6 +36,18 @@ public final class VilaCommand {
 				.then(Commands.literal("muralha")
 						.then(Commands.literal("cancelar").executes(c -> wall(c, true)))
 						.then(Commands.literal("retomar").executes(c -> wall(c, false))))
+				// 0.3.0 (M15): o dono da Mesa junta amigos à área cívica (Prefeitura, Praça, Mercado, Taverna)
+				.then(Commands.literal("civica").then(Commands.literal("amigo")
+						.then(Commands.literal("adicionar").then(Commands.argument("jogador", EntityArgument.player())
+								.executes(c -> civic(c, EntityArgument.getPlayer(c, "jogador"), null))))
+						.then(Commands.literal("remover").then(Commands.argument("jogador", StringArgumentType.word())
+								.executes(c -> civic(c, null, StringArgumentType.getString(c, "jogador")))))))
+				// 0.3.0: os botões do pedido de um aldeão («!»)
+				.then(Commands.literal("pedido")
+						.then(Commands.literal("entregar").then(Commands.argument("aldeao", StringArgumentType.word())
+								.executes(c -> request(c, true))))
+						.then(Commands.literal("trocar").then(Commands.argument("aldeao", StringArgumentType.word())
+								.executes(c -> request(c, false)))))
 				.then(Commands.literal("terreno")
 						.then(Commands.literal("comprar").executes(c -> result(c, VillageManager.buyLot(c.getSource().getPlayerOrException()))))
 						.then(Commands.literal("info").executes(VilaCommand::lotInfo))
@@ -55,6 +67,26 @@ public final class VilaCommand {
 				for (var id : lot.friends) b.suggest(lot.friendNames.getOrDefault(id, id.toString()));
 		}
 		return b.buildFuture();
+	}
+
+	private static int civic(CommandContext<CommandSourceStack> c, ServerPlayer add, String remove) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, add != null ? VillageManager.addCivicFriend(p, v, add) : VillageManager.removeCivicFriend(p, v, remove));
+	}
+
+	private static int request(CommandContext<CommandSourceStack> c, boolean deliver) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		java.util.UUID id;
+		try {
+			id = java.util.UUID.fromString(StringArgumentType.getString(c, "aldeao"));
+		} catch (IllegalArgumentException e) {
+			return result(c, VillageManager.Result.fail("tvilas.request.none"));
+		}
+		var r = deliver ? com.tcordeiro.vilas.village.VillagerRequests.deliver(p, id) : com.tcordeiro.vilas.village.VillagerRequests.trade(p, id);
+		if (!deliver && r.ok()) return 1; // abriu as trocas: sem mensagem
+		return result(c, r);
 	}
 
 	private static Village here(ServerPlayer p) {

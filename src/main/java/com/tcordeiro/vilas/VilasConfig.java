@@ -29,8 +29,10 @@ import net.fabricmc.loader.api.FabricLoader;
  * <li>{@code wall} (true): o Prefeito encomenda a muralha quando a vila chega a Cidade.</li>
  * <li>0.3.0 — {@code cubcoin_trades} (true): com o CubCoin, todos os aldeões trocam em CubCoin em vez de esmeraldas;
  * {@code mission_daily_cap_cents} (40000 = 400 CB: o máximo que a tesouraria paga em missões por dia; 0 = sem teto) e
- * {@code mission_daily_per_player} (3: missões por jogador e por dia em cada vila); {@code civic_buildings} (true): numa vila
- * antiga o Prefeito manda construir a Prefeitura, o Mercado, a Taverna e a Praça que faltam.</li>
+ * {@code mission_batch_days} (4: o quadro e os pedidos dos aldeões renovam-se; cada um uma vez por jogador em cada lote);
+ * {@code prestige_per_resident} (3 missões trazem um morador) e {@code population_cap} (40); {@code civic_buildings} (true): numa vila
+ * antiga o Prefeito manda construir a Prefeitura, o Mercado, a Taverna e a Praça que faltam; {@code mission_fund_daily_cents}
+ * (5000) e {@code mission_fund_cap_cents} (40000): o fundo das missões (a vila nasce com 200 CB nele).</li>
  * </ul>
  */
 public final class VilasConfig {
@@ -48,8 +50,12 @@ public final class VilasConfig {
 	public boolean wall = true;
 	public boolean cubcoin_trades = true;
 	public long mission_daily_cap_cents = 40000;
-	public int mission_daily_per_player = com.tcordeiro.vilas.logic.MissionRules.DAILY_PER_PLAYER;
 	public boolean civic_buildings = true;
+	public int mission_batch_days = com.tcordeiro.vilas.logic.MissionRules.BATCH_DAYS;
+	public int prestige_per_resident = com.tcordeiro.vilas.logic.GrowthRules.DEFAULT_PER_RESIDENT;
+	public int population_cap = com.tcordeiro.vilas.logic.GrowthRules.DEFAULT_CAP;
+	public long mission_fund_daily_cents = com.tcordeiro.vilas.logic.FundRules.DAILY_CENTS;
+	public long mission_fund_cap_cents = com.tcordeiro.vilas.logic.FundRules.CAP_CENTS;
 
 	private static VilasConfig current = new VilasConfig();
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

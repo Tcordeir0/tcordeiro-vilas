@@ -24,12 +24,15 @@ para a lógica; o cliente precisa para as texturas e nomes (não há código de 
   ou lanternas), imposto ajustável, terrenos congelados por dívida (nada é apagado) e o Mercador da Vila.
 - **0.3.0** — com o CubCoin, todos os aldeões trocam em CubCoin (40 CB por esmeralda, com troco); vilas antigas ganham a
   Prefeitura/Mercado/Taverna/Praça que faltam; bichos dos terrenos e área cívica protegidos; Prefeito levado não é substituído;
-  missões sem lucro infinito; automação congelada com dívida; codecs estritos; tirar amigos desligados.
+  missões em lotes de 4 dias (uma vez por jogador), pedidos dos aldeões com «!», a vila cresce com as missões (prestígio →
+  moradores, casa se faltar cama); missões sem lucro infinito; automação congelada com dívida; codecs estritos; tirar amigos
+  desligados; postes de 4 blocos com o Industrial 0.12.2+.
 
 Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
 `tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
 `merchant_every_days`, `merchant_stay_days`, `wall`, `cubcoin_trades`, `mission_daily_cap_cents`, `mission_daily_per_player`,
-`civic_buildings`).
+`civic_buildings`, `mission_batch_days`, `prestige_per_resident`, `population_cap`, `mission_fund_daily_cents`,
+`mission_fund_cap_cents`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
 `/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`.
 

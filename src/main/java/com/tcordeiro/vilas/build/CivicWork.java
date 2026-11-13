@@ -160,7 +160,8 @@ public final class CivicWork {
 
 	/** A obra (blocos da estrutura NBT, de baixo para cima) num sítio livre, ou null. */
 	public static Project create(ServerLevel level, Village v, String building) {
-		var t = level.getServer().getStructureTemplateManager().get(template(biome(level, v), building));
+		boolean house = building.equals("house");
+		var t = level.getServer().getStructureTemplateManager().get(house ? houseTemplate(biome(level, v)) : template(biome(level, v), building));
 		if (t.isEmpty()) {
 			TVilas.LOGGER.warn("Vilas: estrutura {} não encontrada", template(biome(level, v), building));
 			return null;
@@ -180,12 +181,42 @@ public final class CivicWork {
 		Project p = new Project(kind(building), origin.offset(size.getX() / 2, 0, size.getZ() / 2));
 		for (var b : blocks) {
 			BlockState s = b.state();
-			if (s.isAir() || s.is(Blocks.STRUCTURE_VOID) || s.is(Blocks.JIGSAW) || s.is(VilasBlocks.MAYOR_DESK)) continue;
+			if (s.is(Blocks.JIGSAW)) s = finalState(level, b.nbt()); // como na geração: o bloco de encaixe vira o «final_state» (ex.: rua)
+			if (s == null || s.isAir() || s.is(Blocks.STRUCTURE_VOID) || s.is(Blocks.JIGSAW) || s.is(VilasBlocks.MAYOR_DESK)) continue;
 			p.pending.add(new Project.Placement(origin.offset(b.pos()), s));
 		}
 		p.total = p.pending.size();
-		v.civic.put(building + "_built", new LotRules.Area(origin.getX() - 1, origin.getZ() - 1, origin.getX() + size.getX(), origin.getZ() + size.getZ()));
+		if (!house) // a casa é dos moradores, não é área cívica
+			v.civic.put(building + "_built", new LotRules.Area(origin.getX() - 1, origin.getZ() - 1, origin.getX() + size.getX(), origin.getZ() + size.getZ()));
 		return p;
+	}
+
+	/** A casa pequena da vila do jogo (com cama) do bioma. */
+	static net.minecraft.resources.Identifier houseTemplate(String biome) {
+		return net.minecraft.resources.Identifier.withDefaultNamespace("village/" + biome + "/houses/" + biome + "_small_house_1");
+	}
+
+	/** 0.3.0: o prestígio pede um morador mas não há cama — o Prefeito encomenda uma casa simples (paga pela tesouraria). */
+	public static Project orderHouse(ServerLevel level, Village v) {
+		long cost = com.tcordeiro.vilas.logic.GrowthRules.HOUSE_CENTS;
+		if (v.economy.treasury < cost) return null;
+		Project p = create(level, v, "house");
+		if (p == null) return null;
+		v.economy.treasury -= cost;
+		v.economy.log(VillageEconomy.day(level), "tvilas.upgrade.house", cost);
+		Builders.start(level, v, p);
+		return p;
+	}
+
+	/** O «final_state» de um bloco de encaixe (jigsaw) da estrutura, ou null. */
+	static BlockState finalState(ServerLevel level, net.minecraft.nbt.CompoundTag nbt) {
+		if (nbt == null) return null;
+		String fs = nbt.getStringOr("final_state", "minecraft:air");
+		try {
+			return net.minecraft.commands.arguments.blocks.BlockStateParser.parseForBlock(level.holderLookup(Registries.BLOCK), fs, false).blockState();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	/**
@@ -219,7 +250,7 @@ public final class CivicWork {
 				int wx = x0 + x, wz = z0 + z;
 				if (!level.isLoaded(new BlockPos(wx, v.center.getY(), wz))) return null;
 				BlockPos top = Ground.surface(level, wx, wz, v.center.getY());
-				if (!natural(level.getBlockState(top.below()))) return null; // rua, casa ou bloco de jogador: não
+				if (!Ground.natural(level.getBlockState(top.below()))) return null; // rua, casa ou bloco de jogador: não
 				tops[x * sz + z] = top.getY();
 				minY = Math.min(minY, top.getY());
 				maxY = Math.max(maxY, top.getY());
@@ -232,15 +263,6 @@ public final class CivicWork {
 					if (level.isOutsideBuildHeight(p) || !Ground.free(level.getBlockState(p))) return null;
 				}
 		return new BlockPos(x0, maxY, z0);
-	}
-
-	/**
-	 * Chão natural para um edifício: o de {@link Ground#natural} e também a relva, a podzólica, o micélio, a lama e o musgo (no
-	 * 26.3 a etiqueta {@code minecraft:dirt} não traz o bloco de relva). Nunca ruas nem blocos de jogador.
-	 */
-	static boolean natural(BlockState s) {
-		return !Ground.street(s) && (Ground.natural(s) || s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.PODZOL) || s.is(Blocks.MYCELIUM)
-				|| s.is(Blocks.COARSE_DIRT) || s.is(Blocks.ROOTED_DIRT) || s.is(Blocks.MUD) || s.is(Blocks.MOSS_BLOCK) || s.is(Blocks.DIRT));
 	}
 
 	/** Acabou a obra: a vila já tem este edifício. */

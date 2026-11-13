@@ -134,4 +134,24 @@ public class CivicBuildGameTests {
 		clear(level, c);
 		h.succeed();
 	}
+
+	/** Sem cama livre, o prestígio das missões faz o Prefeito encomendar uma casa simples (paga pela tesouraria). */
+	@GameTest
+	public void noFreeBedOrdersAHouse(GameTestHelper h) {
+		ServerLevel level = h.getLevel();
+		BlockPos c = h.absolutePos(new BlockPos(4, 1, 4)).offset(0, 0, 30000); // longe dos outros testes
+		Village v = oldVillage(h, c);
+		v.civic.prestige = com.tcordeiro.vilas.VilasConfig.get().prestige_per_resident;
+		long before = v.economy.treasury;
+		h.assertValueEqual(com.tcordeiro.vilas.village.Growth.step(level, v), com.tcordeiro.vilas.logic.GrowthRules.Step.ORDER_HOUSE, "sem cama: casa");
+		h.assertTrue(v.extra.projects.stream().anyMatch(p -> p.kind == Project.Kind.HOUSE), "a casa está em obras");
+		h.assertValueEqual(v.economy.treasury, before - com.tcordeiro.vilas.logic.GrowthRules.HOUSE_CENTS, "paga pela tesouraria");
+		h.assertValueEqual(com.tcordeiro.vilas.village.Growth.step(level, v), com.tcordeiro.vilas.logic.GrowthRules.Step.WAIT, "uma casa de cada vez");
+		Builders.overnight(level, v); // feita de noite: tem cama, chega o morador
+		h.assertTrue(com.tcordeiro.vilas.village.Growth.freeBeds(level, v) > 0 || v.civic.prestige == 0, "a casa tem cama (ou o morador já a ocupou)");
+		VillageData.get(level).villages.remove(v);
+		level.getEntitiesOfClass(Villager.class, new net.minecraft.world.phys.AABB(c).inflate(HALF)).forEach(net.minecraft.world.entity.Entity::discard);
+		clear(level, c);
+		h.succeed();
+	}
 }

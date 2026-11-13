@@ -138,19 +138,19 @@ public class ReviewFixGameTests {
 		long reward = MissionRules.rewardCents(1, com.tcordeiro.vilas.VilasConfig.get().emerald_value_cents);
 		VillageManager.setMission(h.getLevel(), v, 0, wheat);
 		p.getInventory().add(new ItemStack(Items.WHEAT, 64));
+		v.civic.missionFund = 0; // aqui só a tesouraria (o fundo tem o seu teste)
 		v.economy.treasury = reward - 1;
 		h.assertTrue(!VillageManager.deliver(p, v, 0).ok(), "tesouraria sem dinheiro: não paga");
 		h.assertValueEqual(VillageManager.count(p.getInventory(), Items.WHEAT), 64, "e não tira os itens");
 		h.assertValueEqual(TestUtil.money(p), 0L, "nem cria dinheiro");
 		v.economy.treasury = 100 * reward;
-		for (int i = 0; i < MissionRules.DAILY_PER_PLAYER; i++) {
-			VillageManager.setMission(h.getLevel(), v, 0, wheat);
-			h.assertTrue(VillageManager.deliver(p, v, 0).ok(), "missão " + (i + 1) + " do dia");
-		}
-		h.assertValueEqual(v.economy.treasury, 100 * reward - MissionRules.DAILY_PER_PLAYER * reward, "o dinheiro saiu da tesouraria");
-		h.assertValueEqual(TestUtil.money(p), MissionRules.DAILY_PER_PLAYER * reward, "o jogador recebeu o mesmo (nada criado)");
-		VillageManager.setMission(h.getLevel(), v, 0, wheat);
-		h.assertTrue(!VillageManager.deliver(p, v, 0).ok(), "a 4.ª missão do dia espera por amanhã");
+		long mid = v.missions.get(0).id();
+		h.assertTrue(VillageManager.deliver(p, v, 0).ok(), "com dinheiro, paga");
+		h.assertValueEqual(v.economy.treasury, 99 * reward, "o dinheiro saiu da tesouraria");
+		h.assertValueEqual(TestUtil.money(p), reward, "o jogador recebeu o mesmo (nada criado)");
+		h.assertValueEqual(v.missions.get(0).id(), mid, "a missão fica no quadro até ao lote seguinte");
+		h.assertTrue(!VillageManager.deliver(p, v, 0).ok(), "a mesma missão, o mesmo jogador, o mesmo lote: não");
+		h.assertValueEqual(v.economy.treasury, 99 * reward, "e não paga outra vez");
 		// outro jogador, mas a vila já passou o teto do dia
 		ServerPlayer other = TestUtil.playerAt(h, new BlockPos(5, 1, 4));
 		other.getInventory().clearContent();
@@ -158,7 +158,89 @@ public class ReviewFixGameTests {
 		v.civic.paidToday = com.tcordeiro.vilas.VilasConfig.get().mission_daily_cap_cents;
 		h.assertTrue(!VillageManager.deliver(other, v, 0).ok(), "passa o teto diário da tesouraria");
 		v.civic.missionDay = -1; // novo dia: recomeça
-		h.assertTrue(VillageManager.deliver(other, v, 0).ok(), "no dia seguinte paga");
+		h.assertTrue(VillageManager.deliver(other, v, 0).ok(), "no dia seguinte paga (outro jogador pode fazer a mesma missão)");
+		h.succeed();
+	}
+
+	/** O lote: a cada 4 dias o quadro troca TODAS as missões e quem já fez pode fazer as novas. */
+	@GameTest
+	public void boardRenewsEveryBatch(GameTestHelper h) {
+		Village v = TestUtil.richVillage(h);
+		var level = h.getLevel();
+		com.tcordeiro.vilas.village.VillagerRequests.tick(level, v); // 1.º lote
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
+		p.getInventory().clearContent();
+		p.getInventory().add(new ItemStack(Items.WHEAT, 64));
+		VillageManager.setMission(level, v, 0, new MissionRules.Template(MissionRules.Kind.DELIVER, "minecraft:wheat", 2, 1, 1, 1));
+		h.assertTrue(VillageManager.deliver(p, v, 0).ok(), "faz a missão");
+		h.assertTrue(!VillageManager.deliver(p, v, 0).ok(), "uma vez por lote");
+		java.util.List<Long> before = v.missions.stream().map(com.tcordeiro.vilas.village.Mission::id).toList();
+		com.tcordeiro.vilas.village.VillagerRequests.tick(level, v);
+		h.assertValueEqual(v.missions.stream().map(com.tcordeiro.vilas.village.Mission::id).toList(), before, "no mesmo lote nada muda");
+		v.civic.batch.id--; // passaram 4 dias
+		com.tcordeiro.vilas.village.VillagerRequests.tick(level, v);
+		for (int i = 0; i < 3; i++) h.assertTrue(!before.contains(v.missions.get(i).id()), "lote novo: a missão " + (i + 1) + " foi trocada");
+		h.assertTrue(v.civic.batch.done.isEmpty(), "e o que cada um fez recomeça");
+		h.assertValueEqual(v.missions.size(), 3, "continuam 3");
+		h.succeed();
+	}
+
+	/** Uma vila nova tem 200 CB no fundo das missões; +50 CB por dia até 400 CB; paga primeiro do fundo. */
+	@GameTest
+	public void newVillageHasAMissionFund(GameTestHelper h) {
+		Village v = TestUtil.village(h);
+		h.assertValueEqual(v.civic.missionFund, com.tcordeiro.vilas.logic.FundRules.START_CENTS, "200 CB no fundo ao nascer");
+		h.assertValueEqual(v.economy.treasury, 0L, "a tesouraria começa vazia");
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 4));
+		p.getInventory().clearContent();
+		p.getInventory().add(new ItemStack(Items.WHEAT, 64));
+		VillageManager.setMission(h.getLevel(), v, 0, new MissionRules.Template(MissionRules.Kind.DELIVER, "minecraft:wheat", 2, 1, 1, 1));
+		h.assertTrue(VillageManager.deliver(p, v, 0).ok(), "uma vila nova já paga missões");
+		long reward = MissionRules.rewardCents(1, com.tcordeiro.vilas.VilasConfig.get().emerald_value_cents);
+		h.assertValueEqual(v.civic.missionFund, com.tcordeiro.vilas.logic.FundRules.START_CENTS - reward, "saiu do fundo");
+		h.assertValueEqual(TestUtil.money(p), reward, "o jogador recebeu o mesmo");
+		// dias depois o fundo enche, mas nunca passa dos 400 CB
+		long day = VillageEconomy.day(h.getLevel());
+		v.economy.lastDay = day;
+		VillageEconomy.daily(h.getLevel(), v, day + 100);
+		h.assertValueEqual(v.civic.missionFund, com.tcordeiro.vilas.logic.FundRules.CAP_CENTS, "teto de 400 CB");
+		v.civic.missionFund = 0;
+		VillageEconomy.daily(h.getLevel(), v, day + 101);
+		h.assertValueEqual(v.civic.missionFund, com.tcordeiro.vilas.logic.FundRules.DAILY_CENTS, "+50 CB num dia");
+		h.succeed();
+	}
+
+	/** Prefeito sumido (chunk por carregar) há 3 dias: chega um novo; o antigo perde a profissão quando voltar a carregar. */
+	@GameTest
+	public void vanishedMayorIsReplacedAfterThreeDays(GameTestHelper h) {
+		TestUtil.clean(h);
+		TestUtil.floor(h, 4);
+		BlockPos desk = new BlockPos(4, 1, 4);
+		h.setBlock(desk, VilasBlocks.MAYOR_DESK);
+		var level = h.getLevel();
+		Village v = VillageManager.found(level, h.absolutePos(desk), TestUtil.RADIUS);
+		long now = level.getGameTime() + 100 * VillageEconomy.DAY;
+		java.util.UUID gone = java.util.UUID.randomUUID(); // um Prefeito que não está carregado em lado nenhum
+		v.civic.mayor = gone;
+		v.civic.mayorSeen = now - 2 * VillageEconomy.DAY;
+		h.assertTrue(VillageEconomy.ensureMayor(level, v, now) == null, "2 dias sumido: ainda espera");
+		h.assertTrue(v.civic.mayorTaken, "conta como levado");
+		v.civic.mayorSeen = now - 3 * VillageEconomy.DAY;
+		Villager fresh = VillageEconomy.ensureMayor(level, v, now);
+		h.assertTrue(fresh != null && VillageManager.isMayor(fresh), "3 dias sumido: chega um novo (a vila nunca fica presa)");
+		h.assertTrue(v.civic.retired.contains(gone), "o antigo fica marcado");
+		fresh.discard();
+		// o antigo volta a carregar: deixa de ser Prefeito
+		Villager old = h.spawn(EntityTypes.VILLAGER, new BlockPos(2, 1, 6));
+		old.setNoAi(true);
+		old.setVillagerData(old.getVillagerData().withProfession(level.registryAccess(), com.tcordeiro.vilas.registry.VilasProfessions.MAYOR));
+		v.civic.retired.add(old.getUUID());
+		VillageEconomy.onLoaded(level, old);
+		h.assertTrue(!VillageManager.isMayor(old), "o antigo Prefeito perde a profissão");
+		h.assertTrue(!v.civic.retired.contains(old.getUUID()), "e sai da lista");
+		old.discard();
+		h.setBlock(desk, Blocks.AIR);
+		VillageData.get(level).villages.remove(v);
 		h.succeed();
 	}
 
@@ -236,13 +318,42 @@ public class ReviewFixGameTests {
 		h.assertTrue(!VillageManager.explosionMayBreak(level, null, outside, h.absolutePos(stone)), "explosão de fora não parte");
 		h.assertTrue(!VillageManager.mayCross(level, outside, h.absolutePos(stone)), "líquidos/pistões de fora não entram");
 		h.assertTrue(VillageManager.mayCross(level, h.absolutePos(stone), h.absolutePos(stone).east()), "lá dentro tudo trabalha");
+		// o dono da Mesa e os amigos dele podem; os outros não
+		ServerPlayer owner = TestUtil.playerAt(h, new BlockPos(3, 1, 3));
+		v.civic.owner = owner.getUUID();
+		h.assertTrue(VillageManager.mayModify(level, h.absolutePos(stone), owner), "o dono da Mesa mexe");
+		h.assertTrue(!VillageManager.mayModify(level, h.absolutePos(stone), p), "um estranho continua sem mexer");
+		h.assertTrue(!VillageManager.addCivicFriend(p, v, owner).ok(), "só o dono junta amigos");
+		h.assertTrue(VillageManager.addCivicFriend(owner, v, p).ok(), "o dono junta um amigo");
+		h.assertTrue(VillageManager.mayModify(level, h.absolutePos(stone), p), "o amigo mexe");
+		h.assertTrue(VillageManager.explosionMayBreak(level, p, h.absolutePos(stone), h.absolutePos(stone)), "a TNT do amigo também");
+		h.assertTrue(VillageManager.removeCivicFriend(owner, v, p.getGameProfile().name()).ok(), "o dono tira-o pelo nome");
+		h.assertTrue(!VillageManager.mayModify(level, h.absolutePos(stone), p), "tirado, já não mexe");
 		var cat = h.spawn(EntityTypes.CAT, new BlockPos(5, 1, 3));
 		h.assertValueEqual(AttackEntityCallback.EVENT.invoker().interact(p, level, InteractionHand.MAIN_HAND, cat, null), InteractionResult.FAIL,
 				"os bichos da praça também");
+		h.assertValueEqual(AttackEntityCallback.EVENT.invoker().interact(owner, level, InteractionHand.MAIN_HAND, cat, null), InteractionResult.PASS,
+				"o dono da Mesa pode");
 		cat.discard();
 		h.setBlock(stone, Blocks.AIR);
 		h.setBlock(desk, Blocks.AIR);
 		VillageData.get(level).villages.remove(v);
+		h.succeed();
+	}
+
+	/** Quem põe a Mesa fica dono da área cívica. */
+	@GameTest
+	public void whoPlacesTheDeskOwnsTheCivicArea(GameTestHelper h) {
+		TestUtil.clean(h);
+		TestUtil.floor(h, 4);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 2));
+		BlockPos desk = new BlockPos(4, 1, 4);
+		TestUtil.placeWithItem(h, p, new ItemStack(VilasBlocks.MAYOR_DESK), desk);
+		h.assertBlockPresent(VilasBlocks.MAYOR_DESK, desk);
+		Village v = VillageManager.byDesk(h.getLevel(), h.absolutePos(desk));
+		h.assertTrue(v != null && p.getUUID().equals(v.civic.owner), "o jogador que pôs a Mesa é o dono");
+		h.setBlock(desk, Blocks.AIR);
+		VillageData.get(h.getLevel()).villages.remove(v);
 		h.succeed();
 	}
 
@@ -310,6 +421,35 @@ public class ReviewFixGameTests {
 		h.assertTrue(back.isSuccess(), "a vila carrega");
 		h.assertValueEqual(back.getOrThrow().missions.size(), 1, "só a missão estragada foi ignorada");
 		h.assertTrue(TVilas.MOD_ID.equals("tvilas"), "ok");
+		h.succeed();
+	}
+
+	/** Industrial 0.12.2+: os postes da iluminação têm 4 blocos (API de colunas, sem LED); tirar um poste não larga itens. */
+	@GameTest
+	public void streetPolesAreFourBlocksAndRemoveCleanly(GameTestHelper h) {
+		var kit = com.tcordeiro.vilas.build.StreetLightKit.forBiome("plains");
+		boolean api = kit.industrial() && com.tcordeiro.vilas.build.StreetLightKit.columnApi(kit.pole().get(0).getBlock()) != null;
+		if (!api) {
+			h.assertTrue(kit.height() <= 4, "sem a API: a altura de origem");
+			h.succeed();
+			return;
+		}
+		h.assertValueEqual(kit.height(), com.tcordeiro.vilas.build.StreetLightKit.POLE_HEIGHT, "com a API: 4 blocos");
+		Village v = TestUtil.village(h);
+		var level = h.getLevel();
+		BlockPos base = new BlockPos(4, 1, 2);
+		var p = new com.tcordeiro.vilas.village.Project(com.tcordeiro.vilas.village.Project.Kind.LIGHTING, h.absolutePos(base));
+		p.pending.add(new com.tcordeiro.vilas.village.Project.Placement(h.absolutePos(base), kit.pole().get(0), kit.height()));
+		p.total = 1;
+		com.tcordeiro.vilas.build.Builders.start(level, v, p);
+		com.tcordeiro.vilas.build.Builders.overnight(level, v);
+		var b = kit.pole().get(0).getBlock();
+		for (int i = 0; i < 4; i++) h.assertTrue(level.getBlockState(h.absolutePos(base.above(i))).is(b), "parte " + (i + 1) + " do poste");
+		h.assertTrue(!level.getBlockState(h.absolutePos(base.above(4))).is(b), "e não mais de 4");
+		h.killAllEntitiesOfClass(ItemEntity.class);
+		com.tcordeiro.vilas.build.LightingWork.removePole(level, kit, h.absolutePos(base));
+		for (int i = 0; i < 4; i++) h.assertTrue(level.getBlockState(h.absolutePos(base.above(i))).isAir(), "tirada a parte " + (i + 1));
+		h.assertTrue(h.getEntities(EntityTypes.ITEM).isEmpty(), "sem largar itens");
 		h.succeed();
 	}
 }

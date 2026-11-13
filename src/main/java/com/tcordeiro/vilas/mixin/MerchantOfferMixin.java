@@ -62,6 +62,20 @@ public abstract class MerchantOfferMixin implements MoneyOffer {
 		return (MerchantOffer) (Object) this;
 	}
 
+	/**
+	 * O preço base (sem procura nem descontos) em CubCoin, para o ecrã de trocas mostrar o riscado na mesma nota. As contas do jogo
+	 * que precisam do número de esmeraldas (o desconto do Herói da Aldeia) leem a troca original: {@code VillagerSpecialPricesMixin}.
+	 */
+	@Inject(method = "getBaseCostA", at = @At("HEAD"), cancellable = true)
+	private void tvilas$baseCostA(CallbackInfoReturnable<ItemStack> cir) {
+		if (tvilas$money() && tvilas$emeraldsA() > 0) cir.setReturnValue(com.tcordeiro.vilas.compat.MoneyTrades.displayBaseA(tvilas$self(), baseCostA.count()));
+	}
+
+	@Override
+	public ItemStack tvilas$rawBaseCostA() {
+		return baseCostA.itemStack();
+	}
+
 	@Inject(method = "getCostA", at = @At("HEAD"), cancellable = true)
 	private void tvilas$costA(CallbackInfoReturnable<ItemStack> cir) {
 		if (tvilas$money() && tvilas$emeraldsA() > 0) cir.setReturnValue(com.tcordeiro.vilas.compat.MoneyTrades.displayA(tvilas$self()));

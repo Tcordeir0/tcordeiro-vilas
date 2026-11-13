@@ -29,9 +29,31 @@ public final class MissionEvents {
 			return InteractionResult.SUCCESS;
 		});
 
+		// 0.3.0: aldeão com pedido («!»): clicar abre o pedido; Shift+clique (ou o botão «Trocar» do pedido) faz as trocas normais
+		UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
+			if (world instanceof ServerLevel level && player instanceof ServerPlayer sp && entity instanceof net.minecraft.world.entity.npc.villager.Villager vi
+					&& !VillageManager.isMayor(vi))
+				return VillagerRequests.onUse(sp, level, vi, hand);
+			return InteractionResult.PASS;
+		});
+
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (source.getEntity() instanceof ServerPlayer killer) VillageManager.onKill(killer, entity);
-			if (VillageManager.isMayor(entity) && entity.level() instanceof ServerLevel level) VillageEconomy.onMayorDied(level, entity.getUUID());
+			if (VillageManager.isMayor(entity) && entity.level() instanceof ServerLevel level) VillageEconomy.onMayorDied(level.getServer(), entity.getUUID());
+		});
+
+		// 0.3.0: o Prefeito que se converte (zumbi) ou muda de dimensão deixa a vila livre para outro; antigos Prefeitos perdem o posto
+		ServerLivingEntityEvents.MOB_CONVERSION.register((previous, converted, params) -> {
+			if (VillageManager.isMayor(previous) && previous.level() instanceof ServerLevel level) VillageEconomy.onMayorDied(level.getServer(), previous.getUUID());
+		});
+		net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents.AFTER_ENTITY_CHANGE_LEVEL.register((original, moved, from, to) -> {
+			if (!VillageManager.isMayor(moved)) return;
+			VillageEconomy.onMayorDied(to.getServer(), original.getUUID());
+			if (moved instanceof net.minecraft.world.entity.npc.villager.Villager m) VillageEconomy.retire(to, m, null);
+		});
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((e, level) -> {
+			VillageEconomy.onLoaded(level, e);
+			VillagerRequests.onLoaded(level, e);
 		});
 
 		// Golens chamados pelo alarme não largam ferro (senão ligar/desligar o alarme seria uma quinta de ferro)

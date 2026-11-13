@@ -45,6 +45,16 @@ public final class TownDialog {
 		body.add(new PlainMessage(Component.translatable("tvilas.dialog.treasury", VillageManager.money(eco.treasury),
 				VillageManager.money(eco.collected), VillageManager.money(com.tcordeiro.vilas.village.VillageEconomy.debt(v, p.getUUID())),
 				com.tcordeiro.vilas.logic.TaxRules.format(com.tcordeiro.vilas.village.VillageEconomy.taxRate(v).percent()), v.radius), 300));
+		// 0.3.0: o que falta à vila (o Prefeito manda construir), logo no topo
+		if (!v.civic.missing().isEmpty() && com.tcordeiro.vilas.VilasConfig.get().civic_buildings)
+		{
+			MutableComponent list = Component.empty();
+			for (String k : v.civic.missing()) {
+				if (!list.getSiblings().isEmpty()) list.append(", ");
+				list.append(Component.translatable("tvilas.upgrade." + k));
+			}
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.civic_missing", list).withStyle(ChatFormatting.GOLD), 300));
+		}
 		// 0.2.0: a taxa e porquê, obras, mercador, dívida/congelamento
 		var rate = com.tcordeiro.vilas.village.VillageEconomy.taxRate(v);
 		var cfg = com.tcordeiro.vilas.VilasConfig.get();
@@ -73,28 +83,27 @@ public final class TownDialog {
 		var cfg3 = com.tcordeiro.vilas.VilasConfig.get();
 		var civic = v.civic;
 		boolean today = civic.missionDay == com.tcordeiro.vilas.village.VillageEconomy.day(level);
-		body.add(new PlainMessage(Component.translatable("tvilas.dialog.missions_today", today ? civic.doneToday.getOrDefault(p.getUUID(), 0) : 0,
-				cfg3.mission_daily_per_player, VillageManager.money(today ? civic.paidToday : 0), VillageManager.money(cfg3.mission_daily_cap_cents))
-				.withStyle(ChatFormatting.GRAY), 300));
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.batch", com.tcordeiro.vilas.village.VillagerRequests.untilNext(level),
+				VillageManager.money(today ? civic.paidToday : 0), VillageManager.money(cfg3.mission_daily_cap_cents)).withStyle(ChatFormatting.GRAY), 300));
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.prestige", civic.prestige, cfg3.prestige_per_resident, v.population,
+				cfg3.population_cap).withStyle(ChatFormatting.GRAY), 300));
+		if (!civic.batch.requests.isEmpty())
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.requests", civic.batch.requests.size()).withStyle(ChatFormatting.GRAY), 300));
+		body.add(new PlainMessage(Component.translatable("tvilas.dialog.mission_fund", VillageManager.money(civic.missionFund),
+				VillageManager.money(cfg3.mission_fund_cap_cents)).withStyle(ChatFormatting.GRAY), 300));
 		if (civic.mayorTaken) body.add(new PlainMessage(Component.translatable("tvilas.dialog.mayor_taken").withStyle(ChatFormatting.RED), 300));
-		if (!civic.missing().isEmpty() && cfg3.civic_buildings)
-		{
-			MutableComponent list = Component.empty();
-			for (String k : civic.missing()) {
-				if (!list.getSiblings().isEmpty()) list.append(", ");
-				list.append(Component.translatable("tvilas.upgrade." + k));
-			}
-			body.add(new PlainMessage(Component.translatable("tvilas.dialog.civic_missing", list).withStyle(ChatFormatting.GRAY), 300));
-		}
 		List<ActionButton> buttons = new ArrayList<>();
 		for (int i = 0; i < v.missions.size(); i++) {
 			Mission m = v.missions.get(i);
 			boolean acc = VillageManager.accepted(v, p.getUUID(), m) || m.kind() == MissionRules.Kind.DELIVER;
+			boolean doneIt = v.civic.batch.done.contains(com.tcordeiro.vilas.village.Batch.key(p.getUUID(), m.id()));
 			int prog = VillageManager.progress(p, v, m);
 			MutableComponent line = Component.translatable("tvilas.dialog.mission", i + 1, VillageManager.describe(m), VillageManager.reward(m.emeralds()), m.reputation());
 			if (acc) line.append(Component.translatable("tvilas.dialog.progress", Math.min(prog, m.count()), m.count()).withStyle(ChatFormatting.GRAY));
 			if (m.kind() == MissionRules.Kind.DEFEND) line.append(Component.translatable("tvilas.dialog.defend_hint").withStyle(ChatFormatting.GRAY));
+			if (doneIt) line.append(Component.translatable("tvilas.dialog.mission_done").withStyle(ChatFormatting.GREEN));
 			body.add(new PlainMessage(line, 300));
+			if (doneIt) continue; // já feita neste lote: sem botão
 			String cmd = acc ? "/vila missao entregar " + (i + 1) : "/vila missao aceitar " + (i + 1);
 			Component label = acc ? Component.translatable("tvilas.dialog.deliver", i + 1) : Component.translatable("tvilas.dialog.accept", i + 1);
 			buttons.add(button(label, cmd));

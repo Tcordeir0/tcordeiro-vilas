@@ -99,7 +99,7 @@ public final class VillageEconomy {
 	}
 
 	/** O núcleo da vila: {@link #CORE_RADIUS} blocos (ou o raio, se a vila for mais pequena). */
-	static int coreRadius(Village v) {
+	public static int coreRadius(Village v) {
 		return Math.min(CORE_RADIUS, v.radius);
 	}
 
@@ -164,27 +164,40 @@ public final class VillageEconomy {
 		AABB near = new AABB(v.center).inflate(Math.min(48, v.radius));
 		Civic c = v.civic;
 		List<Villager> here = level.getEntitiesOfClass(Villager.class, near, e -> e.isAlive() && VillageManager.isMayor(e));
+		for (Villager r : here) if (c.retired.contains(r.getUUID())) retire(level, r, c); // um antigo Prefeito que voltou: já não é
+		here.removeIf(r -> !VillageManager.isMayor(r));
 		if (!here.isEmpty()) {
 			if (!here.get(0).getUUID().equals(c.mayor) || c.mayorTaken) {
 				c.mayor = here.get(0).getUUID();
 				c.mayorTaken = false;
-				VillageData.get(level).changed();
 			}
+			c.mayorSeen = now;
+			VillageData.get(level).changed();
 			return null;
 		}
-		// C6 (0.3.0): o Prefeito conhecido não está aqui mas está vivo (levado num barco, carrinho…) ou num chunk por carregar —
-		// NÃO chega outro (senão capturá-lo dava um aldeão por dia). Volta só pela Mesa (MayorDeskBlock) ou se morrer.
+		// C6 (0.3.0): o Prefeito conhecido não está aqui. Vivo e carregado noutro sítio (levado num barco, carrinho…): NÃO chega
+		// outro (senão capturá-lo dava um aldeão por dia) — volta pela Mesa ou se morrer. Sumido (chunk por carregar) há 3 dias de
+		// jogo: chega um novo e o antigo deixa de ser Prefeito quando voltar a aparecer (nunca fica a vila presa para sempre).
 		if (c.mayor != null) {
+			if (c.mayorSeen < 0) c.mayorSeen = now; // vilas de antes da 0.3.0: conta a partir de agora
 			var e = level.getEntity(c.mayor);
-			if (e == null || e instanceof Villager m && m.isAlive() && VillageManager.isMayor(m)) {
+			if (e instanceof Villager m && m.isAlive() && VillageManager.isMayor(m)) {
+				c.mayorSeen = now;
+				if (!c.mayorTaken) c.mayorTaken = true;
+				VillageData.get(level).changed();
+				return null;
+			}
+			if (e == null && !com.tcordeiro.vilas.logic.FundRules.mayorGone(c.mayorSeen, now, DAY)) {
 				if (!c.mayorTaken) {
 					c.mayorTaken = true;
 					VillageData.get(level).changed();
 				}
 				return null;
 			}
-			c.mayor = null; // carregado mas já não é Prefeito (perdeu o posto): esquece-o
+			if (e == null) c.retired.add(c.mayor); // sumido 3 dias: quando voltar a carregar perde a profissão
+			c.mayor = null; // morto, sem posto, ou sumido: esquece-o
 			c.mayorTaken = false;
+			c.mayorSeen = -1;
 		}
 		if (!level.getEntitiesOfClass(Villager.class, near, e -> !e.isBaby() && e.getVillagerData().profession().is(VillagerProfession.NONE)).isEmpty())
 			return null; // um desempregado vai apanhar a Mesa sozinho (vanilla)
@@ -194,6 +207,7 @@ public final class VillageEconomy {
 		v.economy.lastMayorCall = now;
 		c.mayor = mayor.getUUID();
 		c.mayorTaken = false;
+		c.mayorSeen = now;
 		mayor.setVillagerData(mayor.getVillagerData().withProfession(level.registryAccess(), VilasProfessions.MAYOR));
 		// 0.3.0: com 0 de XP e nível 1, o comportamento vanilla «ResetProfession» tira-lhe a profissão logo que perde a memória do
 		// posto (ficava «minecraft:none»). Com 1 de XP ele já é Prefeito «de carreira» e não a perde.
@@ -214,13 +228,35 @@ public final class VillageEconomy {
 				.isPresent();
 	}
 
-	/** O Prefeito morreu: a vila pode receber outro (no máximo 1 por dia, como antes). */
-	public static void onMayorDied(ServerLevel level, java.util.UUID who) {
+	/** O Prefeito morreu (ou converteu-se, ou mudou de dimensão): a vila de qualquer dimensão pode receber outro (máx. 1 por dia). */
+	public static void onMayorDied(net.minecraft.server.MinecraftServer server, java.util.UUID who) {
+		for (ServerLevel level : server.getAllLevels())
+			for (Village v : VillageData.get(level).villages)
+				if (who.equals(v.civic.mayor)) {
+					v.civic.mayor = null;
+					v.civic.mayorTaken = false;
+					v.civic.mayorSeen = -1;
+					VillageData.get(level).changed();
+				}
+	}
+
+	/** Este aldeão foi Prefeito e já não é (sumido 3 dias, ou saiu da dimensão): perde a profissão e a experiência. */
+	public static void retire(ServerLevel level, Villager m, Civic c) {
+		if (c != null) c.retired.remove(m.getUUID());
+		if (!VillageManager.isMayor(m)) return;
+		m.setVillagerXp(0);
+		m.setVillagerData(m.getVillagerData().withProfession(level.registryAccess(), VillagerProfession.NONE).withLevel(1));
+		m.getBrain().eraseMemory(MemoryModuleType.JOB_SITE);
+		VillageData.get(level).changed();
+	}
+
+	/** Um aldeão carregou: se for um antigo Prefeito desta dimensão, perde a profissão. */
+	public static void onLoaded(ServerLevel level, net.minecraft.world.entity.Entity e) {
+		if (!(e instanceof Villager m) || !VillageManager.isMayor(m)) return;
 		for (Village v : VillageData.get(level).villages)
-			if (who.equals(v.civic.mayor)) {
-				v.civic.mayor = null;
-				v.civic.mayorTaken = false;
-				VillageData.get(level).changed();
+			if (v.civic.retired.contains(m.getUUID())) {
+				retire(level, m, v.civic);
+				return;
 			}
 	}
 
@@ -242,7 +278,7 @@ public final class VillageEconomy {
 		return Component.translatable("tvilas.mayor.taken");
 	}
 
-	static Villager spawnVillager(ServerLevel level, Village v) {
+	public static Villager spawnVillager(ServerLevel level, Village v) {
 		int range = Math.max(1, Math.min(6, v.radius / 2)); // perto da Mesa (e sempre dentro de uma vila pequena)
 		return SpawnUtil.trySpawnMob(EntityTypes.VILLAGER, EntitySpawnReason.MOB_SUMMONED, level, v.center, 20, range, 4,
 				SpawnUtil.Strategy.ON_TOP_OF_COLLIDER, false).orElse(null);
@@ -255,6 +291,7 @@ public final class VillageEconomy {
 	 */
 	public static void daily(ServerLevel level, Village v, long day) {
 		com.tcordeiro.vilas.build.CivicWork.refresh(level, v); // 0.3.0: área cívica protegida e os edifícios que a vila já tem
+		VillagerRequests.tick(level, v); // 0.3.0: lote de missões (a cada 4 dias) e os «!» dos aldeões com pedidos
 		Village.Economy e = v.economy;
 		if (e.lastDay < 0) {
 			e.lastDay = day;
@@ -264,15 +301,20 @@ public final class VillageEconomy {
 		long days = day - e.lastDay;
 		if (days <= 0) return;
 		e.lastDay = day;
+		// 0.3.0: o fundo das missões recebe 50 CB por dia, até 400 CB
+		VilasConfig cf = VilasConfig.get();
+		v.civic.missionFund = com.tcordeiro.vilas.logic.FundRules.topUp(v.civic.missionFund, days, cf.mission_fund_daily_cents, cf.mission_fund_cap_cents);
 		long perBed = VilasConfig.get().bed_tax_cents;
 		for (Lot lot : VillageManager.lotsOf(level, v)) charge(level, v, lot.owner, TreasuryRules.bedTax(bedsIn(level, lot), days, perBed));
 		for (UUID who : new ArrayList<>(e.debts.keySet())) settle(level, v, who);
 		Debts.daily(level, v, day);
 		// a noite passou: o que ficou por construir aparece agora
 		com.tcordeiro.vilas.build.Builders.overnight(level, v);
+		com.tcordeiro.vilas.build.LightingWork.revalidate(level, v); // um fio tapado por uma construção nova é desfeito
 		TravelingMerchant.daily(level, v, day);
 		commissionWall(level, v);
 		com.tcordeiro.vilas.build.CivicWork.commissionNext(level, v); // 0.3.0: Prefeitura/Mercado/Taverna/Praça que faltam
+		Growth.step(level, v); // 0.3.0: o prestígio das missões traz moradores (ou encomenda uma casa)
 
 		int pop = VillageManager.countPopulation(level, v);
 		int beds = bedsNear(level, v);

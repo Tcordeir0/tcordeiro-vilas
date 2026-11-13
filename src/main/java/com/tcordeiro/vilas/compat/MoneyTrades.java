@@ -75,6 +75,13 @@ public final class MoneyTrades {
 		return named(stack(piles.get(0)), p, CoinRules.exact(piles, p));
 	}
 
+	/** O preço base (sem procura nem descontos) mostrado como a 1.ª casa: para o riscado do ecrã de trocas. */
+	public static ItemStack displayBaseA(MerchantOffer o, int baseEmeralds) {
+		long p = cents(baseEmeralds + m(o).tvilas$emeraldsB());
+		List<CoinRules.Pile> piles = CoinRules.display(p, moneyB(o) ? 2 : 1);
+		return named(stack(piles.get(0)), p, CoinRules.exact(piles, p));
+	}
+
 	public static ItemStack displayB(MerchantOffer o) {
 		MoneyOffer x = m(o);
 		if (x.tvilas$emeraldsA() > 0 && !moneyB(o)) return o.getItemCostB().map(ItemCost::itemStack).orElse(ItemStack.EMPTY);

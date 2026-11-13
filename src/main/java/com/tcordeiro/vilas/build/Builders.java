@@ -139,8 +139,14 @@ public final class Builders {
 			return false;
 		}
 		BlockState state = at.state();
+		// 0.3.0: postes do Industrial 0.12.2+ com a altura escolhida (API de colunas); sem ela, o bloco de baixo como antes
+		if (p.kind == Project.Kind.LIGHTING && at.clear() > 1 && StreetLightKit.placeColumn(level, pos, state, at.clear())) {
+			p.placed++;
+			if (show) level.playSound(null, pos, state.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0f, 0.9f);
+			return true;
+		}
 		// 0.3.0: os edifícios põem portas, camas e escadas metade a metade — sem atualizar a forma dos vizinhos até estar tudo
-		level.setBlock(pos, state, p.kind.civic() ? net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE : 3);
+		level.setBlock(pos, state, p.kind.structure() ? net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE : 3);
 		p.placed++;
 		if (p.kind == Project.Kind.WALL) v.economy.treasury -= WallRules.BLOCK_CENTS;
 		if (show) {
@@ -162,6 +168,7 @@ public final class Builders {
 			}
 			case LIGHTING -> v.extra.poles = LightingWork.finish(level, v, p);
 			case TOWN_HALL, MARKET, TAVERN, PLAZA -> CivicWork.finish(level, v, p);
+			case HOUSE -> com.tcordeiro.vilas.village.Growth.step(level, v); // a casa tem cama: chega o morador
 		}
 		VillageNews.announce(level, v, VillageNews.DONE, "tvilas.news.done", Component.translatable(p.kind.key()));
 		if (v.extra.projects.isEmpty()) dismiss(level, v);

@@ -44,7 +44,7 @@ public class MissionGameTests {
 		h.assertValueEqual(count(p, Items.WHEAT), 2, "tira só os 5 pedidos");
 		h.assertValueEqual(TestUtil.moneyInEmeralds(p), 3L, "paga 3 esmeraldas");
 		h.assertValueEqual(v.reputationOf(p.getUUID()), 10, "dá 10 de reputação nesta vila");
-		h.assertTrue(v.missions.get(0).id() != m.id(), "a missão entregue é trocada por outra");
+		h.assertTrue(v.missions.get(0).id() == m.id(), "0.3.0: a missão fica no quadro até ao lote seguinte");
 		h.assertValueEqual(v.missions.get(0).kind(), MissionRules.Kind.DELIVER, "a casa 1 continua a ser de trazer");
 		h.assertValueEqual(hasCubCoins(p), TVilas.CUBCOIN, "CubCoins só com o CubCoin instalado");
 		h.succeed();

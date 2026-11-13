@@ -19,7 +19,8 @@ class CoinRulesTest {
 	@Test
 	void displayIsExactWhenItCan() {
 		assertEquals(List.of(new CoinRules.Pile(2000, 2)), CoinRules.display(4000, 2), "1 esmeralda: 2 notas de 20");
-		assertEquals(List.of(new CoinRules.Pile(10000, 4)), CoinRules.display(40000, 1), "10 esmeraldas: 4 notas de 100");
+		assertEquals(List.of(new CoinRules.Pile(2000, 20)), CoinRules.display(40000, 1), "10 esmeraldas: 20 notas de 20 (a nota preferida)");
+		assertEquals(List.of(new CoinRules.Pile(10000, 13)), CoinRules.display(130000, 1), "acima de 64 notas de 20: outra nota");
 		// 33 esmeraldas (1320 CB) não cabem num monte: 13 notas de 100 + 1 de 20
 		var two = CoinRules.display(132000, 2);
 		assertEquals(2, two.size());

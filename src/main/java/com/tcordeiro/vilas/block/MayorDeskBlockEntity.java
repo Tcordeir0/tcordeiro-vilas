@@ -55,6 +55,7 @@ public class MayorDeskBlockEntity extends BlockEntity {
 			v = VillageManager.found(sl, pos, com.tcordeiro.vilas.VilasConfig.get().radius());
 			if (v == null) return; // outra Mesa já manda nesta vila: esta não faz nada
 		}
+		if (be.ticks == 1) com.tcordeiro.vilas.build.LightingWork.revalidate(sl, v); // ao recarregar: os fios que entretanto ficaram tapados
 		if (be.ticks % 100 == 1) {
 			VillageManager.updateLevel(sl, v);
 			com.tcordeiro.vilas.village.VillageEconomy.ensureMayor(sl, v, sl.getGameTime());

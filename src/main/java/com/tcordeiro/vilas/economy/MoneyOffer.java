@@ -1,5 +1,7 @@
 package com.tcordeiro.vilas.economy;
 
+import net.minecraft.world.item.ItemStack;
+
 /**
  * Uma troca de aldeão ({@code MerchantOffer}) vista pelo Vilas (interface acrescentada pelo mixin {@code MerchantOfferMixin}).
  * Os números são os ORIGINAIS da troca, em esmeraldas — mesmo quando, com o CubCoin, o ecrã a mostra em CubCoins.
@@ -13,6 +15,9 @@ public interface MoneyOffer {
 
 	/** Esmeraldas que o aldeão dá (0 se dá outra coisa). */
 	int tvilas$emeraldsResult();
+
+	/** O custo base da 1.ª casa como está guardado (esmeraldas), sem a conversão para CubCoin. */
+	ItemStack tvilas$rawBaseCostA();
 
 	/** Esta troca é feita em CubCoin? (CubCoin instalado, a troca usa esmeraldas e não mexe já em dinheiro — o Cambista não muda) */
 	boolean tvilas$money();

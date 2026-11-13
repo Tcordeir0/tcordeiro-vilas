@@ -33,9 +33,12 @@ public final class Ground {
 		return WallRules.mayReplace(s.isAir(), grassOrFlower(s), s.is(Blocks.SNOW), inLot);
 	}
 
-	/** Chão natural (terra, erva, areia, pedra, terracota, cascalho, neve) — não um bloco de jogador nem uma rua. */
+	/**
+	 * Chão natural (terra, erva, areia, pedra, terracota, cascalho, neve) — não um bloco de jogador nem uma rua. No 26.3 a erva
+	 * (bloco de grama, podzol, micélio) saiu da tag {@code dirt} para {@code grass_blocks}: sem ela, nada se construía na erva.
+	 */
 	public static boolean natural(BlockState s) {
-		return !s.is(Blocks.DIRT_PATH) && (s.is(BlockTags.DIRT) || s.is(BlockTags.SAND) || s.is(BlockTags.BASE_STONE_OVERWORLD)
+		return !s.is(Blocks.DIRT_PATH) && (s.is(BlockTags.DIRT) || s.is(BlockTags.GRASS_BLOCKS) || s.is(BlockTags.SAND) || s.is(BlockTags.BASE_STONE_OVERWORLD)
 				|| s.is(BlockTags.TERRACOTTA) || s.is(Blocks.GRAVEL) || s.is(Blocks.SNOW_BLOCK) || s.is(Blocks.SANDSTONE)
 				|| s.is(Blocks.STONE));
 	}

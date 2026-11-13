@@ -110,8 +110,9 @@ public final class Village {
 				Codec.LONG.optionalFieldOf("merchant_arrived", -1L).forGetter(x -> x.merchantArrived),
 				Codec.LONG.optionalFieldOf("merchant_next", -1L).forGetter(x -> x.merchantNext),
 				UUIDUtil.STRING_CODEC.optionalFieldOf("builder").forGetter(x -> java.util.Optional.ofNullable(x.builder)),
-				Codec.BOOL.optionalFieldOf("lighting", false).forGetter(x -> x.lighting))
-				.apply(i, (st, lr, ds, fr, wa, pr, w, po, me, dk, ma, mn, b, li) -> {
+				Codec.BOOL.optionalFieldOf("lighting", false).forGetter(x -> x.lighting),
+				Codec.LONG.listOf().optionalFieldOf("light_anchors", List.of()).forGetter(x -> List.copyOf(x.lightAnchors)))
+				.apply(i, (st, lr, ds, fr, wa, pr, w, po, me, dk, ma, mn, b, li, la) -> {
 					Extra x = new Extra();
 					x.structures = st;
 					x.lastRate = lr;
@@ -127,6 +128,7 @@ public final class Village {
 					x.merchantNext = mn;
 					x.builder = b.orElse(null);
 					x.lighting = li;
+					x.lightAnchors.addAll(la);
 					return x;
 				}));
 
@@ -147,6 +149,8 @@ public final class Village {
 		public int poles;
 		/** A iluminação pública já foi comprada? */
 		public boolean lighting;
+		/** Os postes e a fonte da iluminação pública ligados por fio (BlockPos.asLong): os fios revêem-se a cada dia e ao recarregar. */
+		public final List<Long> lightAnchors = new ArrayList<>();
 		public UUID merchant, donkey;
 		public long merchantArrived = -1, merchantNext = -1;
 		/** O aldeão construtor (enquanto há obra à vista). */
@@ -246,7 +250,15 @@ public final class Village {
 		return dx * dx + dz * dz;
 	}
 
-	/** Esquece o progresso de todos numa missão (quando é entregue e trocada). */
+	/** 0.3.0: esquece o progresso de UM jogador numa missão (ele entregou; a missão fica para os outros até ao lote seguinte). */
+	void forget(UUID player, Mission m) {
+		String k = key(player, m);
+		accepted.remove(k);
+		kills.remove(k);
+		placed.remove(k);
+	}
+
+	/** Esquece o progresso de todos numa missão (quando é trocada). */
 	void forget(Mission m) {
 		String suffix = ":" + m.id();
 		accepted.removeIf(k -> k.endsWith(suffix));

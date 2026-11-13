@@ -82,13 +82,41 @@ class MissionRulesTest {
 	}
 
 	@Test
-	void treasuryPaysWithCapAndDailyLimit() {
-		assertTrue(MissionRules.mayPay(10000, 0, 40000, 0, 3, 4000));
-		assertFalse(MissionRules.mayPay(3999, 0, 40000, 0, 3, 4000), "tesouraria sem dinheiro");
-		assertFalse(MissionRules.mayPay(100000, 38000, 40000, 0, 3, 4000), "passa o teto do dia");
-		assertTrue(MissionRules.mayPay(100000, 36000, 40000, 0, 3, 4000), "chega mesmo ao teto");
-		assertFalse(MissionRules.mayPay(100000, 0, 40000, 3, 3, 4000), "4.ª missão do dia");
-		assertTrue(MissionRules.mayPay(100000, 900000, 0, 0, 3, 4000), "teto 0 = sem teto");
+	void treasuryPaysWithCapOncePerBatch() {
+		assertTrue(MissionRules.mayPay(10000, 0, 40000, false, 4000));
+		assertFalse(MissionRules.mayPay(3999, 0, 40000, false, 4000), "tesouraria sem dinheiro");
+		assertFalse(MissionRules.mayPay(100000, 38000, 40000, false, 4000), "passa o teto do dia");
+		assertTrue(MissionRules.mayPay(100000, 36000, 40000, false, 4000), "chega mesmo ao teto");
+		assertFalse(MissionRules.mayPay(100000, 0, 40000, true, 4000), "já feita por este jogador neste lote");
+		assertTrue(MissionRules.mayPay(100000, 900000, 0, false, 4000), "teto 0 = sem teto");
+	}
+
+	@Test
+	void batchesEveryFourDays() {
+		assertEquals(4, MissionRules.BATCH_DAYS, "o quadro renova-se a cada 4 dias");
+		assertEquals(0, MissionRules.batchOf(0, 4));
+		assertEquals(0, MissionRules.batchOf(3, 4));
+		assertEquals(1, MissionRules.batchOf(4, 4), "ao 4.º dia, lote novo");
+		assertEquals(2, MissionRules.batchOf(9, 4));
+		assertEquals(4 * 24000, MissionRules.ticksToNextBatch(0, 24000, 4));
+		assertEquals(1, MissionRules.ticksToNextBatch(4 * 24000 - 1, 24000, 4));
+	}
+
+	@Test
+	void villagerRequestsAreFairAndOneInFour() {
+		for (var e : MissionRules.REQUESTS.entrySet())
+			for (var t : e.getValue()) {
+				assertTrue(MissionRules.fairReward(t, 4000), "pedido acima do mercado ×1,25: " + e.getKey() + " " + t);
+				assertTrue(MissionRules.noVillagerProfit(t), "pedido que se compra mais barato: " + t);
+				assertNotEquals("minecraft:cobblestone", t.target());
+			}
+		assertEquals("minecraft:iron_ingot", MissionRules.request("armorer", 0).target(), "o Armeiro pede ferro");
+		assertTrue(MissionRules.request("nitwit", 0) == null, "o Pateta não pede nada");
+		assertEquals(0, MissionRules.requesters(0));
+		assertEquals(1, MissionRules.requesters(1));
+		assertEquals(1, MissionRules.requesters(4));
+		assertEquals(2, MissionRules.requesters(5));
+		assertEquals(3, MissionRules.requesters(12));
 	}
 
 	@Test

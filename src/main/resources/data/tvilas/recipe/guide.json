@@ -33,7 +33,7 @@
             "raw": "§lFalar com ele§r\n\nClique com o botão direito no Prefeito ou na Mesa: abre o quadro da Prefeitura, com o estado da vila, as missões e os terrenos.\n\nO Prefeito não faz trocas."
           },
           {
-            "raw": "§lMissões§r\n\nHá sempre três: trazer itens, colocar blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos precisam estar lá quando você entregar."
+            "raw": "§lMissões§r\n\nHá sempre três no quadro: trazer itens, colocar blocos na vila e defender a vila.\n\nAceite primeiro: só conta o que fizer depois. Os blocos precisam estar lá quando você entregar."
           },
           {
             "raw": "§lRecompensas§r\n\nCada missão dá reputação nesta vila e é paga pela tesouraria: em CubCoins com o mod CubCoin, em esmeraldas sem ele.\n\nA reputação deixa os aldeões daqui um pouco mais baratos."
@@ -165,7 +165,25 @@
             "raw": "§lTudo em CubCoin§r\n\nCom o CubCoin, os terrenos, os impostos e as missões também são em CubCoins. O Cambista continua trocando esmeraldas por notas.\n\nSem o CubCoin, tudo volta para as esmeraldas."
           },
           {
-            "raw": "§lLimites§r\n\nCada jogador entrega até 3 missões por dia em cada vila. A tesouraria paga as missões, até 400 CB por dia.\n\nSem dinheiro na tesouraria, a missão espera: os itens não saem do inventário."
+            "raw": "§lLimites§r\n\nA cada 4 dias o quadro troca todas as missões. Cada missão vale uma vez por jogador nesse tempo; o quadro mostra quanto falta.\n\nA vila paga até 400 CB por dia: primeiro do fundo das missões, depois da tesouraria."
+          },
+          {
+            "raw": "§lFundo das missões§r\n\nUma vila nova começa com 200 CB no fundo das missões e ganha 50 CB por dia, até 400.\n\nAssim uma vila nova já tem missões pagas."
+          },
+          {
+            "raw": "§lPedidos§r\n\nEm cada lote, um em cada quatro aldeões com profissão faz um pedido e mostra um «!» na cabeça: o ferreiro quer ferro, o agricultor trigo ou batatas, o bibliotecário papel ou livros."
+          },
+          {
+            "raw": "§lO pedido§r\n\nClique no aldeão com «!»: abre o pedido, com o que pede e quanto paga. Entregar paga da vila, uma vez por jogador.\n\nShift+clique, ou o botão Trocar, abre as trocas de sempre."
+          },
+          {
+            "raw": "§lSó com dinheiro§r\n\nO «!» só aparece se a vila tiver dinheiro para pagar o pedido. Os pedidos mudam junto com o quadro, a cada 4 dias, e pagam no máximo um pouco acima do mercado."
+          },
+          {
+            "raw": "§lA vila cresce§r\n\nCada missão ou pedido feito dá prestígio à vila. A cada 3, chega um morador novo, a pé, pela borda da vila.\n\nO quadro mostra quanto falta. Há um teto de 40 moradores."
+          },
+          {
+            "raw": "§lCasa nova§r\n\nO morador novo só vem se houver cama livre. Sem cama, o Prefeito encomenda uma casa simples, paga pela tesouraria, num lugar livre, e o Construtor a faz."
           },
           {
             "raw": "§lPreço justo§r\n\nNenhuma missão paga muito mais do que os itens valem no mercado, nem mais do que custa comprá-los dos aldeões.\n\nPedregulho já não vale missão."
@@ -180,13 +198,13 @@
             "raw": "§lOnde constrói§r\n\nO Construtor escolhe um lugar livre perto do centro, em chão natural. Nunca em cima de casas, ruas ou terrenos de jogadores.\n\nÀ vista ele coloca bloco a bloco; de noite a obra avança sozinha."
           },
           {
-            "raw": "§lÁrea cívica§r\n\nA praça da Mesa, a Prefeitura, a Praça, o Mercado e a Taverna são da vila: ninguém quebra nem coloca blocos lá. Explosões, lava e pistões de fora não entram."
+            "raw": "§lÁrea cívica§r\n\nA praça da Mesa, a Prefeitura, a Praça, o Mercado e a Taverna são da vila. Só quem colocou a Mesa e os amigos dele mexem lá:\n/vila civica amigo adicionar Nome\n\nExplosões, lava e pistões de fora não entram."
           },
           {
             "raw": "§lBichos no terreno§r\n\nOs animais, aldeões e decorações dentro do seu terreno ficam protegidos: quem não é amigo não bate, não prende com laço, não leva no balde nem no barco.\n\nMonstros não são protegidos."
           },
           {
-            "raw": "§lPrefeito levado§r\n\nSe alguém levar o Prefeito embora, não chega outro enquanto ele estiver vivo.\n\nClique na Mesa: se ele estiver num lugar carregado, volta para a Prefeitura."
+            "raw": "§lPrefeito levado§r\n\nSe alguém levar o Prefeito embora, clique na Mesa: se ele estiver num lugar carregado, volta para a Prefeitura.\n\nSumido há 3 dias, chega um novo e o antigo deixa de ser Prefeito."
           },
           {
             "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar"

@@ -51,8 +51,14 @@ public final class Civic {
 			Codec.string(1, 32).listOf().optionalFieldOf("built", List.of()).forGetter(c -> List.copyOf(c.built)),
 			Codec.LONG.optionalFieldOf("mission_day", -1L).forGetter(c -> c.missionDay),
 			Codec.LONG.optionalFieldOf("paid_today", 0L).forGetter(c -> c.paidToday),
-			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.intRange(0, 1000)).optionalFieldOf("done_today", Map.of()).forGetter(c -> c.doneToday))
-			.apply(i, (m, t, b, s, bu, md, pt, dt) -> {
+			Batch.CODEC.optionalFieldOf("batch").forGetter(c -> java.util.Optional.of(c.batch)),
+			Codec.LONG.optionalFieldOf("mayor_seen", -1L).forGetter(c -> c.mayorSeen),
+			UUIDUtil.STRING_CODEC.listOf().optionalFieldOf("retired", List.of()).forGetter(c -> List.copyOf(c.retired)),
+			Codec.LONG.optionalFieldOf("mission_fund", com.tcordeiro.vilas.logic.FundRules.START_CENTS).forGetter(c -> c.missionFund),
+			UUIDUtil.STRING_CODEC.optionalFieldOf("owner").forGetter(c -> java.util.Optional.ofNullable(c.owner)),
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.string(0, 32)).optionalFieldOf("friends", Map.of()).forGetter(c -> c.friends),
+			Codec.intRange(0, 1_000_000).optionalFieldOf("prestige", 0).forGetter(c -> c.prestige))
+			.apply(i, (m, t, b, s, bu, md, pt, dt, ms, rt, mf, ow, fr, pr) -> {
 				Civic c = new Civic();
 				c.mayor = m.orElse(null);
 				c.mayorTaken = t;
@@ -61,7 +67,13 @@ public final class Civic {
 				c.built.addAll(bu);
 				c.missionDay = md;
 				c.paidToday = Math.max(0, pt);
-				c.doneToday.putAll(dt);
+				c.batch = dt.orElseGet(Batch::new);
+				c.mayorSeen = ms;
+				c.retired.addAll(rt);
+				c.missionFund = Math.max(0, mf);
+				c.owner = ow.orElse(null);
+				c.friends.putAll(fr);
+				c.prestige = pr;
 				return c;
 			}));
 
@@ -74,10 +86,40 @@ public final class Civic {
 	public boolean scanned;
 	/** Edifícios cívicos que a vila já tem (gerados com a vila ou construídos). */
 	public final Set<String> built = new HashSet<>();
-	/** Missões: o dia de jogo das contas, quanto a tesouraria já pagou hoje e quantas cada jogador já entregou hoje. */
+	/** Missões: o dia de jogo das contas e quanto a vila já pagou hoje (teto diário). */
 	public long missionDay = -1;
 	public long paidToday;
-	public final Map<UUID, Integer> doneToday = new HashMap<>();
+	/** 0.3.0: o lote de missões (renova a cada 4 dias): o que cada jogador já fez e os pedidos dos aldeões. */
+	public Batch batch = new Batch();
+
+	/** Quando o Prefeito foi visto pela última vez (vivo, carregado, ainda Prefeito); −1 = nunca. */
+	public long mayorSeen = -1;
+	/** Antigos Prefeitos (sumidos 3 dias): quando voltarem a carregar perdem a profissão. */
+	public final Set<UUID> retired = new HashSet<>();
+	/** Fundo das missões (cêntimos): a vila nasce com 200 CB e recebe 50 CB por dia, até 400 CB ({@link com.tcordeiro.vilas.logic.FundRules}). */
+	public long missionFund = com.tcordeiro.vilas.logic.FundRules.START_CENTS;
+	/** 0.3.0: prestígio das missões concluídas (a cada {@code prestige_per_resident} chega um morador). */
+	public int prestige;
+	/** Quem pôs a Mesa (manda na área cívica, com os amigos); null = só os operadores (Mesas das vilas geradas). */
+	public UUID owner;
+	/** Amigos do dono da Mesa na área cívica: UUID → nome. */
+	public final Map<UUID, String> friends = new HashMap<>();
+
+	/** REGRA DE SEGURANÇA (M15): pode este jogador mexer na área cívica? O dono da Mesa e os amigos dele (os operadores à parte). */
+	public boolean mayBuild(UUID actor) {
+		return actor != null && (actor.equals(owner) || friends.containsKey(actor));
+	}
+
+	/** O amigo com este nome (sem distinguir maiúsculas) ou UUID escrito, ou null. */
+	public UUID friendByName(String name) {
+		for (var e : friends.entrySet()) if (e.getValue().equalsIgnoreCase(name)) return e.getKey();
+		try {
+			UUID id = UUID.fromString(name);
+			return friends.containsKey(id) ? id : null;
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+	}
 
 	public boolean covers(int x, int z) {
 		for (Box b : boxes) if (b.area.contains(x, z)) return true;

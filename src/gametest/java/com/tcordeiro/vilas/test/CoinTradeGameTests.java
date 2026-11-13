@@ -64,6 +64,9 @@ public class CoinTradeGameTests {
 					if (TVilas.CUBCOIN) {
 						long shown = CubCoinTrade.value(a) + (CubCoinTrade.isMoney(o.getCostB()) ? CubCoinTrade.value(o.getCostB()) : 0);
 						h.assertTrue(CubCoinTrade.isMoney(a), "o aldeão pede CubCoin");
+						h.assertTrue(o.getBaseCostA().is(a.getItem()) && o.getBaseCostA().getCount() == a.getCount(),
+								"sem desconto, o preço base aparece igual (sem riscado com outra nota)");
+						h.assertTrue(m.tvilas$rawBaseCostA().is(Items.EMERALD), "guardado em esmeraldas (o desconto do Herói conta-as)");
 						h.assertTrue(shown == m.tvilas$emeraldsA() * emerald() || a.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME),
 								"mostra o preço exato (ou escrito no nome)");
 					} else h.assertTrue(a.is(Items.EMERALD), "sem CubCoin pede esmeraldas");

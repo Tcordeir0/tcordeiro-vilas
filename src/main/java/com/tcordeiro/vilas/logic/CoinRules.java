@@ -18,6 +18,8 @@ public final class CoinRules {
 	/** Os valores do CubCoin (cêntimos), do menor para o maior — iguais a {@code com.tcordeiro.cubcoin.Money}. */
 	public static final long[] DENOMS = {1, 5, 10, 25, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
 	public static final int MAX_STACK = 64;
+	/** A nota preferida para mostrar preços (20 CB). */
+	public static final long PREFERRED = 2000;
 
 	/** Um monte para mostrar: o valor de uma unidade e quantas. */
 	public record Pile(long denom, int count) {
@@ -46,6 +48,12 @@ public final class CoinRules {
 	public static List<Pile> display(long cents, int maxPiles) {
 		List<Pile> out = new ArrayList<>();
 		if (cents <= 0) return out;
+		// 0.3.0: sempre que der, em notas de 20 CB (meia esmeralda) — assim o preço base e o preço com desconto aparecem na mesma
+		// nota no ecrã de trocas (o jogo mostra o base riscado ao lado do atual)
+		if (cents % PREFERRED == 0 && cents / PREFERRED <= MAX_STACK) {
+			out.add(new Pile(PREFERRED, (int) (cents / PREFERRED)));
+			return out;
+		}
 		Pile one = single(cents);
 		if (one != null) {
 			out.add(one);

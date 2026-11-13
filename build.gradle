@@ -31,6 +31,13 @@ loom {
 			vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.get()}/gametest/junit.xml"
 			runDir "build/gametest"
 		}
+		clientGameTest {
+			client()
+			name "Client Game Test"
+			source sourceSets.gametest
+			vmArg "-Dfabric.client.gametest"
+			runDir "build/clientgametest"
+		}
 	}
 }
 

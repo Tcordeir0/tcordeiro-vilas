@@ -20,7 +20,9 @@ public final class Project {
 	public enum Kind {
 		GOLEM, WALL, LIGHTING,
 		/** 0.3.0: os edifícios cívicos que faltam a uma vila antiga ({@link com.tcordeiro.vilas.build.CivicWork}). */
-		TOWN_HALL, MARKET, TAVERN, PLAZA;
+		TOWN_HALL, MARKET, TAVERN, PLAZA,
+		/** 0.3.0: uma casa simples (sem cama livre, para o morador que o prestígio traz). */
+		HOUSE;
 
 		/** 0.3.0 (M14): nomes desconhecidos dão erro ao ler (a obra é ignorada) em vez de rebentar o carregamento do mundo. */
 		public static final Codec<Kind> CODEC = Codec.STRING.comapFlatMap(s -> {
@@ -30,6 +32,11 @@ public final class Project {
 
 		public boolean civic() {
 			return this == TOWN_HALL || this == MARKET || this == TAVERN || this == PLAZA;
+		}
+
+		/** Uma estrutura NBT posta pelos construtores (edifícios cívicos e a casa). */
+		public boolean structure() {
+			return civic() || this == HOUSE;
 		}
 
 		public String key() {

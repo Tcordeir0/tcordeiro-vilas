@@ -10,6 +10,7 @@
 		"MerchantOfferMixin",
 		"MerchantMenuMixin",
 		"MerchantResultSlotMixin",
+		"VillagerSpecialPricesMixin",
 		"StructureTemplateAccessor",
 		"compat.CubCoinTradesMixin",
 		"protect.DispenserBlockMixin",

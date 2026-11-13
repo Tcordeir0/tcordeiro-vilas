@@ -61,6 +61,20 @@ public class MayorDeskBlock extends BaseEntityBlock {
 		return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
 	}
 
+	/** 0.3.0 (M15): quem põe a Mesa fica dono da área cívica (com os amigos que juntar); nas Mesas geradas, só os operadores. */
+	@Override
+	public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.LivingEntity placer, net.minecraft.world.item.ItemStack stack) {
+		super.setPlacedBy(level, pos, state, placer, stack);
+		if (level instanceof ServerLevel sl && placer instanceof ServerPlayer p && !(p instanceof net.fabricmc.fabric.api.entity.FakePlayer)) {
+			Village v = VillageManager.byDesk(sl, pos);
+			if (v == null) v = VillageManager.found(sl, pos, com.tcordeiro.vilas.VilasConfig.get().radius());
+			if (v != null && v.civic.owner == null) {
+				v.civic.owner = p.getUUID();
+				com.tcordeiro.vilas.village.VillageData.get(sl).changed();
+			}
+		}
+	}
+
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (level instanceof ServerLevel sl && player instanceof ServerPlayer sp) {
