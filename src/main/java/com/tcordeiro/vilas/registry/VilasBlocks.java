@@ -56,6 +56,10 @@ public final class VilasBlocks {
 	public static final Block CHANGER_COUNTER = optional(com.tcordeiro.vilas.compat.Mods.CUBCOIN, "changer_counter", p -> new JobSiteBlock(JobSiteBlock.FULL, p),
 			BlockBehaviour.Properties.of().mapColor(MapColor.EMERALD).strength(2.5f).sound(SoundType.WOOD).ignitedByLava());
 
+	// 0.5.0 — o Carteiro (só com o Móveis: entrega nas caixas de correio dele)
+	public static final Block POST_COUNTER = optional(com.tcordeiro.vilas.compat.Mods.MOVEIS, "post_counter", p -> new JobSiteBlock(JobSiteBlock.FULL, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLUE).strength(2.5f).sound(SoundType.WOOD).ignitedByLava().noOcclusion());
+
 	public static final BlockEntityType<MayorDeskBlockEntity> MAYOR_DESK_BE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			TVilas.id("mayor_desk"), new BlockEntityType<>(MayorDeskBlockEntity::new, Set.of(MAYOR_DESK)));
 

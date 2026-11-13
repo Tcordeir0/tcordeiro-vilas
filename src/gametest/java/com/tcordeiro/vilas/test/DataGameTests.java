@@ -39,7 +39,10 @@ public class DataGameTests {
 		h.assertTrue(content != null && !content.pages().isEmpty() && content.pages().size() <= 100, "livro com 1–100 páginas");
 		// 0.2.0: o livro leva TODAS as páginas (as dos mods dizem «só com o mod»); o separador do Receitário só as dos mods instalados
 		// 0.3.0: + a página final «E o resto?»
-		h.assertValueEqual(com.tcordeiro.vilas.guide.VilasGuide.ALL.size() + 1, content.pages().size(), "livro = páginas do guia + «E o resto?»");
+		// 0.5.0: o livro vai até 100 páginas — se o guia tiver mais, leva as primeiras, os comandos e «E o resto?» (o resto está no separador)
+		int all = com.tcordeiro.vilas.guide.VilasGuide.ALL.size();
+		h.assertValueEqual(content.pages().size(), Math.min(all, 99) + 1, "livro = páginas do guia (até 99) + «E o resto?»");
+		h.assertTrue(content.pages().get(content.pages().size() - 1).raw().getString().contains("E o resto?"), "a última página é «E o resto?»");
 		for (var page : com.tcordeiro.vilas.guide.VilasGuide.ALL)
 			h.assertValueEqual(com.tcordeiro.vilas.guide.VilasGuide.PAGES.contains(page), page.available(), "página " + page.key() + " só com o mod");
 		h.succeed();

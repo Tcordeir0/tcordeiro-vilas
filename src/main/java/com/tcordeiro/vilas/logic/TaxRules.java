@@ -19,7 +19,7 @@ public final class TaxRules {
 
 	/** Porquê a taxa é a que é (o quadro mostra). */
 	public enum Reason {
-		BASE, RAISED, CAPPED, FULL;
+		BASE, RAISED, CAPPED, FULL, /** 0.5.0: a proposta «imposto menor» do Prefeito eleito. */ POLICY;
 
 		public String key() {
 			return "tvilas.tax.reason." + name().toLowerCase(java.util.Locale.ROOT);

@@ -85,7 +85,7 @@ public final class Care {
 		if (d.guardDay == day) return d.guards.size();
 		d.guardDay = day;
 		List<BlockPos> posts = posts(level, v, places);
-		int wanted = Math.min(posts.size(), LifeRules.guardPosts(v.level));
+		int wanted = Math.min(posts.size(), com.tcordeiro.vilas.logic.TownRules.guardPostsWithPolicy(LifeRules.guardPosts(v.level), Election.policy(v))); // 0.5.0: «mais guardas»
 		List<IronGolem> golems = level.getEntitiesOfClass(IronGolem.class, new net.minecraft.world.phys.AABB(v.center).inflate(VillageEconomy.coreRadius(v)),
 				g -> g.isAlive() && !g.entityTags().contains(MayorDeskBlockEntity.CALLED_TAG) && v.covers(g.getBlockX(), g.getBlockZ()));
 		wanted = Math.min(wanted, golems.size());

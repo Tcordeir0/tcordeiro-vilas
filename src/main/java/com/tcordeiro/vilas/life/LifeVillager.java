@@ -18,5 +18,8 @@ public interface LifeVillager {
 		/** Vigia anti-preso dos aldeões que andam pelo vanilla: última posição vista e há quantas vistas não anda. */
 		public double wx, wy, wz;
 		public int still;
+		/** 0.5.0: próxima entrega (Carteiro), próxima pescaria e a margem de pesca (relida de 5 em 5 minutos). */
+		public long nextMail, nextFish, fishScan;
+		public Fishing.Spot fishSpot;
 	}
 }

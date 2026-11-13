@@ -30,8 +30,8 @@ public final class VilaCommand {
 				.executes(c -> open(c))
 				.then(Commands.literal("info").executes(VilaCommand::info))
 				.then(Commands.literal("missao")
-						.then(Commands.literal("aceitar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(c -> mission(c, true))))
-						.then(Commands.literal("entregar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(c -> mission(c, false)))))
+						.then(Commands.literal("aceitar").then(Commands.argument("n", IntegerArgumentType.integer(1, 4)).executes(c -> mission(c, true))))
+						.then(Commands.literal("entregar").then(Commands.argument("n", IntegerArgumentType.integer(1, 4)).executes(c -> mission(c, false)))))
 				.then(Commands.literal("divida").then(Commands.literal("pagar").executes(VilaCommand::payDebt)))
 				.then(Commands.literal("muralha")
 						.then(Commands.literal("cancelar").executes(c -> wall(c, true)))
@@ -54,7 +54,18 @@ public final class VilaCommand {
 						.then(Commands.literal("conversar").executes(c -> resident(c, "conversar", null)))
 						.then(Commands.literal("pedido").executes(c -> resident(c, "pedido", null)))
 						.then(Commands.literal("caminho").then(Commands.argument("sitio", StringArgumentType.word())
-								.executes(c -> resident(c, "caminho", StringArgumentType.getString(c, "sitio")))))))
+								.executes(c -> resident(c, "caminho", StringArgumentType.getString(c, "sitio")))))
+						// 0.5.0: Carteiro e ajudante
+						.then(Commands.literal("correio").executes(c -> resident(c, "correio", null)))
+						.then(Commands.literal("carta").then(Commands.argument("para", StringArgumentType.word())
+								.executes(c -> resident(c, "carta", StringArgumentType.getString(c, "para")))))
+						.then(Commands.literal("devolvido").executes(c -> resident(c, "devolvido", null)))
+						.then(Commands.literal("contratar").executes(c -> resident(c, "contratar", null)))
+						.then(Commands.literal("bolsa").executes(c -> resident(c, "bolsa", null)))
+						.then(Commands.literal("dispensar").executes(c -> resident(c, "dispensar", null)))))
+				// 0.5.0: eleições
+				.then(Commands.literal("eleicao").executes(VilaCommand::election))
+				.then(Commands.literal("votar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(VilaCommand::vote)))
 				.then(Commands.literal("reuniao").executes(VilaCommand::meeting))
 				.then(Commands.literal("terreno")
 						.then(Commands.literal("comprar").executes(c -> result(c, VillageManager.buyLot(c.getSource().getPlayerOrException()))))
@@ -115,6 +126,21 @@ public final class VilaCommand {
 		Village v = here(p);
 		if (v == null) return 0;
 		return result(c, com.tcordeiro.vilas.life.Life.callMeeting(p, v));
+	}
+
+	private static int election(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		com.tcordeiro.vilas.life.Election.openDialog(p, p.level(), v);
+		return 1;
+	}
+
+	private static int vote(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, com.tcordeiro.vilas.life.Election.vote(p, v, IntegerArgumentType.getInteger(c, "n") - 1));
 	}
 
 	private static Village here(ServerPlayer p) {

@@ -460,16 +460,39 @@ public final class VillageManager {
 		Block b = block(m.target());
 		long now = p.level().getGameTime();
 		List<Long> out = new ArrayList<>();
+		// 0.5.0: na missão da festa só contam os blocos à volta da Praça
+		BlockPos plaza = null;
+		if (isFestaDecor(v, m)) {
+			var spot = com.tcordeiro.vilas.life.Life.places(p.level(), v).plaza();
+			plaza = spot != null ? spot.center : v.center;
+		}
 		for (long l : v.placed.getOrDefault(Village.key(p.getUUID(), m), List.of())) {
 			BlockPos pos = BlockPos.of(l);
+			if (plaza != null && horizontalSq(pos, plaza) > FESTA_DECOR_RADIUS * FESTA_DECOR_RADIUS) continue;
 			if (!v.paidSpots.isPaid(l, now) && p.level().isLoaded(pos) && p.level().getBlockState(pos).is(b)) out.add(l);
 		}
 		return out;
 	}
 
+	/** 0.5.0: a missão de uma casa do quadro (1–3 do lote; a 4.ª é a temporária «decorar a festa», quando há festa). */
+	public static Mission missionAt(Village v, int slot) {
+		if (slot >= 0 && slot < v.missions.size()) return v.missions.get(slot);
+		if (slot == FESTA_SLOT) return v.civic.life.town.decor;
+		return null;
+	}
+
+	public static final int FESTA_SLOT = 3;
+	/** 0.5.0: os blocos da missão da festa contam a esta distância (horizontal) do centro da Praça. */
+	public static final int FESTA_DECOR_RADIUS = 24;
+
+	static boolean isFestaDecor(Village v, Mission m) {
+		Mission d = v.civic.life.town.decor;
+		return d != null && d.id() == m.id();
+	}
+
 	public static Result accept(ServerPlayer p, Village v, int slot) {
-		if (slot < 0 || slot >= v.missions.size()) return Result.fail("tvilas.mission.none");
-		Mission m = v.missions.get(slot);
+		Mission m = missionAt(v, slot);
+		if (m == null) return Result.fail("tvilas.mission.none");
 		if (!v.accepted.add(Village.key(p.getUUID(), m))) return Result.fail("tvilas.mission.already");
 		data(p.level()).changed();
 		return Result.ok("tvilas.mission.accepted", describe(m));
@@ -477,8 +500,8 @@ public final class VillageManager {
 
 	/** Entrega: verifica, tira os itens (se for de trazer), paga, dá reputação e põe uma missão nova nessa casa. */
 	public static Result deliver(ServerPlayer p, Village v, int slot) {
-		if (slot < 0 || slot >= v.missions.size()) return Result.fail("tvilas.mission.none");
-		Mission m = v.missions.get(slot);
+		Mission m = missionAt(v, slot);
+		if (m == null) return Result.fail("tvilas.mission.none");
 		if (m.kind() != MissionRules.Kind.DELIVER && !accepted(v, p.getUUID(), m)) return Result.fail("tvilas.mission.not_accepted");
 		int done = progress(p, v, m);
 		if (!MissionRules.complete(m.template(), done)) return Result.fail("tvilas.mission.not_done", done, m.count());
@@ -641,11 +664,23 @@ public final class VillageManager {
 		Village v = villageAt(level, pos);
 		if (v == null) return;
 		Identifier id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-		for (Mission m : v.missions)
+		List<Mission> all = new ArrayList<>(v.missions);
+		if (v.civic.life.town.decor != null) all.add(v.civic.life.town.decor); // 0.5.0: a missão da festa
+		for (Mission m : all)
 			if (m.kind() == MissionRules.Kind.DECORATE && m.target().equals(id.toString()) && accepted(v, p.getUUID(), m)) {
 				List<Long> list = v.placed.computeIfAbsent(Village.key(p.getUUID(), m), k -> new ArrayList<>());
 				if (!list.contains(pos.asLong())) list.add(pos.asLong());
 				data(level).changed();
 			}
+	}
+
+	static long horizontalSq(BlockPos a, BlockPos b) {
+		long dx = a.getX() - b.getX(), dz = a.getZ() - b.getZ();
+		return dx * dx + dz * dz;
+	}
+
+	/** 0.5.0: esquece o progresso de todos numa missão (a da festa, quando a festa acaba). */
+	public static void dropMission(Village v, Mission m) {
+		v.forget(m);
 	}
 }

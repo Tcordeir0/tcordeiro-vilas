@@ -63,7 +63,13 @@ public final class Tasks {
 		var b = v.getBrain();
 		b.eraseMemory(MemoryModuleType.WALK_TARGET);
 		b.eraseMemory(MemoryModuleType.PATH);
-		if (t.kind == Task.Kind.TALK || t.kind == Task.Kind.POINT || t.kind == Task.Kind.FESTA) Props.clear(v);
+		if (t.kind == Task.Kind.TALK || t.kind == Task.Kind.POINT || t.kind == Task.Kind.FESTA || t.kind == Task.Kind.DELIVER || t.kind == Task.Kind.FISH
+				|| t.kind == Task.Kind.MARKET) Props.clear(v);
+		if (t.prop != null) { // 0.5.0: a boia nunca fica no mundo
+			Stage.remove(t.prop);
+			t.prop = null;
+		}
+		if (t.kind == Task.Kind.PLAY) Play.ended(v, t);
 	}
 
 	/** O mixin chama isto a cada tick: true = o cérebro vanilla pode correr (a tarefa acabou). */
@@ -101,12 +107,20 @@ public final class Tasks {
 			end(level, v, t, "unseated");
 			return;
 		}
+		if (t.kind == Task.Kind.HELP) {
+			Helper.step(level, v, t, now); // 0.5.0: decide para onde vai (nunca para dentro de um terreno alheio)
+			if (get(v) != t) return;
+		}
 		switch (t.kind) {
 			case TALK -> talk(level, v, t, now);
 			case POINT -> point(level, v, t, now);
 			default -> {
-				if (t.target != null && !t.arrived && !t.seated && !t.sleeping) walk(level, v, t, now);
-				else if (t.target != null && t.arrived && (t.kind == Task.Kind.FOLLOW || t.kind == Task.Kind.WELCOME)
+				if (now < t.holdUntil) {
+					v.getNavigation().stop(); // 0.5.0: parado de propósito (a contar, à espera)
+					if (t.arrived) stay(level, v, t, now);
+				} else if (t.target != null && !t.arrived && !t.seated && !t.sleeping) walk(level, v, t, now);
+				else if (t.target != null && t.arrived && (t.kind == Task.Kind.FOLLOW || t.kind == Task.Kind.WELCOME || t.kind == Task.Kind.HELP
+						|| (t.kind == Task.Kind.PLAY && t.follow != null))
 						&& v.distanceToSqr(Vec3.atBottomCenterOf(t.target)) > (t.reach + 2) * (t.reach + 2))
 					t.arrived = false; // o mestre/jogador andou: volta a segui-lo
 				if (t.arrived) stay(level, v, t, now);
@@ -202,6 +216,9 @@ public final class Tasks {
 			case REPAIR -> Care.repair(level, v, t);
 			case WELCOME -> Life.welcomeArrived(level, v, t);
 			case GO -> end(level, v, t, "done");
+			case DELIVER -> Mail.arrive(level, v, t);
+			case FISH -> Fishing.arrive(level, v, t, now);
+			case PLAY -> Play.arrive(level, v, t, now);
 			default -> {}
 		}
 	}
@@ -214,7 +231,10 @@ public final class Tasks {
 				if (now >= m.nextFestaJump && v.onGround()) {
 					v.getJumpControl().jump();
 					m.nextFestaJump = now + 30 + level.getRandom().nextInt(60);
-					if (level.getRandom().nextInt(3) == 0) Balloons.show(v, level.getRandom().nextBoolean() ? Balloons.NOTE : Balloons.PARTY, 40);
+					if (level.getRandom().nextInt(3) == 0) {
+						Balloons.show(v, level.getRandom().nextBoolean() ? Balloons.NOTE : Balloons.PARTY, 40);
+						Balloons.gesture(v, Gestures.CHEER, 20);
+					}
 				}
 				if (now >= t.nextStage && t.fallback != null) { // um sítio novo na Praça a cada 5 s
 					t.nextStage = now + 100;
@@ -229,9 +249,12 @@ public final class Tasks {
 			case FLEE -> {
 				if (t.follow != null) look(v, t.follow);
 			}
-			case FOLLOW, WELCOME -> {
+			case FOLLOW, WELCOME, HELP -> {
 				if (t.follow != null) look(v, t.follow);
 			}
+			case FISH -> Fishing.stay(level, v, t, now);
+			case MARKET -> Market.stay(level, v, t, now);
+			case PLAY -> Play.stay(level, v, t, now);
 			default -> {}
 		}
 	}

@@ -107,11 +107,17 @@ BLOCKS = {
     "alloy_anvil": ("Bigorna de Ligas", "Bigorna de Ligas", "Alloy Anvil", "bench", "pickaxe"),
     "carpenter_bench": ("Bancada do Marceneiro", "Bancada do Marceneiro", "Carpenter's Bench", "bench", "axe"),
     "changer_counter": ("Balcão do Cambista", "Balcão do Cambista", "Changer's Counter", "orientable", "axe"),
+    # 0.5.0 — o Carteiro (só com o Móveis); modelo feito no Blender (tools/blender_050.py)
+    "post_counter": ("Balcão dos Correios", "Balcão dos Correios", "Post Office Counter", "blender", "axe"),
 }
+
+# 0.5.0 — itens de cena com modelo do Blender (tools/blender_050.py): sem receita e fora do separador criativo
+STAGE_ITEMS = ("mail_bag", "bobber", "market_stall")
 
 # bloco/profissão → mod de que depende
 MOD_OF = {"mechanic_bench": "tindustrial", "alloy_anvil": "tforja", "carpenter_bench": "tmoveis", "changer_counter": "cubcoin",
-          "mechanic": "tindustrial", "alloy_smith": "tforja", "carpenter": "tmoveis", "money_changer": "cubcoin"}
+          "mechanic": "tindustrial", "alloy_smith": "tforja", "carpenter": "tmoveis", "money_changer": "cubcoin",
+          "post_counter": "tmoveis", "postman": "tmoveis"}
 
 # profissão: (pt_br, pt_pt, en, posto)
 PROFESSIONS = {
@@ -124,6 +130,7 @@ PROFESSIONS = {
     "alloy_smith": ("Ferreiro de Ligas", "Ferreiro de Ligas", "Alloy Smith", "alloy_anvil"),
     "carpenter": ("Marceneiro", "Marceneiro", "Carpenter", "carpenter_bench"),
     "money_changer": ("Cambista", "Cambista", "Money Changer", "changer_counter"),
+    "postman": ("Carteiro", "Carteiro", "Postman", "post_counter"),
 }
 
 
@@ -169,6 +176,9 @@ def gen_models():
                              "down": face("#side", cull="down"), "north": face("#side", [2, 6, 14, 16]),
                              "south": face("#side", [2, 6, 14, 16]), "east": face("#side", [2, 6, 14, 16]),
                              "west": face("#side", [2, 6, 14, 16])}}]}
+        elif kind == "blender":  # 0.5.0: o modelo vem do Blender (tools/blender_050.py); aqui só se regista
+            with open(os.path.join(RES, "assets", MOD, "models", "block", bid + ".json")) as fh:
+                model = json.load(fh)
         else:  # bench
             model = {"parent": "minecraft:block/block", "textures": {"top": tex(bid + "_top"), "side": tex(bid + "_side"),
                                                                        "particle": tex(bid + "_side")},
@@ -185,6 +195,8 @@ def gen_models():
             "type": "minecraft:block", "pools": [{"rolls": 1, "condition": {"type": "minecraft:survives_explosion"},
                                                   "entries": [{"type": "minecraft:item", "name": f"{MOD}:{bid}"}]}],
             "random_sequence": f"{MOD}:blocks/{bid}"}, MOD_OF.get(bid))
+    for it in STAGE_ITEMS:
+        write(f"assets/{MOD}/items/{it}.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{it}"}})
     for tool in ("axe", "pickaxe"):
         write(f"data/minecraft/tags/block/mineable/{tool}.json",
               {"replace": False, "values": [tag_entry(b) for b, v in BLOCKS.items() if v[4] == tool]})
@@ -240,6 +252,9 @@ def gen_recipes():
            unlock=["tmoveis:oak_chair"])
     shaped("changer_counter", ["NNN", "PEP"], {"N": "cubcoin:note_1", "P": "#minecraft:planks", "E": "minecraft:emerald"},
            unlock=["cubcoin:note_1"])
+    # 0.5.0 — Balcão dos Correios: papel, tábuas e uma caixa de correio do Móveis
+    shaped("post_counter", ["AAA", "PMP"], {"A": "minecraft:paper", "P": "#minecraft:planks", "M": "tmoveis:mailbox"},
+           unlock=["tmoveis:mailbox"])
 
 
 # ------------------------------------------------------------------ trocas (data-driven, 26.3)
@@ -375,6 +390,14 @@ MOD_TRADES = {
     },
     # Cambista (CubCoin): esmeraldas ↔ notas ao preço do Balcão de Câmbio
     "money_changer": cambista(),
+    # 0.5.0 — Carteiro (Móveis): papel, livros para escrever, pacotes, bússolas e as caixas de correio do Móveis
+    "postman": {
+        1: [buy("minecraft:paper", 24), sell(1, "minecraft:writable_book", 1)],
+        2: [buy("minecraft:leather", 6), sell(2, "minecraft:bundle", 1, 8)],
+        3: [buy("minecraft:ink_sac", 6), sell(3, "minecraft:compass", 1, 8)],
+        4: [sell(4, "tmoveis:mailbox", 1, 8), buy("minecraft:feather", 16)],
+        5: [sell(5, "minecraft:name_tag", 1, 4), sell(2, "tmoveis:mailbox", 1, 8)],
+    },
 }
 
 
@@ -528,7 +551,8 @@ def gen_lang_names():
          "%s · population %s · village reputation %s (yours: %s) · lots %s/%s · Desk at %s %s %s"),
     ]
     from life_040 import T_040
-    T += T_020 + T_030 + T_040
+    from life_050 import T_050
+    T += T_020 + T_030 + T_040 + T_050
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
@@ -921,15 +945,18 @@ GUIDE = [
       ("Presidente levado", "Se alguém levar o Presidente embora, clica na Mesa: se ele estiver num sítio carregado, volta à Câmara.\n\nSumido há 3 dias, chega um novo e o antigo deixa de ser Presidente."),
       ("Mayor taken", "If someone carries the Mayor away, click the Desk: if he is somewhere loaded, he comes back to the Town Hall.\n\nGone for 3 days, a new one comes and the old one stops being Mayor.")),
     P("commands", None,
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"),
-      ("Comandos", "/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"),
-      ("Commands", "/vila opens the board\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao")),
+      ("Comandos", "/vila abre o quadro\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila reuniao\n/vila eleicao\n/vila votar 1"),
+      ("Comandos", "/vila abre o quadro\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila reuniao\n/vila eleicao\n/vila votar 1"),
+      ("Commands", "/vila opens the board\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila reuniao\n/vila eleicao\n/vila votar 1")),
 ]
 
 
 import life_040 as _life  # noqa: E402  (0.4.0: aldeões vivos)
 
 GUIDE[-1:-1] = _life.pages(P)
+import life_050 as _life5  # noqa: E402  (0.5.0: Carteiro, mercado, eleições, pescador, crianças, festa, ajudante)
+
+GUIDE[-1:-1] = _life5.pages(P)
 
 
 def _grid(r):
@@ -947,6 +974,9 @@ def gen_guide():
         for part, i in (("title", 0), ("text", 1)):
             tr(f"guide.{MOD}.{g['key']}.{part}", g["br"][i], g["pt"][i], g["en"][i])
     book = [f"§l{g['br'][0]}§r\n\n{g['br'][1]}" for g in GUIDE]
+    # 0.5.0: o livro escrito vai até 100 páginas — as primeiras 98, os comandos e «E o resto?»; tudo o resto fica no separador Guias
+    if len(book) > 99:
+        book = book[:98] + [book[-1]]
     # 0.3.0: como os livros dos outros mods, o último manda para o separador Guias (lá estão as receitas)
     book.append("§lE o resto?§r\n\nTudo o resto está no separador Guias do Receitário (botão no inventário): a receita de cada "
                 "bloco, uma por página, e as páginas dos mods que estão instalados.")

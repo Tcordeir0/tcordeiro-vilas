@@ -21,6 +21,10 @@
     {
       "id": "tvilas:money_changer",
       "required": false
+    },
+    {
+      "id": "tvilas:postman",
+      "required": false
     }
   ]
 }

@@ -47,7 +47,8 @@ public class VillagerRequestGameTests {
 		VillagerRequests.tick(level, v);
 		h.assertValueEqual(v.civic.batch.requests.size(), 1, "1 em cada 4 aldeões com profissão faz um pedido");
 		Villager r = requester(all);
-		h.assertTrue(r != null && r.hasCustomName() && r.getCustomName().getString().equals("!"), "mostra um «!» por cima da cabeça");
+		// 0.5.0: o «!» é um balão (o nome não muda)
+		h.assertTrue(r != null && r.entityTags().contains(VillagerRequests.TAG) && !r.hasCustomName(), "marcado com o «!» (balão), sem mexer no nome");
 		Mission m = v.civic.batch.requests.get(r.getUUID());
 		h.assertTrue(m.target().equals("minecraft:iron_ingot") || m.target().equals("minecraft:coal"), "o Armeiro pede ferro ou carvão: " + m.target());
 		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 3));

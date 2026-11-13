@@ -98,7 +98,7 @@ public final class VillagerRequests {
 		return level.getEntitiesOfClass(Villager.class, VillageManager.box(v, level), e -> e.isAlive() && v.covers(e.getBlockX(), e.getBlockZ())
 				&& !e.isBaby() && !VillageManager.isMayor(e) && !com.tcordeiro.vilas.build.Builders.isBuilder(e)
 				&& !e.getVillagerData().profession().is(VillagerProfession.NONE) && !e.getVillagerData().profession().is(VillagerProfession.NITWIT)
-				&& (!e.hasCustomName() || e.entityTags().contains(TAG)) && MissionRules.REQUESTS.containsKey(profession(e)));
+				&& (!e.hasCustomName() || e.entityTags().contains(TAG) || !VilasConfig.get().request_name_tag) && MissionRules.REQUESTS.containsKey(profession(e)));
 	}
 
 	/** Escolhe 1 em cada 4 aldeões com profissão para fazer um pedido neste lote. */
@@ -121,19 +121,36 @@ public final class VillagerRequests {
 		for (var e : b.requests.entrySet()) {
 			if (!(level.getEntity(e.getKey()) instanceof Villager vi) || !vi.isAlive()) continue;
 			boolean show = v.civic.meta.real && available >= MissionRules.rewardCents(e.getValue().emeralds(), VilasConfig.get().emerald_value_cents);
+			boolean nameTag = VilasConfig.get().request_name_tag;
 			if (show && !vi.entityTags().contains(TAG)) {
 				vi.addTag(TAG);
-				vi.setCustomName(Component.literal("!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-				vi.setCustomNameVisible(true);
+				if (nameTag) { // compatibilidade (config): o «!» dourado no nome, como até à 0.4
+					vi.setCustomName(Component.literal("!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+					vi.setCustomNameVisible(true);
+				}
 				b.named.add(vi.getUUID());
 			} else if (!show && vi.entityTags().contains(TAG)) unname(vi, b);
+			// 0.5.0: o «!» é um BALÃO por cima da cabeça (só a quem está a 32 blocos); o nome do aldeão nunca é mexido
+			if (show && !nameTag) {
+				if (legacyName(vi)) clearName(vi);
+				com.tcordeiro.vilas.life.Balloons.show(vi, com.tcordeiro.vilas.life.Balloons.EXCLAIM, 120);
+			}
 		}
+	}
+
+	/** O «!» que a 0.3/0.4 punham no nome (literal, sem ser de um jogador). */
+	static boolean legacyName(Villager vi) {
+		return vi.hasCustomName() && "!".equals(vi.getCustomName().getString());
+	}
+
+	static void clearName(Villager vi) {
+		vi.setCustomName(null);
+		vi.setCustomNameVisible(false);
 	}
 
 	static void unname(Villager vi, Batch b) {
 		vi.removeTag(TAG);
-		vi.setCustomName(null);
-		vi.setCustomNameVisible(false);
+		if (legacyName(vi)) clearName(vi);
 		b.named.remove(vi.getUUID());
 	}
 
@@ -146,8 +163,7 @@ public final class VillagerRequests {
 		if (!(e instanceof Villager vi) || !vi.entityTags().contains(TAG)) return;
 		for (Village v : VillageData.get(level).villages) if (v.civic.batch.requests.containsKey(vi.getUUID())) return;
 		vi.removeTag(TAG);
-		vi.setCustomName(null);
-		vi.setCustomNameVisible(false);
+		if (legacyName(vi)) clearName(vi);
 	}
 
 	/** A vila em que este aldeão tem um pedido, ou null. */

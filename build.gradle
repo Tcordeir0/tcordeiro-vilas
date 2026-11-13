@@ -90,6 +90,11 @@ dependencies {
 		gametestRuntimeOnly siblingJar("tcordeiro-moveis", "tcordeiro-moveis")
 		gametestRuntimeOnly siblingJar("tcordeiro-clima", "tcordeiro-clima") // 0.4.0: frio → lareira (ClimaApi por reflexão)
 	}
+	// 0.5.0: -Pemf junta o Entity Model Features e o Entity Texture Features do jogo do Talys (para ver as variáveis de gesto registadas)
+	if (project.hasProperty('emf')) {
+		def inst = file("${System.getProperty('user.home')}/Library/Application Support/horizon/instances/fabric/mods")
+		gametestRuntimeOnly files((inst.listFiles() ?: [] as File[]).findAll { it.name.startsWith('entity_model_features') || it.name.startsWith('entity_texture_features') })
+	}
 
 	// Lógica pura (níveis, preços, lotes, alarme, missões): JUnit, sem servidor.
 	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"

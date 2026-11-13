@@ -33,7 +33,17 @@ public final class Task {
 		/** Pedir caminho: virar-se para o sítio e «apontar». */
 		POINT,
 		/** Ir a um sítio e parar (reunião, recuar de uma arma, boas-vindas). */
-		GO, MEETING, WELCOME
+		GO, MEETING, WELCOME,
+		/** 0.5.0: o Carteiro leva uma carta à caixa de correio de um terreno. */
+		DELIVER,
+		/** 0.5.0: o pescador pesca à beira da água (cana na mão, boia própria). */
+		FISH,
+		/** 0.5.0: um vendedor na banca do mercado semanal. */
+		MARKET,
+		/** 0.5.0: crianças a brincar (esconde-esconde, apanhada): o papel está em {@link #role}. */
+		PLAY,
+		/** 0.5.0: o ajudante contratado segue quem o contratou (e colhe nos terrenos dele). */
+		HELP
 	}
 
 	public final Kind kind;
@@ -63,6 +73,14 @@ public final class Task {
 	public String icon;
 	/** Os sítios da vila (para soltar o assento/cama reservados no fim). */
 	public Places places;
+	/** 0.5.0: cenário da tarefa (a boia), apagado no fim; o papel na brincadeira; uma referência (carta, banca). */
+	public Entity prop;
+	public String role;
+	public long ref;
+	/** 0.5.0: até quando fica parado (o que conta no esconde-esconde, o pescador entre lançamentos). */
+	public long holdUntil;
+	/** 0.5.0: o contrato do ajudante (ou outro dado da tarefa). */
+	public Object data;
 	/** Porque acabou (para os testes): «done», «deadline», «stuck», «hurt», «trade», «far»… */
 	public String endReason;
 

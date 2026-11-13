@@ -45,6 +45,8 @@ public final class VilasProfessions {
 	public static final ResourceKey<VillagerProfession> ALLOY_SMITH = key("alloy_smith");
 	public static final ResourceKey<VillagerProfession> CARPENTER = key("carpenter");
 	public static final ResourceKey<VillagerProfession> MONEY_CHANGER = key("money_changer");
+	/** 0.5.0 — o Carteiro (só com o Móveis). */
+	public static final ResourceKey<VillagerProfession> POSTMAN = key("postman");
 
 	/** Profissão de mod → o mod de que depende. */
 	public static final Map<ResourceKey<VillagerProfession>, String> MOD_VENDORS = new LinkedHashMap<>();
@@ -63,11 +65,13 @@ public final class VilasProfessions {
 		MOD_VENDORS.put(ALLOY_SMITH, com.tcordeiro.vilas.compat.Mods.FORJA);
 		MOD_VENDORS.put(CARPENTER, com.tcordeiro.vilas.compat.Mods.MOVEIS);
 		MOD_VENDORS.put(MONEY_CHANGER, com.tcordeiro.vilas.compat.Mods.CUBCOIN);
+		MOD_VENDORS.put(POSTMAN, com.tcordeiro.vilas.compat.Mods.MOVEIS);
 		// os postos só existem com o mod; os vendedores registados entram na lista dos vendedores (trocas nos 5 níveis)
 		if (VilasBlocks.MECHANIC_BENCH != null) VENDORS.put(MECHANIC, VilasBlocks.MECHANIC_BENCH);
 		if (VilasBlocks.ALLOY_ANVIL != null) VENDORS.put(ALLOY_SMITH, VilasBlocks.ALLOY_ANVIL);
 		if (VilasBlocks.CARPENTER_BENCH != null) VENDORS.put(CARPENTER, VilasBlocks.CARPENTER_BENCH);
 		if (VilasBlocks.CHANGER_COUNTER != null) VENDORS.put(MONEY_CHANGER, VilasBlocks.CHANGER_COUNTER);
+		if (VilasBlocks.POST_COUNTER != null) VENDORS.put(POSTMAN, VilasBlocks.POST_COUNTER);
 	}
 
 	private static ResourceKey<VillagerProfession> key(String name) {
@@ -100,6 +104,7 @@ public final class VilasProfessions {
 		if (VilasBlocks.ALLOY_ANVIL != null) register(ALLOY_SMITH, VilasBlocks.ALLOY_ANVIL, SoundEvents.VILLAGER_WORK_ARMORER, true);
 		if (VilasBlocks.CARPENTER_BENCH != null) register(CARPENTER, VilasBlocks.CARPENTER_BENCH, SoundEvents.VILLAGER_WORK_FLETCHER, true);
 		if (VilasBlocks.CHANGER_COUNTER != null) register(MONEY_CHANGER, VilasBlocks.CHANGER_COUNTER, SoundEvents.VILLAGER_WORK_LIBRARIAN, true);
+		if (VilasBlocks.POST_COUNTER != null) register(POSTMAN, VilasBlocks.POST_COUNTER, SoundEvents.VILLAGER_WORK_CARTOGRAPHER, true);
 	}
 
 	/** Esta profissão de mod está registada? (só com o mod instalado) */

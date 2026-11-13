@@ -98,6 +98,20 @@ public final class Resident {
 		buttons.add(button(Component.translatable("tvilas.resident.talk"), "/vila morador " + id + " conversar"));
 		if (VillagerRequests.villageOf(level, vi.getUUID()) != null && !v.civic.batch.done.contains(Batch.key(p.getUUID(), vi.getUUID())))
 			buttons.add(button(Component.translatable("tvilas.resident.request"), "/vila morador " + id + " pedido"));
+		// 0.5.0: o Carteiro (mandar e levantar correio) e contratar um ajudante
+		if (Mail.isPostman(vi)) {
+			buttons.add(button(Component.translatable("tvilas.resident.mail"), "/vila morador " + id + " correio"));
+			int back = Mail.returnedFor(v, p.getUUID());
+			if (back > 0) buttons.add(button(Component.translatable("tvilas.resident.mail_back", back), "/vila morador " + id + " devolvido"));
+		}
+		TownData.Helper mine = v.civic.life.town.helperOf(p.getUUID());
+		if (mine != null && mine.villager.equals(vi.getUUID())) {
+			body.add(1, new PlainMessage(Component.translatable("tvilas.resident.helper_until", Math.max(0, (mine.until - level.getGameTime()) / 1000), mine.harvested)
+					.withStyle(ChatFormatting.GOLD), 300));
+			buttons.add(button(Component.translatable("tvilas.resident.bag"), "/vila morador " + id + " bolsa"));
+			buttons.add(button(Component.translatable("tvilas.resident.dismiss"), "/vila morador " + id + " dispensar"));
+		} else if (mine == null && Helper.free(v, vi) && tier != LifeRules.TIER_DISTRUST)
+			buttons.add(button(Component.translatable("tvilas.resident.hire", Helper.priceText()), "/vila morador " + id + " contratar"));
 		Places places = Life.places(level, v);
 		for (String kind : new String[] {"town_hall", "market", "tavern", "plaza"})
 			if (places.spots.containsKey(kind))
@@ -154,6 +168,25 @@ public final class Resident {
 			case "caminho" -> {
 				return directions(p, level, v, vi, arg);
 			}
+			// 0.5.0
+			case "correio" -> {
+				return Mail.isPostman(vi) ? Mail.chooseRecipient(p, level, v, vi) : VillageManager.Result.fail("tvilas.resident.unknown");
+			}
+			case "carta" -> {
+				return Mail.isPostman(vi) ? Mail.openLetter(p, level, v, vi, arg) : VillageManager.Result.fail("tvilas.resident.unknown");
+			}
+			case "devolvido" -> {
+				return Mail.collectReturned(p, v);
+			}
+			case "contratar" -> {
+				return Helper.hire(p, level, v, vi);
+			}
+			case "bolsa" -> {
+				return Helper.openBag(p, v);
+			}
+			case "dispensar" -> {
+				return Helper.dismiss(p, v);
+			}
 			default -> {
 				return VillageManager.Result.fail("tvilas.resident.unknown");
 			}
@@ -188,6 +221,7 @@ public final class Resident {
 		t.places = Life.places(level, v);
 		Tasks.start(level, vi, t);
 		Balloons.show(vi, Balloons.POINT, 60);
+		Balloons.gesture(vi, Gestures.POINT, 100);
 		Component place = Component.translatable("tvilas.upgrade." + kind);
 		Component msg = dist <= 6 ? Component.translatable("tvilas.dir.here", place)
 				: Component.translatable("tvilas.dir.answer", place, dist, Component.translatable("tvilas.dir." + LifeRules.compass(dx, dz)));

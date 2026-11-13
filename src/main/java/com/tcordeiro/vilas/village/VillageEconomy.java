@@ -123,6 +123,7 @@ public final class VillageEconomy {
 		long tax = TreasuryRules.tradeTax(emeralds * VilasConfig.get().emerald_value_cents, taxRate(v).percent());
 		charge(level, v, p.getUUID(), tax);
 		com.tcordeiro.vilas.life.Festa.onTrade(p, v, offer); // 0.4.0: reembolso da festa (da tesouraria)
+		com.tcordeiro.vilas.life.Market.onTrade(p, v, where, offer); // 0.5.0: reembolso nas bancas do mercado (da tesouraria)
 	}
 
 	/** Venda entre jogadores (CubCoin) no território: 2 % do preço, pago pelo vendedor (que acabou de receber). */
@@ -135,8 +136,12 @@ public final class VillageEconomy {
 	/** A taxa das trocas em vigor nesta vila (o Prefeito ajusta-a: {@link com.tcordeiro.vilas.logic.TaxRules}). */
 	public static com.tcordeiro.vilas.logic.TaxRules.Rate taxRate(Village v) {
 		VilasConfig c = VilasConfig.get();
-		return com.tcordeiro.vilas.logic.TaxRules.rate(c.trade_tax_percent, v.extra.structures, c.tax_per_structure_percent, c.tax_cap_percent,
+		var r = com.tcordeiro.vilas.logic.TaxRules.rate(c.trade_tax_percent, v.extra.structures, c.tax_per_structure_percent, c.tax_cap_percent,
 				v.economy.treasury, c.treasury_full_cents);
+		// 0.5.0: o Prefeito eleito com «imposto menor» tira 1 ponto (nunca abaixo de 0)
+		String policy = v.civic.life.town.election.policy;
+		double cut = com.tcordeiro.vilas.logic.TownRules.taxWithPolicy(r.percent(), policy);
+		return cut < r.percent() ? new com.tcordeiro.vilas.logic.TaxRules.Rate(cut, com.tcordeiro.vilas.logic.TaxRules.Reason.POLICY) : r;
 	}
 
 	/** Anuncia (uma linha) quando a taxa muda. */

@@ -32,6 +32,7 @@ public class TVilas implements ModInitializer {
 	public void onInitialize() {
 		VilasConfig.load();
 		VilasBlocks.init();
+		com.tcordeiro.vilas.registry.VilasItems.init(); // 0.5.0: itens de cena (bolsa, boia, banca)
 		VilasProfessions.init();
 		LotProtection.init();
 		MissionEvents.init();

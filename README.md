@@ -33,14 +33,20 @@ cliente precisa do mod para as texturas, os nomes e (0.4.0) os balões de emoç�
   fofoca sobre factos reais, festa na Praça (reembolso da tesouraria), aprendizes, menu do morador (Shift+clique), presentes
   com gostos, reputação visível, pedir caminho, balões de emoção (cliente), trabalho à vista, reações a armas, sino com horas e
   reunião; tudo com LOD (48/96 blocos), prazos e plano B.
+- **0.5.0** — Carteiro (com o Móveis: cartas com itens até à caixa de correio do terreno), mercado semanal na Praça (bancas,
+  vendedor de fora, reembolso da tesouraria), eleições (donos de terreno votam; o vencedor vira Prefeito com a sua proposta),
+  pescador que pesca (boia própria), crianças a brincar, missão «decorar a festa», ajudante por um dia (só nos teus terrenos), «!» dos
+  pedidos em balão e variáveis de gesto para o EMF.
 
 Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
 `tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
 `merchant_every_days`, `merchant_stay_days`, `wall`, `cubcoin_trades`, `mission_daily_cap_cents`, `mission_daily_per_player`,
 `civic_buildings`, `mission_batch_days`, `prestige_per_resident`, `population_cap`, `mission_fund_daily_cents`,
-`mission_fund_cap_cents`, 0.4.0: `villager_life`, `guard_wage_cents`).
+`mission_fund_cap_cents`, 0.4.0: `villager_life`, `guard_wage_cents`, 0.5.0: `market_every_days`, `election_every_days`,
+`helper_price_cents`, `request_name_tag`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
-`/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`, `/vila reuniao`, `/vila morador <aldeão> trocar|conversar|pedido|caminho <sítio>` (botões do menu).
+`/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`, `/vila reuniao`, `/vila morador <aldeão> trocar|conversar|pedido|caminho <sítio>` (botões do menu), 0.5.0: `/vila eleicao`,
+`/vila votar <1-3>`, `/vila missao aceitar|entregar 4` (missão da festa), `/vila morador <aldeão> correio|carta|devolvido|contratar|bolsa|dispensar`.
 
 ## Desenvolvimento
 

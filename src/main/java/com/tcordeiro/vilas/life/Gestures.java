@@ -14,6 +14,24 @@ public final class Gestures {
 	private Gestures() {}
 
 	public static final int SOUND_COOLDOWN = 40;
+	/** 0.5.0: códigos da variável EMF {@code tvilas_gesture} (0 = nenhum). */
+	public static final int WAVE = 1, CHEER = 2, SHRUG = 3, NOD = 4, NO = 5, POINT = 6;
+
+	/** 0.5.0: acena (balão + gesto EMF). */
+	public static void wave(Villager v) {
+		Balloons.gesture(v, WAVE, 30);
+	}
+
+	/** 0.5.0: festeja (um pulinho, como o «celebrar» vanilla, + gesto EMF). */
+	public static void cheer(Villager v) {
+		if (v.onGround()) v.getJumpControl().jump();
+		Balloons.gesture(v, CHEER, 30);
+	}
+
+	/** 0.5.0: encolhe os ombros (gesto EMF). */
+	public static void shrug(Villager v) {
+		Balloons.gesture(v, SHRUG, 25);
+	}
 
 	static boolean soundReady(Villager v) {
 		LifeVillager.Memo m = ((LifeVillager) v).tvilas$memo();
@@ -26,12 +44,14 @@ public final class Gestures {
 	/** Abana a cabeça («não»). */
 	public static void no(Villager v) {
 		v.setUnhappyCounter(40);
+		Balloons.gesture(v, NO, 30);
 		if (soundReady(v)) v.level().playSound(null, v.blockPosition(), SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 0.8f, 1.0f);
 	}
 
 	/** Acena com a cabeça («sim»): só se vê enquanto olha para alguém (tarefa de conversa, presente, caminho). */
 	public static void nod(ServerLevel level, Villager v) {
 		((LifeVillager) v).tvilas$memo().nodUntil = level.getGameTime() + 12;
+		Balloons.gesture(v, NOD, 12);
 		if (soundReady(v)) level.playSound(null, v.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.8f, 1.0f);
 	}
 

@@ -12,6 +12,10 @@
     {
       "id": "tvilas:changer_counter",
       "required": false
+    },
+    {
+      "id": "tvilas:post_counter",
+      "required": false
     }
   ]
 }

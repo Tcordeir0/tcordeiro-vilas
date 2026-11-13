@@ -61,6 +61,13 @@ public final class Life {
 		long listed = Long.MIN_VALUE, lastTalk, lastFirework, meetingReportAt = -1;
 		int strokes, tick;
 		final Places places = new Places();
+		// 0.5.0: bancas do mercado (cenário), o pregão, o vendedor de fora e o jogo das crianças
+		final List<net.minecraft.world.entity.Entity> stalls = new ArrayList<>();
+		final List<BlockPos> stallAt = new ArrayList<>();
+		boolean cried;
+		long traderDay = Long.MIN_VALUE, nextGame;
+		int played;
+		Play.Game game;
 	}
 
 	static final Map<UUID, Runtime> RT = new HashMap<>();
@@ -136,6 +143,11 @@ public final class Life {
 			report(level, v);
 		}
 		if (r.tick % 2 == 0) Care.guardsTick(level, v);
+		Helper.tick(level, v, now); // 0.5.0: os ajudantes contratados (antes dos outros: não ficam com outra tarefa)
+		if (!danger) {
+			Market.tick(level, v, r, places, all, players, now, tod); // 0.5.0: mercado semanal
+			Play.tick(level, v, r, places, all, players, now, tod); // 0.5.0: as crianças brincam
+		} else if (r.game != null) Play.stop(level, r);
 		boolean festa = Festa.active(level, v);
 		if (festa && !players.isEmpty() && now - r.lastFirework >= 160 && places.plaza() != null && near(players, places.plaza().center, LifeRules.FULL)) {
 			r.lastFirework = now;
@@ -207,6 +219,12 @@ public final class Life {
 			case FESTA -> {
 				if (!festa) Tasks.end(level, vi, t, "done");
 			}
+			case MARKET -> {
+				if (!Market.active(level, v)) Tasks.end(level, vi, t, "market_over");
+			}
+			case FISH, DELIVER -> {
+				if (!LifeRules.workTime(tod)) Tasks.end(level, vi, t, "after_work");
+			}
 			default -> {}
 		}
 	}
@@ -222,6 +240,7 @@ public final class Life {
 			return;
 		}
 		if (d.apprentices.containsKey(vi.getUUID())) graduate(level, v, vi);
+		if (Helper.isHelper(vi)) return; // 0.5.0: contratado — o contrato manda
 		long seed = seed(vi);
 		BlockPos head = vi.blockPosition().above();
 		boolean outdoors = level.canSeeSky(head);
@@ -308,6 +327,9 @@ public final class Life {
 			if (Care.cleric(vi) && Care.tryHeal(level, v, places, vi, all)) return;
 			if (Care.smith(vi) && Care.tryRepair(level, v, places, vi)) return;
 		}
+		// 0.5.0: o Carteiro entrega as cartas; o pescador vai pescar
+		if (Mail.tryDeliver(level, v, places, vi, m, now, tod)) return;
+		if (Fishing.tryFish(level, v, places, vi, m, now, tod)) return;
 		work(level, vi, m, now, rnd);
 		lantern(level, vi, m, tod, outdoors);
 		watchdog(vi, m);
@@ -471,6 +493,7 @@ public final class Life {
 			case "beekeeper" -> Items.HONEYCOMB;
 			case "carpenter" -> Items.STICK;
 			case "alloy_smith" -> Items.COPPER_INGOT;
+			case "postman" -> Items.PAPER;
 			default -> null;
 		};
 	}
@@ -550,6 +573,7 @@ public final class Life {
 				t.icon = Balloons.QUESTION;
 				Tasks.start(level, vi, t);
 				Gestures.glance(vi, p);
+				Gestures.shrug(vi); // 0.5.0: gesto EMF
 				if (tier == LifeRules.TIER_DISTRUST) Gestures.no(vi);
 				reacts++;
 			} else if (armored && !armed && d2 < 5 * 5 && tier >= LifeRules.TIER_FRIENDLY) {
@@ -557,6 +581,7 @@ public final class Life {
 				Gestures.glance(vi, p);
 				Gestures.nod(level, vi);
 				Balloons.say(vi, Balloons.WAVE, Component.translatable("tvilas.talk.armor"), 50);
+				Gestures.wave(vi);
 				reacts++;
 			}
 		}
@@ -592,6 +617,7 @@ public final class Life {
 			Tasks.look(vi, p);
 			Gestures.nod(level, vi);
 			Balloons.say(vi, Balloons.HEART, Component.translatable("tvilas.talk.welcome", p.getGameProfile().name()), 70);
+			Gestures.wave(vi);
 			welcomes++;
 		}
 		t.deadline = Math.min(t.deadline, level.getGameTime() + 60);
@@ -670,6 +696,8 @@ public final class Life {
 		d.prune(day);
 		Care.dailyGuards(level, v, places(level, v), day);
 		if (v.extra.merchantNext == day + 1) Festa.schedule(level, v, day + 1, "merchant");
+		Market.daily(level, v, day); // 0.5.0: mercado semanal (aviso na véspera)
+		Election.daily(level, v, day); // 0.5.0: eleições (contar os votos de ontem, abrir as de hoje)
 		VillageData.get(level).changed();
 	}
 
@@ -683,6 +711,12 @@ public final class Life {
 	/** O aldeão morreu ou foi descarregado com um item de cena: tira-o (nunca cai). */
 	public static void cleanup(Villager v) {
 		if (Props.holding(v)) v.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+		Task t = Tasks.get(v);
+		if (t != null && t.prop != null) { // 0.5.0: a boia vai-se com ele
+			Stage.remove(t.prop);
+			t.prop = null;
+		}
+		if (v.level() instanceof ServerLevel sl) Helper.onDeath(sl, v); // 0.5.0: a bolsa do ajudante volta para quem o contratou
 	}
 
 	static GlobalPos unused() {

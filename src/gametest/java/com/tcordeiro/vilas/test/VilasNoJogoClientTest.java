@@ -181,6 +181,7 @@ public class VilasNoJogoClientTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext ctx) {
+		if (java.nio.file.Files.exists(java.nio.file.Path.of("vilas050.flag"))) return; // 0.5.0: só o teste da 0.5
 		boolean mods = Mods.loaded(Mods.MOVEIS) || Mods.loaded(Mods.INDUSTRIAL);
 		prefix = mods ? "" : "semmods_";
 		ctx.runOnClient(mc -> mc.options.getSoundSourceOptionInstance(net.minecraft.sounds.SoundSource.MASTER).set(0.0));

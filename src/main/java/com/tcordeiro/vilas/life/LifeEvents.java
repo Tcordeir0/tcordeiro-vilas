@@ -42,6 +42,8 @@ public final class LifeEvents {
 		});
 		ServerEntityEvents.ENTITY_LOAD.register((e, level) -> {
 			if (e instanceof Villager vi && Props.holding(vi)) Props.clear(vi);
+			Stage.onLoad(e); // 0.5.0: boia/banca que ficou de uma sessão anterior
+			Market.onLoad(level, e); // 0.5.0: o vendedor de fora vai-se embora depois do mercado
 		});
 	}
 

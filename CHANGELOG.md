@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.5.0 — 13/11/2026
+
+**A vila ganha vida própria (vanilla+)** — tudo só nos aldeões do território de uma Mesa, com LOD (48/96 blocos), prazo e plano B
+em cada tarefa; o dinheiro sai SEMPRE da tesouraria, com tetos; nada global.
+
+- **Carteiro** (profissão nova, só com o Móveis; posto: **Balcão dos Correios**, modelo feito no Blender): Shift+clique →
+  «Mandar correio» → escolhe-se um dono de terreno da vila que tenha uma **Caixa de Correio** do Móveis no terreno → 9 espaços;
+  ao fechar, a carta fica com o Carteiro (guardada na vila, nunca no aldeão) e paga-se o selo (1 CB, todo para a tesouraria; grátis
+  sem o CubCoin). Nas horas de trabalho ele vai a pé, com a **Bolsa do Carteiro** na mão, e põe os itens na caixa (a bandeirinha do
+  Móveis sobe e o dono é avisado). Caixa cheia/partida: tenta outra vez; à 3.ª a carta volta e levanta-se no Carteiro. Teto: 3 cartas
+  por jogador, 32 por vila. Trocas: papel, livros para escrever, pacotes, bússolas e caixas de correio do Móveis. Sem o Móveis não
+  existe (nem o bloco nem a profissão).
+- **Mercado semanal na Praça** (`market_every_days`, 7; cada vila no seu dia): o Prefeito avisa na véspera, às 7 h o sino abre o
+  mercado; os vendedores da vila montam **bancas** (modelo do Blender, cenário que se apaga no fim e nunca fica no mundo) e
+  apregoam; chega um **Vendedor de Fora** (o vendedor ambulante do jogo, que se vai às 15 h). Nas bancas a tesouraria devolve 15 % do
+  que se paga (até 15 CB por jogador e 80 CB por mercado; sem o CubCoin, em esmeraldas inteiras).
+- **Eleições** (`election_every_days`, 8): no dia de votar o Prefeito apresenta 2 ou 3 candidatos (aldeões da vila), cada um com uma
+  proposta — imposto menor (−1 ponto na taxa das trocas, nunca abaixo de 0), mais guardas (+1 posto, pago pela tesouraria), mais
+  festas (uma festa extra no mandato) ou mercado maior (teto do reembolso +50 %). Votam no quadro os donos de terreno, um voto cada.
+  No dia seguinte o vencedor toma posse: troca de posto com o Prefeito de antes (discurso e foguete) e a proposta fica em vigor.
+  Nenhuma proposta cria dinheiro. Sem votos, nada muda.
+- **Pescador**: o Pescador do jogo pesca a sério nas horas de trabalho — vai à margem mais perto do posto (16 blocos), cana na mão e
+  a **Boia** do Vilas (modelo do Blender; não o anzol do jogo); a boia balança, há puxões com salpicos e som, e cada peixe repõe uma
+  troca de venda de peixe dele (no máximo 6 por dia; o jogador continua a pagar).
+- **Crianças a brincar**: esconde-esconde (uma conta de costas, as outras escondem-se atrás de alguma coisa e são achadas uma a uma)
+  e apanhada, perto da Praça, de dia e fora das horas de aprendiz — só com um jogador a 48 blocos.
+- **Missão «decorar a festa»**: quando há festa marcada, o quadro mostra uma 4.ª missão temporária (lanternas, velas ou lã a 24
+  blocos da Praça); paga como as outras (fundo e tesouraria, teto do dia, uma vez por jogador) e some quando a festa acaba. O lote de
+  4 dias não muda. `/vila missao aceitar|entregar 4`.
+- **Contratar ajudante** (menu do morador): um aldeão segue-te durante um dia por 20 CB (`helper_price_cents`; sem o CubCoin, 1
+  esmeralda) — TUDO para a tesouraria. Leva uma bolsa de 9 espaços e colhe (e volta a semear) o que está maduro nos TEUS terrenos.
+  Nunca entra em terrenos alheios (espera à porta), nunca colhe fora dos teus terrenos, não apanha itens nem abre baús, não sai do
+  território. Um por jogador, um contrato por dia, dois por vila; no fim (ou dispensado, ou se morrer) a bolsa volta para ti.
+- **O «!» dos pedidos é um balão** por cima da cabeça (os nomes dos aldeões nunca são mexidos; o «!» antigo no nome sai sozinho;
+  aldeões com nome dado também podem pedir). `request_name_tag: true` volta ao nome dourado.
+- **Gestos por variável do EMF** (Entity Model Features 3.3.11, API `EMFAnimationApi` confirmada no jar): o cliente regista
+  `tvilas_gesture` (1 acenar, 2 festejar, 3 encolher os ombros, 4 sim, 5 não, 6 apontar) e `tvilas_gesture_time` (0–1). Só um
+  pacote de recursos que as use mexe no aldeão (ver «Decisões» no relatório: o Vilas não traz um pacote derivado do Fresh Animations).
+- **Ideias minhas**: pregão do mercado (sino e falas dos vendedores), discurso e foguete do Prefeito eleito, fofoca sobre cartas,
+  eleições, mercado e ajudantes.
+- Desempenho: mercado e crianças só com um jogador perto da Praça; boia/bancas são mostradores vanilla sem colisão, apagados ao fim e
+  ao carregar se forem restos; nada por tick além das tarefas. Medido com 40 aldeões (ver o LEIA-ME do teste no jogo).
+- Config: `market_every_days`, `election_every_days`, `helper_price_cents`, `request_name_tag`. Comandos: `/vila eleicao`,
+  `/vila votar <1-3>`, `/vila morador <aldeão> correio|carta|devolvido|contratar|bolsa|dispensar` (botões dos menus).
+- Guia: 17 páginas novas (110 no separador Guias); o livro escrito leva as primeiras 98, os comandos e «E o resto?» (100).
+  pt-BR, pt-PT e en.
+
+
 ## 0.4.0 — 13/11/2026
 
 **Aldeões mais vivos** — só nos aldeões dentro do território de uma Mesa; o horário vanilla, os nomes, a replanta e o clique das

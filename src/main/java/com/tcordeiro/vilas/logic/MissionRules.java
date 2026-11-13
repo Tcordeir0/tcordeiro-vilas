@@ -67,6 +67,16 @@ public final class MissionRules {
 	/** O tipo de cada uma das 3 casas do quadro. */
 	public static final Kind[] SLOTS = {Kind.DELIVER, Kind.DECORATE, Kind.DEFEND};
 
+	/**
+	 * 0.5.0 — A missão temporária «decorar a festa» (4.ª casa do quadro, só enquanto há festa marcada): blocos festivos a 24 blocos
+	 * da Praça. Paga como as outras (fundo das missões e tesouraria, teto do dia, uma vez por jogador) e não mexe no lote de 4 dias.
+	 */
+	public static final List<Template> FESTA_DECOR = List.of(
+			new Template(Kind.DECORATE, "minecraft:lantern", 6, 2, 10, 1),
+			new Template(Kind.DECORATE, "minecraft:candle", 8, 2, 10, 1),
+			new Template(Kind.DECORATE, "minecraft:red_wool", 12, 1, 8, 1),
+			new Template(Kind.DECORATE, "minecraft:yellow_wool", 12, 1, 8, 1));
+
 	/** Modelos possíveis numa casa: do tipo da casa, do escalão da vila ou do anterior (uma cidade não pede trigo). */
 	public static List<Template> eligible(int slot, int tier) {
 		Kind kind = SLOTS[slot];

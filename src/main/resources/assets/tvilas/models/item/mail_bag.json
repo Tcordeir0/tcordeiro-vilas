@@ -1,0 +1,357 @@
+{
+ "parent": "minecraft:block/block",
+ "textures": {
+  "leather": "tvilas:item/mail_bag",
+  "flap": "tvilas:item/mail_bag_flap",
+  "brass": "minecraft:block/gold_block",
+  "strap": "minecraft:block/brown_wool",
+  "paper": "minecraft:block/white_concrete",
+  "particle": "tvilas:item/mail_bag"
+ },
+ "elements": [
+  {
+   "from": [
+    3,
+    2,
+    6
+   ],
+   "to": [
+    13,
+    11,
+    10
+   ],
+   "faces": {
+    "north": {
+     "texture": "#leather"
+    },
+    "south": {
+     "texture": "#leather"
+    },
+    "east": {
+     "texture": "#leather"
+    },
+    "west": {
+     "texture": "#leather"
+    },
+    "up": {
+     "texture": "#leather"
+    },
+    "down": {
+     "texture": "#leather"
+    }
+   }
+  },
+  {
+   "from": [
+    3,
+    5,
+    5
+   ],
+   "to": [
+    13,
+    11.5,
+    6
+   ],
+   "faces": {
+    "north": {
+     "texture": "#flap"
+    },
+    "south": {
+     "texture": "#flap"
+    },
+    "east": {
+     "texture": "#flap"
+    },
+    "west": {
+     "texture": "#flap"
+    },
+    "up": {
+     "texture": "#flap"
+    },
+    "down": {
+     "texture": "#flap"
+    }
+   }
+  },
+  {
+   "from": [
+    3,
+    11,
+    5
+   ],
+   "to": [
+    13,
+    11.5,
+    10
+   ],
+   "faces": {
+    "north": {
+     "texture": "#leather"
+    },
+    "south": {
+     "texture": "#leather"
+    },
+    "east": {
+     "texture": "#leather"
+    },
+    "west": {
+     "texture": "#leather"
+    },
+    "up": {
+     "texture": "#leather"
+    },
+    "down": {
+     "texture": "#leather"
+    }
+   }
+  },
+  {
+   "from": [
+    7,
+    5.5,
+    4.5
+   ],
+   "to": [
+    9,
+    7.5,
+    5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#brass"
+    },
+    "south": {
+     "texture": "#brass"
+    },
+    "east": {
+     "texture": "#brass"
+    },
+    "west": {
+     "texture": "#brass"
+    },
+    "up": {
+     "texture": "#brass"
+    },
+    "down": {
+     "texture": "#brass"
+    }
+   }
+  },
+  {
+   "from": [
+    2,
+    9,
+    7.5
+   ],
+   "to": [
+    3,
+    16,
+    8.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#strap"
+    },
+    "south": {
+     "texture": "#strap"
+    },
+    "east": {
+     "texture": "#strap"
+    },
+    "west": {
+     "texture": "#strap"
+    },
+    "up": {
+     "texture": "#strap"
+    },
+    "down": {
+     "texture": "#strap"
+    }
+   }
+  },
+  {
+   "from": [
+    13,
+    9,
+    7.5
+   ],
+   "to": [
+    14,
+    16,
+    8.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#strap"
+    },
+    "south": {
+     "texture": "#strap"
+    },
+    "east": {
+     "texture": "#strap"
+    },
+    "west": {
+     "texture": "#strap"
+    },
+    "up": {
+     "texture": "#strap"
+    },
+    "down": {
+     "texture": "#strap"
+    }
+   }
+  },
+  {
+   "from": [
+    3,
+    15,
+    7.5
+   ],
+   "to": [
+    13,
+    16,
+    8.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#strap"
+    },
+    "south": {
+     "texture": "#strap"
+    },
+    "east": {
+     "texture": "#strap"
+    },
+    "west": {
+     "texture": "#strap"
+    },
+    "up": {
+     "texture": "#strap"
+    },
+    "down": {
+     "texture": "#strap"
+    }
+   }
+  },
+  {
+   "from": [
+    5,
+    11,
+    7
+   ],
+   "to": [
+    10,
+    13,
+    7.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#paper"
+    },
+    "south": {
+     "texture": "#paper"
+    },
+    "east": {
+     "texture": "#paper"
+    },
+    "west": {
+     "texture": "#paper"
+    },
+    "up": {
+     "texture": "#paper"
+    },
+    "down": {
+     "texture": "#paper"
+    }
+   }
+  }
+ ],
+ "gui_light": "side",
+ "display": {
+  "ground": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    2,
+    0
+   ],
+   "scale": [
+    0.6,
+    0.6,
+    0.6
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  },
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  },
+  "thirdperson_righthand": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    1,
+    1
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "firstperson_righthand": {
+   "rotation": [
+    0,
+    45,
+    0
+   ],
+   "translation": [
+    0,
+    2,
+    0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  }
+ }
+}

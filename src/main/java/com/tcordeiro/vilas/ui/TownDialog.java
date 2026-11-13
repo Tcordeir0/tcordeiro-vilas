@@ -98,7 +98,28 @@ public final class TownDialog {
 		if (life.festa.day >= 0) body.add(new PlainMessage(Component.translatable("tvilas.dialog.festa", life.festa.day,
 				Component.translatable("tvilas.festa." + life.festa.reason)).withStyle(ChatFormatting.LIGHT_PURPLE), 300));
 		body.add(new PlainMessage(Component.translatable("tvilas.dialog.guards", life.guards.size(),
-				com.tcordeiro.vilas.logic.LifeRules.guardPosts(v.level), VillageManager.money(com.tcordeiro.vilas.life.Care.wage())).withStyle(ChatFormatting.GRAY), 300));
+				com.tcordeiro.vilas.logic.TownRules.guardPostsWithPolicy(com.tcordeiro.vilas.logic.LifeRules.guardPosts(v.level), com.tcordeiro.vilas.life.Election.policy(v)), VillageManager.money(com.tcordeiro.vilas.life.Care.wage())).withStyle(ChatFormatting.GRAY), 300));
+		// 0.5.0: mercado, eleições, correio e ajudantes
+		var town = life.town;
+		long day0 = com.tcordeiro.vilas.village.VillageEconomy.day(level);
+		if (com.tcordeiro.vilas.life.Market.today(level, v))
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.market_today", VillageManager.money(com.tcordeiro.vilas.logic.TownRules.marketPlayerCap(
+					com.tcordeiro.vilas.logic.TownRules.MARKET.equals(town.election.policy), 1))).withStyle(ChatFormatting.GOLD), 300));
+		else if (cfg.market_every_days > 0 && civic.meta.real)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.market_next", com.tcordeiro.vilas.life.Market.next(v, day0)).withStyle(ChatFormatting.GRAY), 300));
+		if (town.election.open(day0))
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.election_open", town.election.candidates.size()).withStyle(ChatFormatting.AQUA), 300));
+		if (!town.election.policy.isEmpty())
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.policy", town.election.mayorName,
+					Component.translatable("tvilas.policy." + town.election.policy)).withStyle(ChatFormatting.GRAY), 300));
+		else if (cfg.election_every_days > 0 && civic.meta.real)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.election_next",
+					(day0 / cfg.election_every_days + 1) * cfg.election_every_days).withStyle(ChatFormatting.GRAY), 300));
+		if (com.tcordeiro.vilas.life.Mail.available() && !town.mail.isEmpty())
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.mail", town.pending()).withStyle(ChatFormatting.GRAY), 300));
+		if (town.activeHelpers() > 0)
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.helpers", town.activeHelpers(), com.tcordeiro.vilas.logic.TownRules.HELPERS_PER_VILLAGE)
+					.withStyle(ChatFormatting.GRAY), 300));
 		if (civic.mayorTaken) body.add(new PlainMessage(Component.translatable("tvilas.dialog.mayor_taken").withStyle(ChatFormatting.RED), 300));
 		List<ActionButton> buttons = new ArrayList<>();
 		for (int i = 0; i < v.missions.size(); i++) {
@@ -116,6 +137,21 @@ public final class TownDialog {
 			Component label = acc ? Component.translatable("tvilas.dialog.deliver", i + 1) : Component.translatable("tvilas.dialog.accept", i + 1);
 			buttons.add(button(label, cmd));
 		}
+		// 0.5.0: a missão temporária da festa (4.ª casa; o lote de 4 dias não muda)
+		Mission decor = town.decor;
+		if (decor != null) {
+			boolean acc = VillageManager.accepted(v, p.getUUID(), decor);
+			boolean doneIt = v.civic.batch.done.contains(com.tcordeiro.vilas.village.Batch.key(p.getUUID(), decor.id()));
+			MutableComponent line = Component.translatable("tvilas.dialog.festa_mission", VillageManager.describe(decor), VillageManager.FESTA_DECOR_RADIUS,
+					VillageManager.reward(decor.emeralds()), decor.reputation()).withStyle(ChatFormatting.LIGHT_PURPLE);
+			if (acc) line.append(Component.translatable("tvilas.dialog.progress", Math.min(VillageManager.progress(p, v, decor), decor.count()), decor.count())
+					.withStyle(ChatFormatting.GRAY));
+			if (doneIt) line.append(Component.translatable("tvilas.dialog.mission_done").withStyle(ChatFormatting.GREEN));
+			body.add(new PlainMessage(line, 300));
+			if (!doneIt) buttons.add(button(acc ? Component.translatable("tvilas.dialog.festa_deliver") : Component.translatable("tvilas.dialog.festa_accept"),
+					acc ? "/vila missao entregar 4" : "/vila missao aceitar 4"));
+		}
+		if (town.election.open(day0)) buttons.add(button(Component.translatable("tvilas.dialog.vote"), "/vila eleicao"));
 		if (myDebt > 0) buttons.add(button(Component.translatable("tvilas.dialog.pay_debt", VillageManager.money(myDebt)), "/vila divida pagar"));
 		if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_BUILDING)
 			buttons.add(button(Component.translatable("tvilas.dialog.wall_cancel"), "/vila muralha cancelar"));

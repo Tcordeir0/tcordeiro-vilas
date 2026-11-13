@@ -60,6 +60,14 @@ public final class VilasConfig {
 	public boolean villager_life = true;
 	/** 0.4.0: salário diário de cada guarda (cêntimos), pago pela tesouraria. */
 	public long guard_wage_cents = com.tcordeiro.vilas.logic.LifeRules.GUARD_WAGE_CENTS;
+	/** 0.5.0: mercado semanal na Praça a cada N dias (0 = sem mercado). */
+	public int market_every_days = com.tcordeiro.vilas.logic.TownRules.MARKET_EVERY_DAYS;
+	/** 0.5.0: eleições a cada N dias (0 = sem eleições). */
+	public int election_every_days = com.tcordeiro.vilas.logic.TownRules.ELECTION_EVERY_DAYS;
+	/** 0.5.0: preço de um ajudante por um dia (cêntimos), todo para a tesouraria. */
+	public long helper_price_cents = com.tcordeiro.vilas.logic.TownRules.HELPER_PRICE_CENTS;
+	/** 0.5.0: true = o «!» dos pedidos volta a ser o nome dourado (como até à 0.4) em vez do balão. */
+	public boolean request_name_tag = false;
 
 	private static VilasConfig current = new VilasConfig();
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

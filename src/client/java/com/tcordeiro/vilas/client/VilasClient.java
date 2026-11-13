@@ -12,5 +12,6 @@ public class VilasClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		EntityRendererRegistry.register(LifeSeat.TYPE, NoopRenderer::new);
 		BalloonClient.init();
+		GestureClient.init(); // 0.5.0: gestos por variável do EMF (só com o EMF)
 	}
 }

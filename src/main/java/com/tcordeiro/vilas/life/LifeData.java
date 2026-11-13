@@ -103,8 +103,9 @@ public final class LifeData {
 			Codec.LONG.optionalFieldOf("guard_day", -1L).forGetter(d -> d.guardDay),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("last_seen", Map.of()).forGetter(d -> d.lastSeen),
 			Codec.LONG.optionalFieldOf("last_chime", -1L).forGetter(d -> d.lastChime),
-			Codec.LONG.optionalFieldOf("meeting_day", -1L).forGetter(d -> d.meetingDay))
-			.apply(i, (fa, fc, op, gi, gr, th, td, ap, fe, gu, gd, ls, lc, md) -> {
+			Codec.LONG.optionalFieldOf("meeting_day", -1L).forGetter(d -> d.meetingDay),
+			TownData.CODEC.optionalFieldOf("town").forGetter(d -> java.util.Optional.of(d.town)))
+			.apply(i, (fa, fc, op, gi, gr, th, td, ap, fe, gu, gd, ls, lc, md, tw) -> {
 				LifeData d = new LifeData();
 				for (Fact f : fa) if (d.facts.size() < MAX_FACTS) d.facts.add(f);
 				d.factCounter = fc;
@@ -120,6 +121,7 @@ public final class LifeData {
 				capPut(d.lastSeen, ls, MAX_MAP);
 				d.lastChime = lc;
 				d.meetingDay = md;
+				d.town = tw.orElseGet(TownData::new);
 				return d;
 			}));
 
@@ -151,6 +153,8 @@ public final class LifeData {
 	public final Map<UUID, Long> lastSeen = new HashMap<>();
 	public long lastChime = -1;
 	public long meetingDay = -1;
+	/** 0.5.0: correio, mercado, eleições, ajudantes, missão da festa, peixe. */
+	public TownData town = new TownData();
 
 	public static String pair(UUID a, UUID b) {
 		return a.compareTo(b) < 0 ? a + "|" + b : b + "|" + a;

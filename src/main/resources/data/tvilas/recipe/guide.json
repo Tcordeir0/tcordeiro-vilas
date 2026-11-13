@@ -291,7 +291,25 @@
             "raw": "§lLonge e perto§r\n\nPara não pesar no jogo, tudo isso só acontece perto de jogadores: completo até 48 blocos, só o essencial até 96, e nada mais longe.\n\nNuma invasão, eles se escondem como no jogo."
           },
           {
-            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila info\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila muralha retomar\n/vila reuniao"
+            "raw": "§lNovidades 0.5§r\n\nA vila ganha um Carteiro, mercado semanal, eleições, um pescador que pesca, crianças a brincar, a missão da festa e ajudantes por um dia.\n\nTudo pago pela tesouraria, com teto."
+          },
+          {
+            "raw": "§lMercado semanal§r\n\nUm dia por semana há mercado na Praça, das 7 h às 15 h. O Prefeito avisa na véspera e o sino abre o mercado.\n\nOs vendedores da vila montam bancas e apregoam."
+          },
+          {
+            "raw": "§lPreço de mercado§r\n\nNas bancas a tesouraria devolve 15 % do que você paga: até 15 CB por pessoa e 80 CB por mercado.\n\nChega também um vendedor de fora, que vai embora no fim."
+          },
+          {
+            "raw": "§lEleições§r\n\nA cada 8 dias há eleições. De manhã o Prefeito apresenta 2 ou 3 candidatos, cada um com uma proposta.\n\nNo dia seguinte o vencedor vira Prefeito."
+          },
+          {
+            "raw": "§lVotar§r\n\nNo quadro, «Votar». Vota quem tem terreno na vila, uma vez por eleição.\n\nSem votos, tudo fica como está."
+          },
+          {
+            "raw": "§lAs propostas§r\n\nImposto menor: menos 1 ponto na taxa.\nMais guardas: mais um posto.\nMais festas: uma festa extra.\nMercado maior: reembolso maior.\n\nNenhuma cria dinheiro."
+          },
+          {
+            "raw": "§lComandos§r\n\n/vila abre o quadro\n/vila missao aceitar 1\n/vila missao entregar 1\n/vila terreno comprar\n/vila terreno info\n/vila divida pagar\n/vila muralha cancelar\n/vila reuniao\n/vila eleicao\n/vila votar 1"
           },
           {
             "raw": "§lE o resto?§r\n\nTudo o resto está no separador Guias do Receitário (botão no inventário): a receita de cada bloco, uma por página, e as páginas dos mods que estão instalados."

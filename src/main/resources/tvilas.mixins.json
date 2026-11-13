@@ -13,6 +13,7 @@
 		"VillagerSpecialPricesMixin",
 		"VillagerLifeMixin",
 		"StructureTemplateAccessor",
+		"DisplayAccessor",
 		"compat.CubCoinTradesMixin",
 		"protect.DispenserBlockMixin",
 		"protect.FireBlockMixin",

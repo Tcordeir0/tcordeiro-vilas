@@ -49,6 +49,8 @@ public final class VilasGuide {
 			new String[][] {{"#minecraft:wooden_slabs", "#minecraft:wooden_slabs", "#minecraft:wooden_slabs"}, {"#minecraft:planks", "tmoveis:oak_chair", "#minecraft:planks"}, {null, null, null}});
 	static final Recipe CHANGER_COUNTER = new Recipe("tvilas:changer_counter", "tvilas:changer_counter", 1,
 			new String[][] {{"cubcoin:note_1", "cubcoin:note_1", "cubcoin:note_1"}, {"#minecraft:planks", "minecraft:emerald", "#minecraft:planks"}, {null, null, null}});
+	static final Recipe POST_COUNTER = new Recipe("tvilas:post_counter", "tvilas:post_counter", 1,
+			new String[][] {{"minecraft:paper", "minecraft:paper", "minecraft:paper"}, {"#minecraft:planks", "tmoveis:mailbox", "#minecraft:planks"}, {null, null, null}});
 
 	/** Todas as páginas (o livro escrito leva-as todas; as dos mods dizem «só com o mod»). */
 	public static final List<Page> ALL = List.of(
@@ -144,6 +146,23 @@ public final class VilasGuide {
 			new Page("bell", null, List.of(), null),
 			new Page("welcome", null, List.of(), null),
 			new Page("life_far", null, List.of(), null),
+			new Page("v050", null, List.of(), null),
+			new Page("weekly_market", null, List.of(), null),
+			new Page("market_price", null, List.of(), null),
+			new Page("elections", null, List.of(), null),
+			new Page("voting", null, List.of(), null),
+			new Page("policies", null, List.of(), null),
+			new Page("postman", null, List.of(POST_COUNTER), "tmoveis"),
+			new Page("mail_send", null, List.of(), "tmoveis"),
+			new Page("mail_walk", null, List.of(), "tmoveis"),
+			new Page("mail_back", null, List.of(), "tmoveis"),
+			new Page("fisher", null, List.of(), null),
+			new Page("kids_play", null, List.of(), null),
+			new Page("festa_decor", null, List.of(), null),
+			new Page("helper", null, List.of(), null),
+			new Page("helper_rules", null, List.of(), null),
+			new Page("request_balloon", null, List.of(), null),
+			new Page("gestures", null, List.of(), null),
 			new Page("commands", null, List.of(), null));
 
 	/** As páginas do separador «Guias» do Receitário: sem as dos mods que não estão instalados. */

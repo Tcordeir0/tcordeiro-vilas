@@ -40,6 +40,7 @@ public final class Festa {
 		f.day = day;
 		f.reason = reason;
 		f.reset();
+		decor(level, v, day); // 0.5.0: missão temporária «decorar a festa»
 		VillageNews.announce(level, v, ICON, day == today ? "tvilas.news.festa_today" : "tvilas.news.festa", Component.translatable("tvilas.festa." + reason));
 		Talk.fact(level, v, null, "festa");
 		VillageData.get(level).changed();
@@ -63,12 +64,17 @@ public final class Festa {
 	static void tidy(ServerLevel level, Village v) {
 		LifeData.Festa f = v.civic.life.festa;
 		long today = VillageEconomy.day(level);
-		if (f.day >= 0 && (f.day < today || (f.day == today && LifeRules.timeOfDay(level.getOverworldClockTime()) >= LifeRules.FESTA_END))) {
-			f.last = f.day;
-			f.day = -1;
-			f.reset();
-			VillageData.get(level).changed();
-		}
+		if (f.day >= 0 && (f.day < today || (f.day == today && LifeRules.timeOfDay(level.getOverworldClockTime()) >= LifeRules.FESTA_END))) finish(level, v);
+	}
+
+	/** A festa acabou (ou nunca chegou a ser): fica registada e a missão da festa sai do quadro. */
+	public static void finish(ServerLevel level, Village v) {
+		LifeData.Festa f = v.civic.life.festa;
+		f.last = f.day;
+		f.day = -1;
+		f.reset();
+		clearDecor(v);
+		VillageData.get(level).changed();
 	}
 
 	/** Um foguete na Praça (só cosmético: não larga nada). */
@@ -113,5 +119,25 @@ public final class Festa {
 		}
 		VillageData.get(level).changed();
 		return now;
+	}
+
+	// ---------------------------------------------------------------- 0.5.0: missão «decorar a festa»
+
+	/** Põe no quadro (4.ª casa) a missão temporária da festa; o lote de 4 dias não muda. */
+	static void decor(ServerLevel level, Village v, long festaDay) {
+		if (!v.civic.meta.real) return;
+		clearDecor(v);
+		var list = com.tcordeiro.vilas.logic.MissionRules.FESTA_DECOR;
+		var t = list.get(level.getRandom().nextInt(list.size()));
+		v.civic.life.town.decor = com.tcordeiro.vilas.village.Mission.of(++v.missionCounter, t);
+		v.civic.life.town.decorDay = festaDay;
+	}
+
+	/** A festa acabou: a missão sai do quadro (e o progresso dela). */
+	static void clearDecor(Village v) {
+		TownData t = v.civic.life.town;
+		if (t.decor != null) VillageManager.dropMission(v, t.decor);
+		t.decor = null;
+		t.decorDay = -1;
 	}
 }
