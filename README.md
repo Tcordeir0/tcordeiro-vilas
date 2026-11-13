@@ -1,7 +1,7 @@
 # Vilas do Tcordeiro (`tvilas`)
 
-Mod Fabric para Minecraft Java **26.3** (Fabric Loader 0.20.1, Fabric API 0.165.0+26.3, Java 25). Só servidor precisa dele
-para a lógica; o cliente precisa para as texturas e nomes (não há código de cliente).
+Mod Fabric para Minecraft Java **26.3** (Fabric Loader 0.20.1, Fabric API 0.165.0+26.3, Java 25). A lógica é do servidor; o
+cliente precisa do mod para as texturas, os nomes e (0.4.0) os balões de emoção por cima dos aldeões.
 
 - **Prefeito** — aldeão vanilla com profissão própria (`tvilas:mayor`), posto de trabalho na **Mesa do Prefeito** (1 vaga, uma Mesa
   por vila). Clique direito nele ou na Mesa abre o quadro da Prefeitura (diálogo do servidor). Não faz trocas.
@@ -27,14 +27,20 @@ para a lógica; o cliente precisa para as texturas e nomes (não há código de 
   missões em lotes de 4 dias (uma vez por jogador), pedidos dos aldeões com «!», a vila cresce com as missões (prestígio →
   moradores, casa se faltar cama); missões sem lucro infinito; automação congelada com dívida; codecs estritos; tirar amigos
   desligados; postes de 4 blocos com o Industrial 0.12.2+.
+- **0.4.0** — aldeões mais vivos (só no território de uma Mesa): fim de tarde na Praça e na Taverna (sentados nos móveis do
+  Móveis ou em escadas), deitar aos poucos, cama de casal para quem não tem cama, chuva → Taverna e frio → lareira (Clima),
+  guardas em postos fixos pagos pela tesouraria, clérigo que cura e ferreiros que reparam golens, pânico coletivo, conversas e
+  fofoca sobre factos reais, festa na Praça (reembolso da tesouraria), aprendizes, menu do morador (Shift+clique), presentes
+  com gostos, reputação visível, pedir caminho, balões de emoção (cliente), trabalho à vista, reações a armas, sino com horas e
+  reunião; tudo com LOD (48/96 blocos), prazos e plano B.
 
 Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
 `tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
 `merchant_every_days`, `merchant_stay_days`, `wall`, `cubcoin_trades`, `mission_daily_cap_cents`, `mission_daily_per_player`,
 `civic_buildings`, `mission_batch_days`, `prestige_per_resident`, `population_cap`, `mission_fund_daily_cents`,
-`mission_fund_cap_cents`).
+`mission_fund_cap_cents`, 0.4.0: `villager_life`, `guard_wage_cents`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
-`/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`.
+`/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`, `/vila reuniao`, `/vila morador <aldeão> trocar|conversar|pedido|caminho <sítio>` (botões do menu).
 
 ## Desenvolvimento
 
@@ -46,7 +52,8 @@ python3 tools/gen_structures.py    # NBT da Prefeitura, Mercado, Taverna e Praç
 ./gradlew build                    # jar em build/libs/ (+ testes JUnit da lógica pura)
 ./gradlew runGametest              # testes de servidor (sem janela), com o CubCoin
 ./gradlew runGametest -PnoCubcoin  # os mesmos sem o CubCoin (só esmeraldas)
-./gradlew runGametest -PnoMods     # sem nenhum mod opcional (CubCoin, Industrial, Forja, Móveis)
+./gradlew runGametest -PnoMods     # sem nenhum mod opcional (CubCoin, Industrial, Forja, Móveis, Clima)
+./gradlew runClientGameTest -Ppublished  # no jogo, com os jars publicados (~/Downloads/Mods_Tcordeiro_MC26.3): vídeos e fotos
 python3 tools/mutation_test.py     # prova de mutação das regras de segurança
 python3 tools/check_book_layout.py <26.3.jar> src/main/java/com/tcordeiro/vilas/guide/VilasGuide.java src/main/resources/assets/tvilas/lang/pt_br.json guide.tvilas
 ```

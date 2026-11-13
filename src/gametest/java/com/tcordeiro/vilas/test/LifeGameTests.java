@@ -63,7 +63,11 @@ public class LifeGameTests {
 
 	/** Uma área cívica que cobre o teste todo (0..8). */
 	static void civic(GameTestHelper h, Village v, String kind) {
-		BlockPos a = h.absolutePos(new BlockPos(0, 0, 0)), b = h.absolutePos(new BlockPos(8, 0, 8));
+		civic(h, v, kind, 0, 0, 8, 8);
+	}
+
+	static void civic(GameTestHelper h, Village v, String kind, int x0, int z0, int x1, int z1) {
+		BlockPos a = h.absolutePos(new BlockPos(x0, 0, z0)), b = h.absolutePos(new BlockPos(x1, 0, z1));
 		v.civic.put(kind, new LotRules.Area(Math.min(a.getX(), b.getX()), Math.min(a.getZ(), b.getZ()), Math.max(a.getX(), b.getX()), Math.max(a.getZ(), b.getZ())));
 		Life.rescan(v);
 		Life.relist(v);
@@ -157,7 +161,7 @@ public class LifeGameTests {
 		// uma «Taverna»: telhado sobre metade do teste
 		for (int x = 0; x <= 8; x++)
 			for (int z = 5; z <= 8; z++) h.setBlock(new BlockPos(x, 4, z), Blocks.OAK_PLANKS);
-		civic(h, v, "tavern");
+		civic(h, v, "tavern", 1, 6, 7, 7); // só debaixo do telhado
 		Villager vi = villager(h, new BlockPos(2, 1, 1), VillagerProfession.FISHERMAN);
 		h.runAfterDelay(20, () -> { // a luz do céu debaixo do telhado novo demora uns ticks
 			Life.rescan(v);
@@ -169,7 +173,7 @@ public class LifeGameTests {
 			}
 			Task t = Tasks.get(vi);
 			h.assertTrue(t != null && t.kind == Task.Kind.SHELTER, "com chuva vai para a Taverna; coberto " + Life.places(h.getLevel(), v).tavern().indoor.size());
-			h.succeedWhen(() -> h.assertTrue(!h.getLevel().canSeeSky(vi.blockPosition().above()), "abrigado: tem telhado por cima"));
+			h.succeedWhen(() -> h.assertTrue(!h.getLevel().canSeeSky(vi.blockPosition().above()), "abrigado: tem telhado por cima; fim " + t.endReason + " alvo " + h.relativePos(t.target) + " está " + h.relativePos(vi.blockPosition()) + " chegou " + t.arrived));
 		});
 	}
 
@@ -598,5 +602,61 @@ public class LifeGameTests {
 			h.assertTrue(Tasks.get(vi) == null, "toda a tarefa tem prazo");
 			h.assertTrue(t.endReason != null, "acabou: " + t.endReason);
 		});
+	}
+
+	// ---------------------------------------------------------------- reações, reunião, desempenho
+
+	@GameTest(maxTicks = 100)
+	public void swordMakesThemBackOff(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		Villager vi = villager(h, new BlockPos(4, 1, 5), VillagerProfession.MASON);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 3));
+		p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+		Life.relist(v);
+		int reacts = Life.reacts;
+		Life.reactionsAt(level, v, p);
+		h.assertValueEqual(Life.reacts, reacts + 1, "reage à espada");
+		h.assertTrue(Tasks.get(vi) != null && Tasks.get(vi).kind == Task.Kind.GO, "recua");
+		Life.reactionsAt(level, v, p);
+		h.assertValueEqual(Life.reacts, reacts + 1, "com tempo de espera (não repete logo)");
+		h.succeed();
+	}
+
+	@GameTest(maxTicks = 100)
+	public void meetingNeedsReputationAndOncePerDay(GameTestHelper h) {
+		Village v = village(h);
+		civic(h, v, "plaza");
+		ServerLevel level = h.getLevel();
+		villager(h, new BlockPos(1, 1, 1), VillagerProfession.MASON);
+		Life.relist(v);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(4, 1, 3));
+		p.permissions(); // (jogador falso: sem permissões de operador)
+		v.reputation.put(p.getUUID(), 0);
+		h.assertTrue(!Life.callMeeting(p, v).ok() || p.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER),
+				"sem reputação não convoca");
+		v.reputation.put(p.getUUID(), 50);
+		h.assertTrue(Life.callMeeting(p, v).ok(), "Simpático: convoca");
+		h.assertTrue(!Life.callMeeting(p, v).ok(), "uma vez por dia");
+		h.succeed();
+	}
+
+	@GameTest(maxTicks = 400)
+	public void fortyVillagersTickCost(GameTestHelper h) {
+		Village v = village(h);
+		civic(h, v, "plaza");
+		ServerLevel level = h.getLevel();
+		for (int i = 0; i < 40; i++) {
+			Villager vi = villager(h, new BlockPos(1 + i % 7, 1, 1 + (i / 7) % 7), i % 3 == 0 ? VillagerProfession.FARMER : VillagerProfession.MASON);
+			vi.setNoAi(i % 2 == 0);
+		}
+		TestUtil.playerAt(h, new BlockPos(4, 1, 4));
+		Life.relist(v);
+		long n0 = Life.nanos, c0 = Life.calls;
+		for (int k = 0; k < 200; k++) Life.tick(level, v);
+		long per = (Life.nanos - n0) / Math.max(1, Life.calls - c0);
+		System.out.println("[Vilas040] DESEMPENHO (GameTest): 40 aldeões, vida da vila " + String.format("%.3f", per / 1e6) + " ms por chamada (1 por segundo)");
+		h.assertTrue(per < 5_000_000, "menos de 5 ms por segundo de jogo: " + per / 1e6 + " ms");
+		h.succeed();
 	}
 }

@@ -335,7 +335,7 @@ public final class Life {
 			places.reserved.put(seat, vi.getUUID());
 			t.seat = seat;
 			t.to(seat, 1.3);
-		} else t.to(in, 1.0);
+		} else t.to(in, 0.7);
 		t.places = places;
 		t.icon = balloon;
 		Tasks.start(level, vi, t);
@@ -563,6 +563,11 @@ public final class Life {
 	}
 
 	public static int reacts, welcomes;
+
+	/** Para os testes: as reações dos aldeões da vila a este jogador, agora. */
+	public static void reactionsAt(ServerLevel level, Village v, ServerPlayer p) {
+		reactions(level, v, places(level, v), villagers(level, v), p, level.getGameTime(), VillageEconomy.day(level));
+	}
 
 	static void welcome(ServerLevel level, Places places, List<Villager> all, ServerPlayer p, long now) {
 		Villager best = null;

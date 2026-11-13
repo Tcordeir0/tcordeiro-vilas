@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.4.0 — 13/11/2026
+
+**Aldeões mais vivos** — só nos aldeões dentro do território de uma Mesa; o horário vanilla, os nomes, a replanta e o clique das
+trocas não mudam. O cérebro vanilla de um aldeão só fica em pausa enquanto ele tem uma tarefa do Vilas (todas com prazo e plano B);
+o modelo do aldeão não muda (gestos com estados vanilla, que o Fresh Animations já anima).
+
+- **Anti-preso e portas**: as tarefas abrem as portas de madeira do caminho e fecham-nas quando já ninguém passa; 3 s sem andar →
+  refaz o caminho, à 3.ª desiste; dois frente a frente: cede o de ID mais baixo. Um vigia leve solta os aldeões vanilla presos.
+  Evitam trilhos.
+- **Fim de tarde**: das 16 h até à hora de se deitar (cada um à sua, entre as 18 h e as 19 h 30) vão para a Praça ou para a
+  Taverna, sentam-se e conversam.
+- **Sentar e dormir nos Móveis**: cadeiras, bancos e sofás do Móveis (o assento do próprio Móveis); sem ele, degraus de escada
+  (assento invisível do Vilas). Quem não tem cama dorme na cama de casal da Taverna, um de cada lado, e acorda às 6 h 30.
+- **Clima**: chuva → Taverna (ou Prefeitura); com o Clima, abaixo de 5 °C → lareira/fogueira acesa (ou Prefeitura); sem o Clima,
+  só nos biomas de neve.
+- **Guardas**: os golens da vila em postos fixos (Praça, postes, cantos da muralha; 1/2/4 pelo nível), sem patrulha; salário de
+  3 CB por dia cada (`guard_wage_cents`), SEMPRE da tesouraria (sem dinheiro, o posto fica vago). O clérigo cura (Regeneração,
+  3×/dia) e os ferreiros reparam golens (+25 de vida, 3×/dia). Pânico coletivo: um aldeão atacado por um monstro avisa os vizinhos a
+  15 blocos, que fogem para o golem/guarda ou para um jogador amigo.
+- **Conversas e fofoca**: dois aldeões que se cruzam param e falam de FACTOS reais (imposto, obras, Mercador, morador novo, festa,
+  missões e pedidos do jogador, presentes, terrenos, quem bateu num aldeão); só fala quem sabe, e quem ouve passa a saber. Opinião
+  por par (amigável ou resmungão). 1 conversa por aldeão por minuto.
+- **Festa na Praça**: quando a vila sobe de nível ou na véspera do Mercador, o Prefeito avisa; no dia, das 12 h às 17 h, saltos, ♪,
+  foguetes e um reembolso de 10 % nas trocas com aldeões, pago pela tesouraria (até 20 CB por jogador — sem o CubCoin, 1 esmeralda —
+  e 100 CB por festa).
+- **Aprendizes**: as crianças escolhem um mestre, seguem-no de dia e herdam a profissão ao crescer.
+- **Menu do morador** (Shift+clique com a mão vazia): Trocar, Conversar, Onde fica…? (vira-se, diz a distância e o rumo e mostra
+  um rasto de luz só a quem perguntou) e o pedido «!»; mostra o que pensa de ti (Desconfiado, Neutro, Simpático, Amigo).
+- **Presentes** (Shift+clique com um item): gostos por profissão, 2 por aldeão por semana, reputação com teto diário; detestado
+  volta para ti, sem castigo. Um aldeão Amigo dá um presente de volta (1×/semana; nunca dinheiro).
+- **Balões de emoção** (primeiro código de cliente): 16 ícones feitos no Blender e falas curtas por cima da cabeça, só até 32 blocos.
+- **Trabalho à vista**: na bancada, o item da profissão na mão, faíscas/fumo/brilhos e o som, a cada 3–7 s.
+- **Reações**: espada ou machado perto → recuam com «?»; armadura de ferro → «Um guarda!»; quem bate num aldeão leva olhares
+  zangados.
+- **Sino**: a Prefeitura toca às 8 h, 12 h e 18 h (só o som: ninguém se esconde); «Convocar reunião» no quadro (Simpático, 1×/dia):
+  os aldeões vão à Praça e o Prefeito dá o relatório numa linha.
+- **Minhas**: boas-vindas a quem volta depois de 3 dias; lanterna na mão à noite; o quadro mostra a reputação, a festa e os guardas.
+- **Desempenho**: LOD (tudo até 48 blocos, o essencial até 96, nada além); lista de aldeões e sítios em cache; nada por tick a não
+  ser as tarefas em curso; balões, falas e sons com tempo de espera. Itens de cena nunca caem.
+- Config: `villager_life` (desliga tudo), `guard_wage_cents`. Comandos: `/vila morador <aldeão> …` (botões do menu), `/vila reuniao`.
+- Guia: 28 páginas novas (93 + «E o resto?»); pt-BR, pt-PT e en.
+
+
 ## 0.3.0 — 13/11/2026
 
 - **Economia em CubCoin** (com o mod CubCoin): TODOS os aldeões — os do jogo, os deste mod, o vendedor ambulante e o Mercador da
