@@ -79,10 +79,14 @@ public class Vilas030NoJogoClientTest implements FabricClientGameTest {
 	 * com ar livre e vista limpa sem subir mais de 2 blocos (senão, o primeiro lado, a subir até ver).
 	 */
 	private void camAround(ClientGameTestContext ctx, double tx, double ty, double tz, double dist, double up, double lookY, int wait) {
+		camAround(ctx, tx, ty, tz, dist, up, lookY, wait, Math.PI / 2);
+	}
+
+	private void camAround(ClientGameTestContext ctx, double tx, double ty, double tz, double dist, double up, double lookY, int wait, double start) {
 		Vec3 target = new Vec3(tx, ty + lookY, tz);
 		Vec3 best = sp.getServer().computeOnServer(s -> {
 			for (int k = 0; k < 8; k++) {
-				double a = Math.PI / 2 + k * Math.PI / 4;
+				double a = start + k * Math.PI / 4;
 				Vec3 want = new Vec3(tx + Math.cos(a) * dist, ty + up, tz + Math.sin(a) * dist);
 				Vec3 got = clear(s.overworld(), want, target);
 				if (got.y - want.y <= 2.01) return got;
@@ -506,9 +510,10 @@ public class Vilas030NoJogoClientTest implements FabricClientGameTest {
 		}
 		if (!source.isEmpty()) {
 			BlockPos q = source.get(0);
-			for (int[] d : new int[][] {{6, 6}, {-6, 6}, {6, -6}, {-6, -6}}) {
-				cam(ctx, q.getX() + 0.5 + d[0], q.getY() + 2.5, q.getZ() + 0.5 + d[1], q.getX() + 0.5, q.getY() + 0.5, q.getZ() + 0.5, 15);
-				shot(ctx, "07_fonte_um_fio_" + (d[0] > 0 ? "e" : "o") + (d[1] > 0 ? "s" : "n"));
+			String[] side = {"s", "o", "n", "e"};
+			for (int k = 0; k < 4; k++) { // de 4 lados, à altura de uma pessoa, sempre em ar livre (sem subir para cima de telhados)
+				camAround(ctx, q.getX() + 0.5, q.getY(), q.getZ() + 0.5, 6.0, 2.2, 0.6, 15, Math.PI / 2 + k * Math.PI / 2);
+				shot(ctx, "07_fonte_um_fio_" + side[k]);
 			}
 		}
 		ctx.waitTicks(100);
@@ -533,11 +538,22 @@ public class Vilas030NoJogoClientTest implements FabricClientGameTest {
 		log("de noite: " + on);
 		for (int k = 0; k < Math.min(4, poles.size()); k++) {
 			BlockPos q = poles.get(k);
-			BlockPos lamp = sp.getServer().computeOnServer(s -> {
-				for (int y = 6; y >= 0; y--) if (s.overworld().getBlockState(q.above(y)).getLightEmission() > 0) return q.above(y);
-				return q.above(3);
+			// o lampião pende para a frente do poste (FACING do topo): a câmara fica desse lado, à altura dele, a ~3 blocos
+			double[] lampCam = sp.getServer().computeOnServer(s -> {
+				var l = s.overworld();
+				BlockPos top = q;
+				for (int y = 6; y >= 0; y--) if (l.getBlockState(q.above(y)).is(l.getBlockState(q).getBlock())) {
+					top = q.above(y);
+					break;
+				}
+				var st = l.getBlockState(top);
+				net.minecraft.core.Direction f = st.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
+						? st.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING) : net.minecraft.core.Direction.SOUTH;
+				double lx = top.getX() + 0.5 + f.getStepX() * 0.8, ly = top.getY() + 0.3, lz = top.getZ() + 0.5 + f.getStepZ() * 0.8;
+				var side = f.getClockWise();
+				return new double[] {lx, ly, lz, lx + f.getStepX() * 3 + side.getStepX() * 1.5, ly - 0.2, lz + f.getStepZ() * 3 + side.getStepZ() * 1.5};
 			});
-			camAround(ctx, lamp.getX() + 0.5, lamp.getY(), lamp.getZ() + 0.5, 3.5, 0.2, 0.4, 20); // de perto, em ar livre, a ver o lampião
+			cam(ctx, lampCam[3], lampCam[4], lampCam[5], lampCam[0], lampCam[1], lampCam[2], 20); // de perto, do lado do lampião
 			shot(ctx, "06b_poste_" + k + "_aceso_de_noite_perto");
 		}
 		if (!poles.isEmpty()) {
