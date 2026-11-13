@@ -285,6 +285,6 @@ public final class LifeRules {
 
 	/** Quem esteve fora 3 dias ou mais é recebido por um aldeão amigo. */
 	public static boolean welcome(long lastSeenDay, long day) {
-		return lastSeenDay >= 0 && day - lastSeenDay >= 3;
+		return day - lastSeenDay >= 3;
 	}
 }

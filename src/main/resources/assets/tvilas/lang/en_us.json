@@ -306,7 +306,7 @@
   "tvilas.meeting.festa_yes": "party planned",
   "tvilas.meeting.mayor": "Thanks for coming!",
   "tvilas.meeting.no_rep": "The village doesn't know you well yet: you must be Friendly.",
-  "tvilas.meeting.report": "Mayor: treasury %s · %s residents · %s · %s guard(s) · %s",
+  "tvilas.meeting.report": "Mayor: %s · %s residents · %s · %s guards · %s",
   "tvilas.meeting.today": "There was a meeting today already.",
   "tvilas.mission.accepted": "Mission accepted: %s.",
   "tvilas.mission.already": "You already accepted that mission.",

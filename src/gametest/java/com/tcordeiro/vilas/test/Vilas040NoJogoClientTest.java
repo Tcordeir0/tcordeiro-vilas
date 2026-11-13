@@ -174,6 +174,7 @@ public class Vilas040NoJogoClientTest implements FabricClientGameTest {
 
 	/** O centro de um sítio da vila (Praça, Taverna…), ou a Mesa. */
 	Vec3 spot(MinecraftServer s, String kind) {
+		if (!s.isSameThread()) return sp.getServer().computeOnServer(x -> spot(x, kind)); // o mundo só se lê na thread do servidor
 		Places p = places(s);
 		Places.Spot sp = p.spots.get(kind);
 		BlockPos c = sp != null ? sp.center : desk;

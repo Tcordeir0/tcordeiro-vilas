@@ -176,8 +176,8 @@ public final class Life {
 			}
 		}
 		if (!danger) {
-			conversations(level, v, r, places, all, players, now);
 			for (ServerPlayer p : players) if (v.covers(p.getBlockX(), p.getBlockZ())) reactions(level, v, places, all, p, now, day);
+			conversations(level, v, r, places, all, players, now); // depois das reações: as boas-vindas não perdem o aldeão para uma conversa
 		}
 	}
 

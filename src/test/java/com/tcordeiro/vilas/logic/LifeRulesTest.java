@@ -101,5 +101,6 @@ class LifeRulesTest {
 		assertEquals(LifeRules.OPINION_MAX, LifeRules.opinionAfterTalk(LifeRules.OPINION_MAX, true));
 		assertTrue(LifeRules.welcome(10, 13));
 		assertFalse(LifeRules.welcome(10, 12));
+		assertTrue(LifeRules.welcome(-4, 0), "também no início do mundo");
 	}
 }

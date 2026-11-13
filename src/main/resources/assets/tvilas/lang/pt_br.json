@@ -306,7 +306,7 @@
   "tvilas.meeting.festa_yes": "festa marcada",
   "tvilas.meeting.mayor": "Obrigado por virem!",
   "tvilas.meeting.no_rep": "A vila ainda não te conhece bem: precisa ser Simpático.",
-  "tvilas.meeting.report": "Prefeito: tesouraria %s · %s moradores · %s · %s guarda(s) · %s",
+  "tvilas.meeting.report": "Prefeito: %s · %s moradores · %s · %s guardas · %s",
   "tvilas.meeting.today": "Já houve reunião hoje.",
   "tvilas.mission.accepted": "Missão aceita: %s.",
   "tvilas.mission.already": "Você já aceitou essa missão.",

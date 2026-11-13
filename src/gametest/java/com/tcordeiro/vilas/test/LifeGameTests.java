@@ -659,4 +659,23 @@ public class LifeGameTests {
 		h.assertTrue(per < 5_000_000, "menos de 5 ms por segundo de jogo: " + per / 1e6 + " ms");
 		h.succeed();
 	}
+
+	@GameTest(maxTicks = 200)
+	public void welcomeBackAfterThreeDays(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		Villager friend = villager(h, new BlockPos(7, 1, 7), VillagerProfession.BUTCHER);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(1, 1, 1));
+		friend.getGossips().add(p.getUUID(), GossipType.MAJOR_POSITIVE, 60);
+		Life.relist(v);
+		v.civic.life.lastSeen.put(p.getUUID(), VillageEconomy.day(level) - 1);
+		int w = Life.welcomes;
+		Life.reactionsAt(level, v, p);
+		h.assertTrue(Tasks.get(friend) == null, "1 dia fora: nada");
+		v.civic.life.lastSeen.put(p.getUUID(), VillageEconomy.day(level) - 4);
+		Life.reactionsAt(level, v, p);
+		h.assertTrue(Tasks.get(friend) != null && Tasks.get(friend).kind == Task.Kind.WELCOME, "4 dias fora: o amigo vem ter com ele");
+		h.assertValueEqual(v.civic.life.lastSeen.get(p.getUUID()), VillageEconomy.day(level), "fica registado que voltou");
+		h.succeedWhen(() -> h.assertTrue(Life.welcomes > w, "chegou e deu as boas-vindas"));
+	}
 }

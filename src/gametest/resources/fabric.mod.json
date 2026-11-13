@@ -28,7 +28,7 @@
 			"com.tcordeiro.vilas.test.VillagerRequestGameTests",
 			"com.tcordeiro.vilas.test.LifeGameTests"
 		],
-		"fabric-client-gametest": ["com.tcordeiro.vilas.test.Vilas040NoJogoClientTest"]
+		"fabric-client-gametest": ["com.tcordeiro.vilas.test.Vilas040NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas030NoJogoClientTest", "com.tcordeiro.vilas.test.VilasNoJogoClientTest"]
 	},
 	"depends": {
 		"tvilas": "*",
