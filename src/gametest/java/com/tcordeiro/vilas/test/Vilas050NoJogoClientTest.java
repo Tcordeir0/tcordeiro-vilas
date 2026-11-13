@@ -865,6 +865,72 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 						+ Market.today(s.overworld(), village(s))));
 				boardBoth(ctx, "27_quadro_hoje_ha_mercado");
 			}
+			case "gestures_pack" -> {
+				// os pacotes do Talys pela ordem real (options.txt: de baixo para cima) e o nosso «tvilas_animacoes» por cima de todos
+				String[] fa = {"file/FA+All_Extensions-v1.10.1.zip", "file/FreshAnimations_v1.11.2_26.1+.zip", "file/FA+Details-v2.4.zip",
+						"file/FA+Emissive-v1.7.zip", "file/FA+Objects-v2.1.2.zip", "file/FA+Player-v1.1.zip"};
+				String ours = "file/tvilas_animacoes.zip";
+				String[] all = java.util.Arrays.copyOf(fa, fa.length + 1);
+				all[fa.length] = ours;
+				log("gestos: pacotes " + packs(ctx, all).replaceAll("^.*?file/", "file/"));
+				sp.getServer().runCommand("time set 3000");
+				String r = sp.getServer().computeOnServer(s -> {
+					ServerLevel l = s.overworld();
+					BlockPos at = open(l, BlockPos.containing(spot(s, "plaza")).offset(30, 0, 0), 0, 24); // campo aberto, sem ninguém à volta
+					Villager vi = spawn(l, at, VillagerProfession.FARMER, false);
+					vi.setNoAi(true);
+					return vi.getId() + ";" + str(vi.position());
+				});
+				int eid = Integer.parseInt(r.split(";", 2)[0]);
+				Vec3 c = pos(r.split(";", 2)[1]);
+				String[][] gestures = {{"1", "acenar"}, {"4", "sim"}, {"5", "nao"}, {"6", "apontar"}, {"7", "bater_palmas"}, {"8", "martelar"}, {"9", "comer"},
+						{"2", "festejar"}, {"3", "encolher_os_ombros"}};
+				String[] labels = {"", "acenar", "festejar", "encolher os ombros", "sim", "não", "apontar", "bater palmas", "martelar", "comer"};
+				Runnable face = () -> sp.getServer().runOnServer(s -> {
+					var e = (Villager) s.overworld().getEntity(eid);
+					var pl = player(s);
+					float yaw = (float) Math.toDegrees(Math.atan2(-(pl.getX() - e.getX()), pl.getZ() - e.getZ())) + 40; // de 3/4: vê-se o braço a subir
+					e.setYRot(yaw);
+					e.setYBodyRot(yaw);
+					e.setYHeadRot(yaw);
+				});
+				camAround(ctx, c.add(0, 1.2, 0), 3.4, 0.5, 20);
+				face.run();
+				ctx.waitTicks(10);
+				log("gestos: câmara a " + sp.getServer().computeOnServer(s -> String.format("%.1f", player(s).distanceTo(s.overworld().getEntity(eid)))) + " blocos");
+				for (String[] g : gestures) {
+					int code = Integer.parseInt(g[0]);
+					com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring = Float.MAX_VALUE;
+					com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside = Float.MAX_VALUE;
+					film(ctx, "gestos_" + g[1], 110, i -> {
+						if (i == 10 || i == 60) sp.getServer().runOnServer(s -> {
+							var e = s.overworld().getEntity(eid);
+							com.tcordeiro.vilas.life.Balloons.gesture(e, code, 40);
+							com.tcordeiro.vilas.life.Balloons.say(e, null, net.minecraft.network.chat.Component.literal(labels[code]), 40);
+						});
+						if (i == 30) shot(ctx, "gestos_" + g[1]);
+					});
+					log("gestos (pacote) " + g[1] + ": braços durante " + com.tcordeiro.vilas.client.EmfGestureHook.minArmsDuring + " fora "
+							+ com.tcordeiro.vilas.client.EmfGestureHook.minArmsOutside + " · pacote ativo "
+							+ ctx.computeOnClient(mc -> com.tcordeiro.vilas.client.EmfGestureHook.packActiveForTest()));
+				}
+				// só o FA (sem o nosso pacote): o gancho do mod faz o gesto por cima
+				log("gestos: só o FA " + packs(ctx, fa).replaceAll("^.*?file/", "file/"));
+				face.run();
+				int before = com.tcordeiro.vilas.client.GestureClient.applied;
+				film(ctx, "gestos_so_com_o_fa_gancho_do_mod", 110, i -> {
+					if (i == 10 || i == 60) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 40));
+				});
+				log("gestos (só FA): gancho aplicado " + (com.tcordeiro.vilas.client.GestureClient.applied - before) + " vezes · pacote ativo "
+						+ ctx.computeOnClient(mc -> com.tcordeiro.vilas.client.EmfGestureHook.packActiveForTest()));
+				// sem pacotes nenhuns: nada se parte
+				log("gestos: sem pacotes " + packs(ctx).replaceAll("^.*?tvilas", "tvilas"));
+				face.run();
+				film(ctx, "gestos_sem_pacotes_nada_parte", 110, i -> {
+					if (i == 10 || i == 60) sp.getServer().runOnServer(s -> com.tcordeiro.vilas.life.Balloons.gesture(s.overworld().getEntity(eid), 1, 40));
+				});
+				log("gestos (sem pacotes): sem erros; gancho aplicado no total " + com.tcordeiro.vilas.client.GestureClient.applied);
+			}
 			case "gestures" -> {
 				log("EMF neste jogo de teste: " + net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("entity_model_features")
 						+ " · variáveis registadas: " + com.tcordeiro.vilas.client.GestureClient.registered + " · gestos mandados: " + com.tcordeiro.vilas.life.Balloons.gestures);

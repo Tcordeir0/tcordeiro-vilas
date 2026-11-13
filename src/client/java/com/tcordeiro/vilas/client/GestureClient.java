@@ -35,7 +35,9 @@ public final class GestureClient {
 
 	static final Map<UUID, G> ACTIVE = new HashMap<>();
 	private static Method current, uuidOf;
-	public static boolean registered;
+	public static boolean registered, hooked;
+	/** Para o teste no jogo: quantas vezes o gancho mexeu num aldeão. */
+	public static int applied;
 
 	public static void init() {
 		ClientPlayNetworking.registerGlobalReceiver(Balloons.Gesture.TYPE, (msg, ctx) -> ctx.client().execute(() -> {
@@ -91,11 +93,18 @@ public final class GestureClient {
 				UUID u = animating();
 				return u == null ? 0f : progress(u);
 			};
-			reg.invoke(null, TVilas.MOD_ID, "tvilas_gesture", "Vilas: gesture code of this villager (0 none, 1 wave, 2 cheer, 3 shrug, 4 yes, 5 no, 6 point)",
+			reg.invoke(null, TVilas.MOD_ID, "tvilas_gesture", "Vilas: gesture code of this villager (0 none, 1 wave, 2 cheer, 3 shrug, 4 yes, 5 no, 6 point, 7 clap, 8 hammer, 9 eat)",
 					code);
 			reg.invoke(null, TVilas.MOD_ID, "tvilas_gesture_time", "Vilas: 0..1 progress of the current gesture", time);
 			registered = true;
 			TVilas.LOGGER.info("Vilas: variáveis do EMF registadas (tvilas_gesture, tvilas_gesture_time)");
+			// o gesto em si: um gancho no FIM da animação do EMF soma um pouco à cabeça e aos braços (o Fresh Animations continua a animar)
+			Method hook = api.getMethod("registerAnimationHook", Class.forName("traben.entity_model_features.EMFAnimationApi$EMFAnimationHook"));
+			hooked = (Boolean) hook.invoke(null, EmfGestureHook.create());
+			TVilas.LOGGER.info("Vilas: gancho de gestos no EMF {}", hooked ? "ligado" : "recusado");
+			// em cada recarga dos pacotes de recursos: volta a ver se o pacote dos gestos está ativo
+			net.fabricmc.fabric.api.resource.v1.ResourceLoader.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES).registerReloadListener(
+					TVilas.id("gestos"), (net.minecraft.server.packs.resources.ResourceManagerReloadListener) EmfGestureHook::recheck);
 		} catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
 			TVilas.LOGGER.warn("Vilas: não consegui registar as variáveis do EMF ({}): os gestos ficam só nos balões", e.toString());
 		}

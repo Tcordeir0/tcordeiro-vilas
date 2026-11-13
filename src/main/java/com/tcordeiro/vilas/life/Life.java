@@ -467,6 +467,9 @@ public final class Life {
 		if (part != null) level.sendParticles(part, site.getX() + 0.5, site.getY() + 1.05, site.getZ() + 0.5, 5, 0.25, 0.1, 0.25, 0.01);
 		vi.getLookControl().setLookAt(site.getX() + 0.5, site.getY() + 0.8, site.getZ() + 0.5);
 		vi.playWorkSound();
+		// 0.5.1: quem bate (ferreiros, pedreiro, marceneiro, mecânico) faz o gesto de martelar
+		if (prof.endsWith("smith") || prof.equals("armorer") || prof.equals("mason") || prof.equals("carpenter") || prof.equals("mechanic"))
+			Balloons.gesture(vi, Gestures.HAMMER, 40);
 		works++;
 	}
 

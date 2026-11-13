@@ -44,6 +44,14 @@ loom {
 	}
 }
 
+// 0.5.0: a forma do gancho de animação do EMF, só para compilar o cliente (não vai no jar; no jogo usa-se o EMF verdadeiro)
+sourceSets {
+	emfstub {
+		java.srcDir 'src/emfstub/java'
+	}
+}
+sourceSets.client.compileClasspath += sourceSets.emfstub.output
+
 // testes de cliente: precisam das classes do cliente
 sourceSets.gametest {
 	compileClasspath += sourceSets.client.compileClasspath + sourceSets.client.output

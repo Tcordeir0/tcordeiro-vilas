@@ -15,7 +15,7 @@ public final class Gestures {
 
 	public static final int SOUND_COOLDOWN = 40;
 	/** 0.5.0: códigos da variável EMF {@code tvilas_gesture} (0 = nenhum). */
-	public static final int WAVE = 1, CHEER = 2, SHRUG = 3, NOD = 4, NO = 5, POINT = 6;
+	public static final int WAVE = 1, CHEER = 2, SHRUG = 3, NOD = 4, NO = 5, POINT = 6, CLAP = 7, HAMMER = 8, EAT = 9;
 
 	/** 0.5.0: acena (balão + gesto EMF). */
 	public static void wave(Villager v) {

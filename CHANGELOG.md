@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.1 — 13/11/2026
+
+**Gestos dos aldeões a sério** (com o Entity Model Features 3.3.11 e o Fresh Animations): acenar, sim, não, apontar, bater palmas,
+martelar, comer, festejar e encolher os ombros.
+
+- O mod manda o gesto (pacote do servidor, só a quem está a 32 blocos) e o cliente regista no EMF `tvilas_gesture` (1 acenar,
+  2 festejar, 3 encolher os ombros, 4 sim, 5 não, 6 apontar, 7 bater palmas, 8 martelar, 9 comer) e `tvilas_gesture_time` (0–1).
+- **Pacote `tvilas_animacoes`** (para os amigos, não vai no Git): as nossas somas (`texturas/tvilas_animacoes/gestos.json`) postas
+  no FIM das animações do Fresh Animations (`villager_animations.jpm`), para correrem depois das dele — na 0.5.0 estavam no
+  `villager.jem` e o FA apagava-as. `sh texturas/montar_pack.sh` gera o .zip a partir da cópia do FA que fica em
+  `~/Cods/assets_pessoais/texturas/tvilas_animacoes/` (fora do Git). Ativa-se ACIMA do Fresh Animations e do FA+Details.
+- **Sem o pacote**, o mod faz os mesmos gestos sozinho: um gancho no fim da animação do EMF soma um pouco à cabeça e aos braços
+  (o FA continua a animar). Volta a ver se o pacote está ativo em cada recarga dos pacotes de recursos (ouvinte de recarga).
+  Sem o EMF, nada disto carrega e nada se parte.
+- Onde aparecem: palmas na festa, martelar no trabalho dos ferreiros/pedreiro/marceneiro/mecânico, comer na Taverna ao fim da
+  tarde, acenar nas boas-vindas e à armadura, encolher os ombros perante uma arma, apontar ao pedir caminho, sim/não nas conversas.
+- Guia: «Gestos» e «Pacote dos gestos» (111 páginas no separador Guias).
+
+
 ## 0.5.0 — 13/11/2026
 
 **A vila ganha vida própria (vanilla+)** — tudo só nos aldeões do território de uma Mesa, com LOD (48/96 blocos), prazo e plano B

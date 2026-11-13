@@ -233,7 +233,7 @@ public final class Tasks {
 					m.nextFestaJump = now + 30 + level.getRandom().nextInt(60);
 					if (level.getRandom().nextInt(3) == 0) {
 						Balloons.show(v, level.getRandom().nextBoolean() ? Balloons.NOTE : Balloons.PARTY, 40);
-						Balloons.gesture(v, Gestures.CHEER, 20);
+						Balloons.gesture(v, level.getRandom().nextBoolean() ? Gestures.CHEER : Gestures.CLAP, 30);
 					}
 				}
 				if (now >= t.nextStage && t.fallback != null) { // um sítio novo na Praça a cada 5 s
@@ -245,6 +245,13 @@ public final class Tasks {
 			}
 			case SOCIAL, SHELTER, MEETING -> {
 				if (every(t, now, 40)) lookAtNearest(level, v);
+				// 0.5.1: na Taverna, de vez em quando, come qualquer coisa (pão na mão e o gesto de comer)
+				if (t.kind == Task.Kind.SOCIAL && t.places != null && t.places.tavern() != null && every(t, now, 400)
+						&& t.places.tavern().center.closerThan(v.blockPosition(), 16) && level.getRandom().nextInt(3) == 0
+						&& Props.hold(v, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD), 50)) {
+					Balloons.gesture(v, Gestures.EAT, 50);
+					v.playSound(SoundEvents.GENERIC_EAT.value(), 0.5f, 1.0f);
+				}
 			}
 			case FLEE -> {
 				if (t.follow != null) look(v, t.follow);

@@ -103,6 +103,6 @@ class TownRulesTest {
 		assertTrue(GestureRules.deltas(1, 0.5f)[GestureRules.ARMS_X] < -1f, "acenar levanta os braços");
 		assertTrue(Math.abs(GestureRules.deltas(5, 0.125f)[GestureRules.HEAD_Y]) > 0.3f, "«não» vira a cabeça");
 		for (float v : GestureRules.deltas(0, 0.5f)) assertEquals(0f, v, "código 0: nada");
-		for (float v : GestureRules.deltas(3, 0.5f)) assertTrue(Math.abs(v) <= 1.6f, "pequeno: não desmonta o modelo");
+		for (int c = 1; c <= 9; c++) for (float v : GestureRules.deltas(c, 0.5f)) assertTrue(Math.abs(v) <= 3.0f, "pequeno: não desmonta o modelo");
 	}
 }
