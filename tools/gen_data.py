@@ -197,6 +197,9 @@ def gen_models():
             "random_sequence": f"{MOD}:blocks/{bid}"}, MOD_OF.get(bid))
     for it in STAGE_ITEMS:
         write(f"assets/{MOD}/items/{it}.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:item/{it}"}})
+    # 0.6 eleições: o broche «Eu votei» (item plano; textura de tools/textures_060.py)
+    write(f"assets/{MOD}/items/i_voted.json", {"model": {"type": "minecraft:model", "model": f"{MOD}:item/i_voted"}})
+    write(f"assets/{MOD}/models/item/i_voted.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/i_voted"}})
     for tool in ("axe", "pickaxe"):
         write(f"data/minecraft/tags/block/mineable/{tool}.json",
               {"replace": False, "values": [tag_entry(b) for b, v in BLOCKS.items() if v[4] == tool]})
@@ -552,7 +555,8 @@ def gen_lang_names():
     ]
     from life_040 import T_040
     from life_050 import T_050
-    T += T_020 + T_030 + T_040 + T_050
+    from election_060 import T_060  # 0.6 eleições
+    T += T_020 + T_030 + T_040 + T_050 + T_060
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
@@ -957,6 +961,10 @@ GUIDE[-1:-1] = _life.pages(P)
 import life_050 as _life5  # noqa: E402  (0.5.0: Carteiro, mercado, eleições, pescador, crianças, festa, ajudante)
 
 GUIDE[-1:-1] = _life5.pages(P)
+import election_060 as _el6  # noqa: E402  (0.6 eleições: bónus do voto, promessas, «Eu votei» — logo a seguir a «As propostas»)
+
+_i = [g["key"] for g in GUIDE].index("policies") + 1
+GUIDE[_i:_i] = _el6.pages(P)
 
 
 def _grid(r):

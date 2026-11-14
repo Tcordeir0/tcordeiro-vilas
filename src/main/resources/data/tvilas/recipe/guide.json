@@ -300,10 +300,10 @@
             "raw": "§lPreço de mercado§r\n\nNas bancas a tesouraria devolve 15 % do que você paga: até 15 CB por pessoa e 80 CB por mercado.\n\nChega também um vendedor de fora, que vai embora no fim."
           },
           {
-            "raw": "§lEleições§r\n\nA cada 8 dias há eleições. De manhã o Prefeito apresenta 2 ou 3 candidatos, cada um com uma proposta.\n\nNo dia seguinte o vencedor vira Prefeito."
+            "raw": "§lEleições§r\n\nA cada 8 dias há eleições. O Prefeito apresenta 2 ou 3 candidatos, cada um com uma proposta.\n\nA votação dura 3 dias. O quadro mostra quanto falta."
           },
           {
-            "raw": "§lVotar§r\n\nNo quadro, «Votar». Vota quem tem terreno na vila, uma vez por eleição.\n\nSem votos, tudo fica como está."
+            "raw": "§lVotar§r\n\nNo quadro, «Votar». Vota quem tem terreno na vila, uma vez por eleição. No fim do 3.º dia contam-se os votos.\n\nEmpate: ganha o mais querido pela vila. Sem votos, tudo fica como está."
           },
           {
             "raw": "§lAs propostas§r\n\nImposto menor: menos 1 ponto na taxa.\nMais guardas: mais um posto.\nMais festas: uma festa extra.\nMercado maior: reembolso maior.\n\nNenhuma cria dinheiro."

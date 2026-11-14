@@ -108,7 +108,8 @@ public final class TownDialog {
 		else if (cfg.market_every_days > 0 && civic.meta.real)
 			body.add(new PlainMessage(Component.translatable("tvilas.dialog.market_next", com.tcordeiro.vilas.life.Market.next(v, day0)).withStyle(ChatFormatting.GRAY), 300));
 		if (town.election.open(day0))
-			body.add(new PlainMessage(Component.translatable("tvilas.dialog.election_open", town.election.candidates.size()).withStyle(ChatFormatting.AQUA), 300));
+			body.add(new PlainMessage(Component.translatable("tvilas.dialog.election_open", town.election.candidates.size(),
+					com.tcordeiro.vilas.life.election.VoteBonus.timeLeft(level, v)).withStyle(ChatFormatting.AQUA), 300)); // 0.6 eleições: quanto falta
 		if (!town.election.policy.isEmpty())
 			body.add(new PlainMessage(Component.translatable("tvilas.dialog.policy", town.election.mayorName,
 					Component.translatable("tvilas.policy." + town.election.policy)).withStyle(ChatFormatting.GRAY), 300));

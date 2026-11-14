@@ -42,6 +42,9 @@ import net.minecraft.world.entity.npc.villager.VillagerProfession;
  * (teto do reembolso por jogador +50 %). Votam no quadro os jogadores com TERRENO na vila, um voto cada. No dia seguinte conta-se: o
  * vencedor passa a ser o Prefeito (troca de posto com o Prefeito de antes, se os dois estiverem carregados) e a proposta fica em vigor
  * até à eleição seguinte. Nenhuma proposta põe dinheiro em lado nenhum: só mudam taxas e postos.
+ * <p>
+ * 0.6 eleições: a votação dura 3 dias de jogo e conta-se no fim do 3.º; empate → o mais querido pela vila, depois a proposta em
+ * vigor, depois sorteio com semente; os bónus do voto estão em {@link com.tcordeiro.vilas.life.election.VoteBonus}.
  */
 public final class Election {
 	private Election() {}
@@ -59,15 +62,20 @@ public final class Election {
 		return false;
 	}
 
-	/** Uma vez por dia: conta os votos da eleição de ontem; no dia de votar, apresenta os candidatos. */
+	/**
+	 * Uma vez por dia: no fim do 3.º dia de votação conta os votos (0.6 eleições: a votação dura
+	 * {@link com.tcordeiro.vilas.life.election.VoteRules#VOTE_DAYS} dias); no dia de votar, apresenta os candidatos.
+	 */
 	public static void daily(ServerLevel level, Village v, long day) {
 		TownData.Election e = v.civic.life.town.election;
-		if (e.day >= 0 && e.day < day) count(level, v);
-		if (TownRules.electionDay(day, every()) && e.last != day && v.civic.meta.real && !VillageManager.lotsOf(level, v).isEmpty()) open(level, v, day);
-		// «mais festas»: a festa extra do mandato, dois dias depois de ganhar
-		if (TownRules.FESTAS.equals(e.policy) && !e.festaDone && e.last >= 0 && day >= e.last + 2) {
+		if (com.tcordeiro.vilas.life.election.VoteRules.countNow(e.day, day)) count(level, v);
+		if (TownRules.electionDay(day, every()) && e.day < 0 && e.last != day && v.civic.meta.real && !VillageManager.lotsOf(level, v).isEmpty()) open(level, v, day);
+		// «mais festas»: a festa extra do mandato, dois dias depois da posse
+		long since = e.mandate.since >= 0 ? e.mandate.since : e.last; // 0.6 eleições: conta a partir da posse
+		if (TownRules.FESTAS.equals(e.policy) && !e.festaDone && since >= 0 && day >= since + 2) {
 			if (Festa.schedule(level, v, day + 1, "election")) e.festaDone = true;
 		}
+		com.tcordeiro.vilas.life.election.VoteBonus.reserveRequests(level, v); // 0.6 eleições: pedido «!» exclusivo dos apoiadores
 	}
 
 	/** Abre a votação: 2 ou 3 candidatos com propostas diferentes. */
@@ -87,6 +95,7 @@ public final class Election {
 		int n = Math.min(pool.size(), pool.size() >= 3 ? 3 : 2);
 		e.candidates.clear();
 		e.votes.clear();
+		e.mandate.repGiven.clear(); // 0.6 eleições: a reputação do voto é uma vez por eleição
 		for (int i = 0; i < n; i++) {
 			Villager c = pool.get(i);
 			e.candidates.add(new TownData.Candidate(c.getUUID(), name(c), policies.get(i)));
@@ -94,7 +103,7 @@ public final class Election {
 		}
 		e.day = day;
 		e.last = day;
-		VillageNews.announce(level, v, "🗳", "tvilas.news.election_open", n);
+		VillageNews.announce(level, v, "🗳", "tvilas.news.election_open", n, com.tcordeiro.vilas.life.election.VoteRules.VOTE_DAYS);
 		Talk.fact(level, v, null, "election", e.candidates.get(0).name(), "#tvilas.policy." + e.candidates.get(0).policy());
 		VillageData.get(level).changed();
 		opened++;
@@ -120,6 +129,7 @@ public final class Election {
 			return e.votes.containsKey(p.getUUID()) ? VillageManager.Result.fail("tvilas.election.already") : VillageManager.Result.fail("tvilas.election.no_lot");
 		}
 		e.votes.put(p.getUUID(), choice);
+		com.tcordeiro.vilas.life.election.VoteBonus.onVote(p, v); // 0.6 eleições: reputação, uma vez por eleição
 		TownData.Candidate c = e.candidates.get(choice);
 		if (level.getEntity(c.villager()) instanceof Villager cv) {
 			Balloons.show(cv, Balloons.HEART, 40);
@@ -129,14 +139,18 @@ public final class Election {
 		return VillageManager.Result.ok("tvilas.election.voted", c.name(), Component.translatable("tvilas.policy." + c.policy()));
 	}
 
-	/** Conta os votos: o vencedor passa a Prefeito e a proposta dele fica em vigor. Sem votos, nada muda. */
+	/**
+	 * Conta os votos: o vencedor passa a Prefeito e a proposta dele fica em vigor. Sem votos, nada muda. 0.6 eleições: empate → o mais
+	 * querido pela vila, depois a proposta em vigor, depois sorteio com semente; na posse, os bónus do voto.
+	 */
 	public static int count(ServerLevel level, Village v) {
 		TownData.Election e = v.civic.life.town.election;
 		int[] votes = new int[e.candidates.size()];
 		for (int c : e.votes.values()) if (c >= 0 && c < votes.length) votes[c]++;
 		int incumbent = -1;
 		for (int i = 0; i < e.candidates.size(); i++) if (e.candidates.get(i).policy().equals(e.policy)) incumbent = i;
-		int w = TownRules.winner(votes, incumbent);
+		int w = com.tcordeiro.vilas.life.election.VoteRules.winner(votes, com.tcordeiro.vilas.life.election.VoteBonus.likes(v, e), incumbent,
+				com.tcordeiro.vilas.life.election.VoteBonus.seed(v, e));
 		e.day = -1;
 		counted++;
 		if (w < 0) {
@@ -152,6 +166,7 @@ public final class Election {
 		e.held++;
 		e.festaDone = false;
 		swearIn(level, v, c);
+		com.tcordeiro.vilas.life.election.VoteBonus.onWin(level, v, e, w, c.name(), VillageEconomy.day(level)); // 0.6 eleições: bónus do voto
 		VillageNews.announce(level, v, "🗳", "tvilas.news.election_won", c.name(), Component.translatable("tvilas.policy." + c.policy()), votes[w]);
 		Talk.fact(level, v, null, "elected", c.name(), "#tvilas.policy." + c.policy());
 		e.candidates.clear();
@@ -202,6 +217,8 @@ public final class Election {
 		if (!open) body.add(new PlainMessage(Component.translatable("tvilas.election.closed"), 300));
 		else {
 			body.add(new PlainMessage(Component.translatable("tvilas.election.intro"), 300));
+			body.add(new PlainMessage(Component.translatable("tvilas.vote.closes_in", com.tcordeiro.vilas.life.election.VoteBonus.timeLeft(level, v))
+					.withStyle(ChatFormatting.AQUA), 300)); // 0.6 eleições
 			for (int i = 0; i < e.candidates.size(); i++) {
 				TownData.Candidate c = e.candidates.get(i);
 				body.add(new PlainMessage(Component.translatable("tvilas.election.candidate", i + 1, c.name(), Component.translatable("tvilas.policy." + c.policy()),
@@ -212,6 +229,7 @@ public final class Election {
 				body.add(new PlainMessage(Component.translatable("tvilas.election.you_voted", e.candidates.get(e.votes.get(p.getUUID())).name()).withStyle(ChatFormatting.GREEN), 300));
 			body.add(new PlainMessage(Component.translatable("tvilas.election.rules").withStyle(ChatFormatting.GRAY), 300));
 		}
+		for (Component line : com.tcordeiro.vilas.life.election.VoteBonus.lines(v, p.getUUID())) body.add(new PlainMessage(line, 300)); // 0.6 eleições
 		List<ActionButton> buttons = new ArrayList<>();
 		if (open && hasLot(level, v, p.getUUID()) && !e.votes.containsKey(p.getUUID()))
 			for (int i = 0; i < e.candidates.size(); i++)

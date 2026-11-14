@@ -33,6 +33,7 @@ public class TVilas implements ModInitializer {
 		VilasConfig.load();
 		VilasBlocks.init();
 		com.tcordeiro.vilas.registry.VilasItems.init(); // 0.5.0: itens de cena (bolsa, boia, banca)
+		com.tcordeiro.vilas.life.election.VoteItems.init(); // 0.6 eleições: broche «Eu votei»
 		VilasProfessions.init();
 		LotProtection.init();
 		MissionEvents.init();
