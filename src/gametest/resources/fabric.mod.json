@@ -30,7 +30,7 @@
 			"com.tcordeiro.vilas.test.Vilas060LoreGameTests",
 			"com.tcordeiro.vilas.test.TownGameTests"
 		],
-		"fabric-client-gametest": ["com.tcordeiro.vilas.test.Vilas050NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas040NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas030NoJogoClientTest", "com.tcordeiro.vilas.test.VilasNoJogoClientTest"]
+		"fabric-client-gametest": ["com.tcordeiro.vilas.test.Vilas060NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas050NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas040NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas030NoJogoClientTest", "com.tcordeiro.vilas.test.VilasNoJogoClientTest"]
 	},
 	"depends": {
 		"tvilas": "*",
