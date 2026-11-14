@@ -249,7 +249,7 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				return;
 			}
 			populate(ctx);
-			String[] scenes = {"rescue", "chronicle", "project"};
+			String[] scenes = {"rescue", "chronicle", "project", "election"};
 			String only = System.getenv("VILAS060_SCENES");
 			if (only != null && !only.isBlank()) scenes = only.split(",");
 			for (String sc : scenes) {
@@ -593,6 +593,112 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 					look(ctx, Vec3.atCenterOf(sign).add(0, 0.6, -2.6), Vec3.atCenterOf(sign).add(0, 0.2, 0), 15);
 					shot(ctx, "08_placa_com_os_doadores");
 				}
+			}
+			case "election" -> {
+				sp.getServer().runCommand("time set 3000");
+				String o = sp.getServer().computeOnServer(s -> {
+					ServerLevel l = s.overworld();
+					Village v = village(s);
+					ServerPlayer pl = player(s);
+					Lot lot = neighborLot(l, v, BlockPos.containing(spot(s, "plaza")), "Talys");
+					if (lot != null) { // o terreno é do jogador do teste (só quem tem terreno vota)
+						data(s).lots.remove(lot);
+						data(s).lots.add(new Lot(lot.id, v.id, lot.area, pl.getUUID(), pl.getGameProfile().name(), new java.util.HashSet<>()));
+					}
+					long day = com.tcordeiro.vilas.village.VillageEconomy.day(l);
+					boolean opened = com.tcordeiro.vilas.life.Election.open(l, v, day);
+					return "aberta " + opened + " candidatos " + v.civic.life.town.election.candidates.size();
+				});
+				log("eleição: " + o);
+				boardBoth(ctx, "09_quadro_votacao_quanto_falta");
+				screen(ctx, "10_ecra_de_votar", s -> com.tcordeiro.vilas.life.Election.openDialog(player(s), s.overworld(), village(s)));
+				String voted = sp.getServer().computeOnServer(s -> com.tcordeiro.vilas.life.Election.vote(player(s), village(s), 0).message().getString());
+				log("voto: " + voted);
+				chat(ctx, true);
+				hud(ctx, true);
+				ctx.waitTicks(5);
+				shot(ctx, "11_voto_e_reputacao_no_chat");
+				chat(ctx, false);
+				hud(ctx, false);
+				String w = sp.getServer().computeOnServer(s -> {
+					var e = village(s).civic.life.town.election;
+					return e.candidates.isEmpty() ? null : e.candidates.get(0).villager().toString();
+				});
+				if (w != null) {
+					UUID wid = UUID.fromString(w);
+					Vec3 wp = sp.getServer().computeOnServer(s -> s.overworld().getEntity(wid) == null ? null : s.overworld().getEntity(wid).position());
+					if (wp != null) {
+						sp.getServer().runOnServer(s -> ((Villager) s.overworld().getEntity(wid)).setNoAi(true));
+						camAround(ctx, wp.add(0, 1.4, 0), 3.8, 0.8, 5);
+						filmEvery(ctx, "03_posse_do_eleito", 90, 2, i -> {
+							if (i == 5) sp.getServer().runOnServer(s -> {
+								var e = village(s).civic.life.town.election;
+								e.day = com.tcordeiro.vilas.village.VillageEconomy.day(s.overworld()) - 3;
+								com.tcordeiro.vilas.life.Election.count(s.overworld(), village(s));
+							});
+						});
+						sp.getServer().runOnServer(s -> {
+							if (s.overworld().getEntity(wid) instanceof Villager x) x.setNoAi(false);
+						});
+					}
+				}
+				// o broche «Eu votei»: tooltip no inventário
+				String b = sp.getServer().computeOnServer(s -> {
+					ServerPlayer pl = player(s);
+					int got = com.tcordeiro.vilas.life.election.VoteBonus.deliver(s.overworld(), village(s), pl);
+					int slot = -1;
+					for (int i = 0; i < pl.getInventory().getContainerSize(); i++)
+						if (pl.getInventory().getItem(i).is(com.tcordeiro.vilas.life.election.VoteItems.I_VOTED)) slot = i;
+					if (slot < 0) return "sem broche (entregues " + got + ")";
+					ItemStack badge = pl.getInventory().getItem(slot).copy();
+					pl.getInventory().setItem(slot, ItemStack.EMPTY);
+					pl.getInventory().setItem(0, badge);
+					return "broche no espaço 1 (entregues " + got + ")";
+				});
+				log("broche: " + b);
+				sp.getServer().runCommand("gamemode survival @a");
+				ctx.waitTicks(5);
+				ctx.runOnClient(mc -> mc.gui.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)));
+				ctx.waitTicks(10);
+				double[] cur = ctx.computeOnClient(mc -> {
+					double g = mc.getWindow().getGuiScale();
+					int left = (mc.getWindow().getGuiScaledWidth() - 176) / 2, top = (mc.getWindow().getGuiScaledHeight() - 166) / 2;
+					return new double[] {(left + 8 + 8) * g, (top + 142 + 8) * g};
+				});
+				ctx.getInput().setCursorPos(cur[0], cur[1]);
+				ctx.waitTicks(5);
+				shot(ctx, "12_broche_eu_votei_tooltip");
+				ctx.runOnClient(mc -> mc.gui.setScreen(null));
+				sp.getServer().runCommand("gamemode creative @a");
+				sp.getServer().runOnServer(s -> {
+					var pl = player(s);
+					pl.getAbilities().flying = true;
+					pl.onUpdateAbilities();
+				});
+				// a banca própria de quem votou em «mercado maior»
+				sp.getServer().runOnServer(s -> {
+					var e = village(s).civic.life.town.election;
+					var m = com.tcordeiro.vilas.life.election.VoteBonus.mandate(village(s));
+					m.begin(Math.max(1, e.held), com.tcordeiro.vilas.village.VillageEconomy.day(s.overworld()), com.tcordeiro.vilas.logic.TownRules.MARKET, e.mayorName);
+					e.held = m.term;
+					m.supporters.add(player(s).getUUID());
+				});
+				sp.getServer().runCommand("time set 1500");
+				Market.forceActive = true;
+				ctx.waitTicks(80);
+				String stall = sp.getServer().computeOnServer(s -> {
+					for (var en : s.overworld().getEntities((net.minecraft.world.entity.Entity) null, box(BlockPos.containing(spot(s, "plaza")), 24),
+							x -> x.entityTags().contains(com.tcordeiro.vilas.life.election.VoteBonus.OWN_STALL_TAG)))
+						return str(en.position()) + "|" + en.getCustomName().getString();
+					return null;
+				});
+				log("banca própria: " + stall);
+				if (stall != null) {
+					Vec3 sp0 = pos(stall.split("\\|")[0]);
+					camAround(ctx, sp0.add(0, 1.2, 0), 3.6, 0.8, 10);
+					shot(ctx, "13_banca_propria_com_nome");
+				}
+				Market.forceActive = null;
 			}
 			default -> {}
 		}
