@@ -557,7 +557,8 @@ def gen_lang_names():
     from life_050 import T_050
     from life_060 import T_060  # 0.6.0: memória, crónica, resgate e cartas, obras com doações
     from election_060 import T_060 as T_060E  # 0.6 eleições
-    T += T_020 + T_030 + T_040 + T_050 + T_060 + T_060E
+    from crises_060 import T_060C  # 0.6 crises
+    T += T_020 + T_030 + T_040 + T_050 + T_060 + T_060E + T_060C
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
@@ -969,6 +970,9 @@ import election_060 as _el6  # noqa: E402  (0.6 eleições: bónus do voto, prom
 
 _i = [g["key"] for g in GUIDE].index("policies") + 1
 GUIDE[_i:_i] = _el6.pages(P)
+import crises_060 as _crises  # noqa: E402  (0.6 crises: reconstruir, crises, funeral, velhice)
+
+GUIDE[-1:-1] = _crises.pages(P)
 
 
 def _grid(r):

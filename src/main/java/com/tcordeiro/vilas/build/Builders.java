@@ -146,7 +146,9 @@ public final class Builders {
 			return true;
 		}
 		// 0.3.0: os edifícios põem portas, camas e escadas metade a metade — sem atualizar a forma dos vizinhos até estar tudo
-		level.setBlock(pos, state, p.kind.structure() ? net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE : 3);
+		// 0.6 crises: a reconstrução também põe portas e camas metade a metade (sem desfazer a metade já posta)
+		level.setBlock(pos, state, p.kind.structure() || p.kind == Project.Kind.REBUILD
+				? net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE : 3);
 		p.placed++;
 		if (p.kind == Project.Kind.WALL) v.economy.treasury -= WallRules.BLOCK_CENTS;
 		if (show) {
@@ -170,6 +172,7 @@ public final class Builders {
 			case TOWN_HALL, MARKET, TAVERN, PLAZA -> CivicWork.finish(level, v, p);
 			case HOUSE -> com.tcordeiro.vilas.village.Growth.step(level, v); // a casa tem cama: chega o morador
 			case COMMUNITY -> com.tcordeiro.vilas.life.projects.Projects.finish(level, v, p); // 0.6.0: a placa com os doadores
+			case REBUILD -> com.tcordeiro.vilas.life.crisis.Rebuild.finish(level, v, p); // 0.6 crises
 		}
 		VillageNews.announce(level, v, VillageNews.DONE, "tvilas.news.done", Component.translatable(p.kind.key()));
 		if (v.extra.projects.isEmpty()) dismiss(level, v);

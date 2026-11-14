@@ -21,7 +21,10 @@
 		"protect.LavaFluidMixin",
 		"protect.PistonStructureResolverMixin",
 		"protect.ServerExplosionMixin",
-		"protect.SpawnerMobsMixin"
+		"protect.SpawnerMobsMixin",
+		"crisis.ExplosionRebuildMixin",
+		"crisis.FireRebuildMixin",
+		"crisis.BreakDoorRebuildMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

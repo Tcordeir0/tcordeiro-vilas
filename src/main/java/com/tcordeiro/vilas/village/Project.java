@@ -24,7 +24,9 @@ public final class Project {
 		/** 0.3.0: uma casa simples (sem cama livre, para o morador que o prestígio traz). */
 		HOUSE,
 		/** 0.6.0: obra comunitária com doações (ponte, chafariz, farol, coreto). */
-		COMMUNITY;
+		COMMUNITY,
+		/** 0.6 crises: repor os blocos partidos por monstros, explosões ou fogo ({@link com.tcordeiro.vilas.life.crisis.Rebuild}). */
+		REBUILD;
 
 		/** 0.3.0 (M14): nomes desconhecidos dão erro ao ler (a obra é ignorada) em vez de rebentar o carregamento do mundo. */
 		public static final Codec<Kind> CODEC = Codec.STRING.comapFlatMap(s -> {

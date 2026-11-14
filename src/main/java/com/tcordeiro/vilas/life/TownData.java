@@ -193,8 +193,9 @@ public final class TownData {
 			Mission.CODEC.optionalFieldOf("decor").forGetter(t -> Optional.ofNullable(t.decor)),
 			Codec.LONG.optionalFieldOf("decor_day", -1L).forGetter(t -> t.decorDay),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.INT).optionalFieldOf("catches", Map.of()).forGetter(t -> t.catches),
-			Codec.LONG.optionalFieldOf("catch_day", -1L).forGetter(t -> t.catchDay))
-			.apply(i, (ma, co, mk, el, he, hi, de, dd, ca, cd) -> {
+			Codec.LONG.optionalFieldOf("catch_day", -1L).forGetter(t -> t.catchDay),
+			com.tcordeiro.vilas.life.crisis.CrisisData.CODEC.optionalFieldOf("crisis").forGetter(t -> Optional.of(t.crisis))) // 0.6 crises
+			.apply(i, (ma, co, mk, el, he, hi, de, dd, ca, cd, cr) -> {
 				TownData t = new TownData();
 				for (Parcel p : ma) if (t.mail.size() < 2 * com.tcordeiro.vilas.logic.TownRules.MAIL_PER_VILLAGE) t.mail.add(p); // folga: nunca se perde uma carta
 				t.counter = co;
@@ -206,6 +207,7 @@ public final class TownData {
 				t.decorDay = dd;
 				LifeData.capPut(t.catches, ca, 64);
 				t.catchDay = cd;
+				t.crisis = cr.orElseGet(com.tcordeiro.vilas.life.crisis.CrisisData::new); // 0.6 crises
 				return t;
 			}));
 
@@ -222,6 +224,8 @@ public final class TownData {
 	/** Pescador → peixes apanhados hoje (repõem trocas, com teto). */
 	public final Map<UUID, Integer> catches = new HashMap<>();
 	public long catchDay = -1;
+	/** 0.6 crises: reconstrução, crises, funerais e velhice ({@link com.tcordeiro.vilas.life.crisis.CrisisData}). */
+	public com.tcordeiro.vilas.life.crisis.CrisisData crisis = new com.tcordeiro.vilas.life.crisis.CrisisData();
 
 	public Helper helperOf(UUID player) {
 		for (Helper h : helpers) if (h.player.equals(player) && !h.ended) return h;

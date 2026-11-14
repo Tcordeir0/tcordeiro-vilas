@@ -175,6 +175,10 @@ public final class VilasGuide {
 			new Page("v060_projects", null, List.of(), null),
 			new Page("v060_donate", null, List.of(), null),
 			new Page("v060_plaque", null, List.of(), null),
+			new Page("rebuild", null, List.of(), null),
+			new Page("crises", null, List.of(), null),
+			new Page("funeral", null, List.of(), null),
+			new Page("aging", null, List.of(), null),
 			new Page("commands", null, List.of(), null));
 
 	/** As páginas do separador «Guias» do Receitário: sem as dos mods que não estão instalados. */

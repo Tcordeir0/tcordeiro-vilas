@@ -39,6 +39,7 @@ public class TVilas implements ModInitializer {
 		MissionEvents.init();
 		com.tcordeiro.vilas.life.LifeEvents.init(); // 0.4.0: depois dos cliques do Prefeito e dos pedidos
 		VilaCommand.init();
+		com.tcordeiro.vilas.life.crisis.Crises.init(); // 0.6 crises (depois do /vila: junta-lhe o «crise»)
 		VillagePoolInjector.init();
 	}
 }

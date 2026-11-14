@@ -68,6 +68,20 @@ public final class VilasConfig {
 	public long helper_price_cents = com.tcordeiro.vilas.logic.TownRules.HELPER_PRICE_CENTS;
 	/** 0.5.0: true = o «!» dos pedidos volta a ser o nome dourado (como até à 0.4) em vez do balão. */
 	public boolean request_name_tag = false;
+	// 0.6 crises
+	/** 0.6 crises: o Construtor repõe os blocos partidos por monstros, explosões ou fogo (fora dos terrenos). */
+	public boolean rebuild = true;
+	/** 0.6 crises: teto de blocos registados por vila e o raio (à volta da Mesa) onde se registam. */
+	public int rebuild_max_blocks = com.tcordeiro.vilas.life.crisis.CrisisRules.REBUILD_MAX;
+	public int rebuild_radius = com.tcordeiro.vilas.life.crisis.CrisisRules.REBUILD_RADIUS;
+	/** 0.6 crises: incêndio, fome e noite perigosa com missão relâmpago; monstros que fazem a noite perigosa. */
+	public boolean crises = true;
+	public int crisis_night_monsters = com.tcordeiro.vilas.life.crisis.CrisisRules.NIGHT_MONSTERS;
+	/** 0.6 crises: funeral na Praça com campa e luto dos amigos. */
+	public boolean funerals = true;
+	/** 0.6 crises: velhice (DESLIGADA por omissão; ligada, só aldeões sem trocas trancadas) e os dias de vida. */
+	public boolean villager_aging = false;
+	public int villager_lifespan_days = com.tcordeiro.vilas.life.crisis.CrisisRules.LIFESPAN_DAYS;
 
 	private static VilasConfig current = new VilasConfig();
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
