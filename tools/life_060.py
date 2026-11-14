@@ -59,6 +59,15 @@ T_060 = [
     ("tvilas.dialog.donate", "🧱 Doar materiais", "🧱 Doar materiais", "🧱 Donate materials"),
     ("tvilas.dialog.chronicle", "📜 Crônica", "📜 Crónica", "📜 Chronicle"),
     ("tvilas.project.community", "Obra comunitária", "Obra comunitária", "Community project"),
+    # 0.6 crises na crónica e no epitáfio
+    ("tvilas.chronicle.death", "morreu %s (%s).", "morreu %s (%s).", "%s died (%s)."),
+    ("tvilas.chronicle.funeral", "a vila despediu-se de %s na Praça.", "a povoação despediu-se de %s na Praça.", "the village said goodbye to %s at the Plaza."),
+    ("tvilas.chronicle.crisis.fire", "houve um incêndio e a vila pediu ajuda.", "houve um incêndio e a povoação pediu ajuda.", "there was a fire and the village asked for help."),
+    ("tvilas.chronicle.crisis.hunger", "faltou comida e a vila pediu ajuda.", "faltou comida e a povoação pediu ajuda.", "food ran short and the village asked for help."),
+    ("tvilas.chronicle.crisis.night", "uma noite perigosa, cheia de monstros.", "uma noite perigosa, cheia de monstros.", "a dangerous night, full of monsters."),
+    ("tvilas.chronicle.crisis.rebuilt", "o Construtor reconstruiu o que o ataque partiu.", "o Construtor reconstruiu o que o ataque partiu.", "the Builder rebuilt what the attack broke."),
+    ("tvilas.epitaph.saved", "Salvo por %s", "Salvo por %s", "Saved by %s"),
+    ("tvilas.epitaph.friend", "Amigo de %s", "Amigo de %s", "Friend of %s"),
 ] + [(f"tvilas.project060.{k}", *v) for k, v in KINDS.items()]
 
 

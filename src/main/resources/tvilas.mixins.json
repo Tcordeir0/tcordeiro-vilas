@@ -24,6 +24,7 @@
 		"protect.SpawnerMobsMixin",
 		"crisis.ExplosionRebuildMixin",
 		"crisis.FireRebuildMixin",
+		"crisis.BaseFireRebuildMixin",
 		"crisis.BreakDoorRebuildMixin"
 	],
 	"injectors": {

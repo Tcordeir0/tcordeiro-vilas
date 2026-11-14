@@ -149,6 +149,7 @@ public final class Builders {
 		// 0.6 crises: a reconstrução também põe portas e camas metade a metade (sem desfazer a metade já posta)
 		level.setBlock(pos, state, p.kind.structure() || p.kind == Project.Kind.REBUILD
 				? net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE : 3);
+		if (p.kind == Project.Kind.REBUILD) reconnect(level, pos); // 0.6.0: cercas, paredes e vidros voltam a ligar-se
 		p.placed++;
 		if (p.kind == Project.Kind.WALL) v.economy.treasury -= WallRules.BLOCK_CENTS;
 		if (show) {
@@ -158,6 +159,22 @@ public final class Builders {
 			level.playSound(null, pos, state.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0f, 0.9f);
 		}
 		return true;
+	}
+
+	/**
+	 * 0.6.0 — Depois de repor um bloco: ele e os 6 vizinhos voltam a calcular a forma (cercas, paredes, painéis de vidro, escadas
+	 * ligam-se outra vez). Os blocos de duas metades (portas, camas, plantas altas) ficam como estão: põem-se metade a metade e
+	 * recalcular a primeira metade sem a outra apagava-a.
+	 */
+	public static void reconnect(ServerLevel level, BlockPos pos) {
+		for (BlockPos q : new BlockPos[] {pos, pos.north(), pos.south(), pos.east(), pos.west(), pos.above(), pos.below()}) {
+			if (!level.isLoaded(q)) continue;
+			BlockState cur = level.getBlockState(q);
+			if (cur.isAir() || cur.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF)
+					|| cur.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.BED_PART)) continue;
+			BlockState ns = net.minecraft.world.level.block.Block.updateFromNeighbourShapes(cur, level, q);
+			if (ns != cur && !ns.isAir()) level.setBlock(q, ns, net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE);
+		}
 	}
 
 	static void complete(ServerLevel level, Village v, Project p) {

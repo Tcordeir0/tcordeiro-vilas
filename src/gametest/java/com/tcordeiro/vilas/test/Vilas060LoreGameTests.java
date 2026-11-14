@@ -167,6 +167,30 @@ public class Vilas060LoreGameTests {
 		h.succeed();
 	}
 
+	@GameTest(maxTicks = 100)
+	public void rebuiltFencesAndPanesConnectAgain(GameTestHelper h) {
+		Village v = village(h);
+		h.setBlock(new BlockPos(3, 1, 4), Blocks.OAK_FENCE);
+		h.setBlock(new BlockPos(5, 1, 4), Blocks.OAK_FENCE);
+		h.setBlock(new BlockPos(3, 1, 6), Blocks.GLASS_PANE);
+		h.setBlock(new BlockPos(5, 1, 6), Blocks.GLASS_PANE);
+		Project p = new Project(Project.Kind.REBUILD, h.absolutePos(new BlockPos(4, 1, 4)));
+		p.pending.add(new Project.Placement(h.absolutePos(new BlockPos(4, 1, 4)), Blocks.OAK_FENCE.defaultBlockState()));
+		p.pending.add(new Project.Placement(h.absolutePos(new BlockPos(4, 1, 6)), Blocks.GLASS_PANE.defaultBlockState()));
+		p.total = 2;
+		v.extra.projects.add(p);
+		Builders.overnight(h.getLevel(), v);
+		var fence = h.getBlockState(new BlockPos(4, 1, 4));
+		var pane = h.getBlockState(new BlockPos(4, 1, 6));
+		h.assertTrue(fence.is(Blocks.OAK_FENCE), "a cerca voltou");
+		h.assertTrue(fence.getValue(net.minecraft.world.level.block.CrossCollisionBlock.EAST) && fence.getValue(net.minecraft.world.level.block.CrossCollisionBlock.WEST),
+				"a cerca reposta liga-se às vizinhas");
+		h.assertTrue(h.getBlockState(new BlockPos(3, 1, 4)).getValue(net.minecraft.world.level.block.CrossCollisionBlock.EAST), "e a vizinha liga-se a ela");
+		h.assertTrue(pane.getValue(net.minecraft.world.level.block.CrossCollisionBlock.EAST) && pane.getValue(net.minecraft.world.level.block.CrossCollisionBlock.WEST),
+				"o painel de vidro também");
+		h.succeed();
+	}
+
 	static Lore unused() {
 		return null;
 	}

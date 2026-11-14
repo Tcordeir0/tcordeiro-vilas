@@ -117,8 +117,9 @@ public final class CrisisData {
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("mourning", Map.of()).forGetter(d -> d.mourning),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("first_seen", Map.of()).forGetter(d -> d.firstSeen),
 			Codec.LONG.optionalFieldOf("counter", 0L).forGetter(d -> d.counter),
-			Codec.LONG.optionalFieldOf("aging_day", -1L).forGetter(d -> d.agingDay))
-			.apply(i, (br, lb, cr, ld, hd, hc, de, gr, mo, fs, co, ag) -> {
+			Codec.LONG.optionalFieldOf("aging_day", -1L).forGetter(d -> d.agingDay),
+			Codec.LONG.listOf().optionalFieldOf("tainted", List.of()).forGetter(d -> List.copyOf(d.tainted))) // revisão: fogos de jogador
+			.apply(i, (br, lb, cr, ld, hd, hc, de, gr, mo, fs, co, ag, ta) -> {
 				CrisisData d = new CrisisData();
 				for (Broken b : br) if (d.broken.size() < CrisisRules.REBUILD_MAX * 2) d.broken.add(b); // folga: config maior
 				d.lastBroken = lb;
@@ -132,6 +133,7 @@ public final class CrisisData {
 				capPut(d.firstSeen, fs, MAX_MAP);
 				d.counter = co;
 				d.agingDay = ag;
+				for (Long t : ta) if (d.tainted.size() < 512) d.tainted.add(t); // MAX_TAINTED
 				return d;
 			}));
 
@@ -159,6 +161,12 @@ public final class CrisisData {
 	/** Aldeão → dia em que foi visto pela primeira vez na vila (para os dias de vida). */
 	public final Map<UUID, Long> firstSeen = new HashMap<>();
 	public long counter, agingDay = -1;
+	/**
+	 * Revisão de segurança: os fogos (BlockPos.asLong) com origem de jogador — acesos com um jogador a 16 blocos, num terreno, perto de
+	 * um dispensador ou de lava, ou espalhados de um fogo destes. Apagá-los não paga nada. Guardado no mundo (sobrevive a reinícios).
+	 */
+	public static final int MAX_TAINTED = 512;
+	public final java.util.Set<Long> tainted = new java.util.LinkedHashSet<>();
 
 	public boolean recorded(long pos) {
 		if (brokenAt == null) {

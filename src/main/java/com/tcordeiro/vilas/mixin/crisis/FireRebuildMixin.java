@@ -39,9 +39,4 @@ public abstract class FireRebuildMixin {
 		if (level.getBlockState(pos) == before) return; // não ardeu
 		Crises.onBurn(sl, pos, before);
 	}
-
-	@Inject(method = "onPlace", at = @At("TAIL"))
-	private void tvilas$firePlaced(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston, CallbackInfo ci) {
-		if (level instanceof ServerLevel sl) Crises.onFirePlaced(sl, pos);
-	}
 }

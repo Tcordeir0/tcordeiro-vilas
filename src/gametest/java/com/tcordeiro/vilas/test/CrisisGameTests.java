@@ -46,6 +46,7 @@ public class CrisisGameTests {
 	static Village village(GameTestHelper h) {
 		Village v = TownGameTests.village(h);
 		v.economy.treasury = 100_000;
+		v.civic.missionFund = 0; // 0.6.0: as crises pagam primeiro do fundo; estes testes medem a tesouraria (o fundo tem o seu teste)
 		Crises.forceMonsters = null;
 		Crises.forceTod = null;
 		Funeral.forceTime = null;
@@ -165,6 +166,7 @@ public class CrisisGameTests {
 		TestUtil.useOnTop(h, arsonist, new ItemStack(Items.FLINT_AND_STEEL), new BlockPos(7, 2, 7));
 		BlockPos[] fires = {new BlockPos(2, 1, 4), new BlockPos(3, 1, 4), new BlockPos(5, 1, 4), new BlockPos(6, 1, 4), new BlockPos(4, 1, 6)};
 		for (BlockPos f : fires) h.setBlock(f, Blocks.FIRE);
+		data(v).tainted.clear(); // como se fossem fogos de um raio: no teste nasceram com jogadores perto (esses têm o seu teste)
 		Crises.onBurn(level, h.absolutePos(new BlockPos(4, 1, 4)), Blocks.OAK_PLANKS.defaultBlockState());
 		CrisisData.Crisis c = data(v).active(CrisisRules.FIRE);
 		h.assertTrue(c != null, "um bloco da vila ardeu: crise do incêndio");
@@ -182,9 +184,36 @@ public class CrisisGameTests {
 		h.setBlock(new BlockPos(2, 1, 2), Blocks.FIRE);
 		h.setBlock(new BlockPos(2, 1, 3), Blocks.FIRE);
 		h.setBlock(new BlockPos(3, 1, 2), Blocks.FIRE);
+		data(v).tainted.clear();
 		for (BlockPos f : new BlockPos[] {new BlockPos(2, 1, 2), new BlockPos(2, 1, 3), new BlockPos(3, 1, 2)}) hero.gameMode.destroyBlock(h.absolutePos(f));
 		h.assertValueEqual(v.economy.treasury, treasury - reward, "uma vez por jogador em cada crise");
 		h.assertValueEqual(TestUtil.money(hero) - money, reward, "uma vez por jogador em cada crise");
+		h.succeed();
+	}
+
+	@GameTest(maxTicks = 40)
+	public void firesWithAPlayerOriginNeverPay(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		ServerPlayer hero = TestUtil.playerAt(h, new BlockPos(1, 1, 1));
+		hero.getInventory().clearContent();
+		BlockPos[] fires = {new BlockPos(2, 1, 4), new BlockPos(3, 1, 4), new BlockPos(5, 1, 4)};
+		for (BlockPos f : fires) h.setBlock(f, Blocks.FIRE); // com um jogador a 16 blocos (o do teste)
+		for (BlockPos f : fires) h.assertTrue(!Crises.payable(v, h.absolutePos(f)), "fogo nascido com um jogador perto: marcado");
+		Crises.onBurn(level, h.absolutePos(new BlockPos(4, 1, 4)), Blocks.OAK_PLANKS.defaultBlockState());
+		CrisisData.Crisis c = data(v).active(CrisisRules.FIRE);
+		long treasury = v.economy.treasury, money = TestUtil.money(hero);
+		for (BlockPos f : fires) hero.gameMode.destroyBlock(h.absolutePos(f));
+		h.assertTrue(c == null || !c.paid.contains(hero.getUUID()), "apagar fogos de jogador não paga");
+		h.assertValueEqual(v.economy.treasury, treasury, "nada sai da tesouraria");
+		h.assertValueEqual(TestUtil.money(hero), money, "nada criado");
+		// espalhar-se de um fogo marcado também fica marcado; e o estado sobrevive a um reinício (codec)
+		data(v).tainted.clear();
+		data(v).tainted.add(h.absolutePos(new BlockPos(6, 1, 6)).asLong());
+		h.assertTrue(Crises.playerOrigin(level, data(v), h.absolutePos(new BlockPos(7, 1, 7))), "espalhado de um fogo marcado");
+		var enc = CrisisData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, data(v)).getOrThrow();
+		var back = CrisisData.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, enc).getOrThrow();
+		h.assertTrue(back.tainted.contains(h.absolutePos(new BlockPos(6, 1, 6)).asLong()), "fica guardado no mundo");
 		h.succeed();
 	}
 
@@ -277,6 +306,23 @@ public class CrisisGameTests {
 	}
 
 	@GameTest(maxTicks = 40)
+	public void crisisPaysFromTheMissionFundFirst(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		CrisisData.Crisis c = Crises.open(level, v, CrisisRules.NIGHT, level.getGameTime() + 2000, 1, 2, null);
+		ServerPlayer p = TestUtil.playerAt(h, new BlockPos(1, 1, 1));
+		long reward = MissionRules.rewardCents(c.emeralds, VilasConfig.get().emerald_value_cents);
+		v.civic.missionFund = reward / 2;
+		long treasury = v.economy.treasury, money = TestUtil.money(p);
+		h.spawn(EntityTypes.ZOMBIE, new BlockPos(4, 1, 4)).hurtServer(level, level.damageSources().playerAttack(p), 1000);
+		h.assertTrue(c.paid.contains(p.getUUID()), "pagou");
+		h.assertValueEqual(v.civic.missionFund, 0L, "primeiro o fundo das missões");
+		h.assertValueEqual(v.economy.treasury, treasury - (reward - reward / 2), "o resto da tesouraria");
+		h.assertValueEqual(TestUtil.money(p) - money, reward, "o jogador recebe a recompensa inteira");
+		h.succeed();
+	}
+
+	@GameTest(maxTicks = 100)
 	public void crisisDoesNotPayWithoutTreasuryOrOverTheDailyCap(GameTestHelper h) {
 		Village v = village(h);
 		ServerLevel level = h.getLevel();

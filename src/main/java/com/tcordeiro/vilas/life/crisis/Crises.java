@@ -137,7 +137,7 @@ public final class Crises {
 	}
 
 	static void lit(ServerLevel level, ServerPlayer p, BlockPos pos) {
-		Village v = VillageManager.villageAt(level, pos);
+		Village v = Rebuild.areaOf(level, pos); // revisão: a mesma procura de vila que o credit (villageFor)
 		if (v != null) rt(v).lighters.put(p.getUUID(), level.getGameTime());
 	}
 
@@ -154,18 +154,49 @@ public final class Crises {
 
 	/** Um fogo novo: se for perto de uma vila (fora dos terrenos), fica seguido até se apagar. */
 	public static void onFirePlaced(ServerLevel level, BlockPos pos) {
-		if (!enabled()) return;
+		if (!enabled() || VillageData.get(level).villages.isEmpty()) return;
+		Village area = Rebuild.areaOf(level, pos);
+		if (area == null) return;
+		CrisisData ad = data(area);
+		if (!ad.tainted.contains(pos.asLong()) && playerOrigin(level, ad, pos)) {
+			if (ad.tainted.size() >= CrisisData.MAX_TAINTED) ad.tainted.remove(ad.tainted.iterator().next());
+			ad.tainted.add(pos.asLong());
+			VillageData.get(level).changed();
+		}
 		Village v = villageFor(level, pos);
 		if (v == null) return;
 		Rt r = rt(v);
 		if (r.fires.size() < MAX_FIRES) r.fires.add(pos.asLong());
 	}
 
+	/**
+	 * REGRA DE SEGURANÇA (revisão): este fogo tem origem de jogador? Um jogador a {@link CrisisRules#ORIGIN_RADIUS} blocos, num terreno,
+	 * um dispensador ou lava perto, ou um fogo vizinho já marcado (o fogo espalhou-se dele).
+	 */
+	public static boolean playerOrigin(ServerLevel level, CrisisData d, BlockPos pos) {
+		if (VillageManager.lotAt(level, pos.getX(), pos.getZ()) != null) return true;
+		for (ServerPlayer p : level.players())
+			if (!p.isSpectator() && p.blockPosition().closerThan(pos, CrisisRules.ORIGIN_RADIUS)) return true;
+		for (BlockPos q : BlockPos.betweenClosed(pos.offset(-2, -2, -2), pos.offset(2, 2, 2))) {
+			if (d.tainted.contains(q.asLong())) return true;
+			var s = level.getBlockState(q);
+			if (s.is(net.minecraft.world.level.block.Blocks.DISPENSER) || s.getFluidState().is(net.minecraft.tags.FluidTags.LAVA)) return true;
+		}
+		return false;
+	}
+
+	/** Este fogo pode render a quem o apaga? (nasceu sem jogador por perto e sem origem de jogador) */
+	public static boolean payable(Village v, BlockPos pos) {
+		return !data(v).tainted.contains(pos.asLong());
+	}
+
 	static void extinguished(ServerLevel level, ServerPlayer p, BlockPos pos) {
 		Village v = villageFor(level, pos);
 		if (v == null) return;
 		rt(v).fires.remove(pos.asLong());
-		credit(level, v, p, data(v).active(CrisisRules.FIRE));
+		boolean pay = payable(v, pos);
+		data(v).tainted.remove(pos.asLong());
+		if (pay) credit(level, v, p, data(v).active(CrisisRules.FIRE));
 	}
 
 	/** Um monstro morto por um jogador dentro da vila durante a noite perigosa. */
@@ -296,7 +327,9 @@ public final class Crises {
 			var s = level.getBlockState(pos);
 			if (s.is(BlockTags.FIRE)) continue;
 			it.remove();
-			if (c != null && !s.getFluidState().isEmpty()) { // apagado com água: o jogador mais perto
+			boolean pay = payable(v, pos);
+			d.tainted.remove(pos.asLong());
+			if (pay && c != null && !s.getFluidState().isEmpty()) { // apagado com água: o jogador mais perto
 				ServerPlayer p = nearest(level, pos, 6);
 				if (p != null) credit(level, v, p, c);
 			}
@@ -453,11 +486,12 @@ public final class Crises {
 		Civic civ = today(level, v);
 		VilasConfig cfg = VilasConfig.get();
 		long reward = MissionRules.rewardCents(c.emeralds, cfg.emerald_value_cents);
-		if (CrisisRules.mayPay(c.paid.contains(p.getUUID()), c.paid.size(), payees(c.type), v.economy.treasury, civ.paidToday, cfg.mission_daily_cap_cents, reward))
+		long available = v.economy.treasury + civ.missionFund; // 0.6.0: como as missões — o fundo das missões e depois a tesouraria
+		if (CrisisRules.mayPay(c.paid.contains(p.getUUID()), c.paid.size(), payees(c.type), available, civ.paidToday, cfg.mission_daily_cap_cents, reward))
 			return null;
 		if (c.paid.contains(p.getUUID())) return VillageManager.Result.fail("tvilas.crisis.already");
 		if (c.paid.size() >= payees(c.type)) return VillageManager.Result.fail("tvilas.crisis.full");
-		if (v.economy.treasury < reward) return VillageManager.Result.fail("tvilas.mission.no_funds", VillageManager.money(reward), VillageManager.money(v.economy.treasury));
+		if (available < reward) return VillageManager.Result.fail("tvilas.mission.no_funds", VillageManager.money(reward), VillageManager.money(available));
 		return VillageManager.Result.fail("tvilas.mission.daily_cap", VillageManager.money(cfg.mission_daily_cap_cents));
 	}
 
@@ -471,7 +505,7 @@ public final class Crises {
 		return c;
 	}
 
-	/** Paga a crise da tesouraria (se a regra deixar) e dá reputação. Devolve true se pagou. */
+	/** Paga a crise (primeiro do fundo das missões, depois da tesouraria; se a regra deixar) e dá reputação. Devolve true se pagou. */
 	static boolean pay(ServerLevel level, Village v, ServerPlayer p, CrisisData.Crisis c) {
 		VillageManager.Result no = mayPay(level, v, p, c);
 		if (no != null) {
@@ -480,7 +514,9 @@ public final class Crises {
 		}
 		long reward = MissionRules.rewardCents(c.emeralds, VilasConfig.get().emerald_value_cents);
 		Civic civ = today(level, v);
-		v.economy.treasury -= reward;
+		long fund = com.tcordeiro.vilas.logic.FundRules.fromFund(civ.missionFund, reward); // primeiro o fundo das missões
+		civ.missionFund -= fund;
+		v.economy.treasury -= reward - fund; // o resto da tesouraria
 		civ.paidToday += reward;
 		c.paid.add(p.getUUID());
 		if (TVilas.CUBCOIN) com.tcordeiro.vilas.compat.CubCoinPay.give(p, reward);

@@ -41,6 +41,8 @@ public final class CrisisRules {
 	// ---------------------------------------------------------------- crises
 
 	public static final String FIRE = "fire", HUNGER = "hunger", NIGHT = "night";
+	/** Revisão de segurança: um fogo que nasce com um jogador a menos disto (blocos) não paga a quem o apaga. */
+	public static final int ORIGIN_RADIUS = 16;
 
 	/** Recompensas (em esmeraldas, pagas em CubCoin ou esmeraldas), meta e quantos jogadores no máximo recebem por crise. */
 	public static final int FIRE_EMERALDS = 2, FIRE_GOAL = 3, FIRE_PAYEES = 4;

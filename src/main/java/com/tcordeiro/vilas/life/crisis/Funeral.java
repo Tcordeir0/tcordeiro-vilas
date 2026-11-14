@@ -201,7 +201,7 @@ public final class Funeral {
 				BlockPos signAt = pos.relative(face);
 				level.setBlock(signAt, Blocks.SPRUCE_WALL_SIGN.defaultBlockState().setValue(WallSignBlock.FACING, face), 3);
 				if (level.getBlockEntity(signAt) instanceof SignBlockEntity sign) {
-					sign.setText(epitaph(x), SignTextSlot.FRONT);
+					sign.setText(epitaph(v, x), SignTextSlot.FRONT);
 					sign.setWaxed(true);
 				}
 				d.graves.add(pos.asLong());
@@ -221,10 +221,10 @@ public final class Funeral {
 	}
 
 	/** O epitáfio (4 linhas da placa): nome, profissão, dias na vila e a causa (ou a linha da crónica, se houver). */
-	public static SignText epitaph(CrisisData.Death x) {
+	public static SignText epitaph(Village v, CrisisData.Death x) {
 		Component l1 = who(x), l2 = x.name.isEmpty() ? Component.empty() : text(x.profession);
 		Component l3 = Component.translatable("tvilas.funeral.days", x.days);
-		Component l4 = CrisisHooks.epitaphLine(x); // crónica do principal (no merge)
+		Component l4 = CrisisHooks.epitaphLine(v, x); // 0.6.0: a recordação mais forte do morto (memória)
 		if (l4 == null) l4 = Component.translatable("tvilas.funeral.cause." + (x.cause.isEmpty() ? "rest" : x.cause));
 		return SignText.EMPTY.asMutable().setLine(0, l1).setLine(1, l2).setLine(2, l3).setLine(3, l4).asImmutable();
 	}
