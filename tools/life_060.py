@@ -27,7 +27,7 @@ T_060 = [
     ("tvilas.chronicle.need_book", "Traga um livro: a crônica é copiada nele.", "Traz um livro: a crónica é copiada para ele.",
      "Bring a book: the chronicle is copied into it."),
     ("tvilas.chronicle.book_given", "📖 A crônica foi copiada no livro.", "📖 A crónica foi copiada para o livro.", "📖 The chronicle was copied into the book."),
-    ("tvilas.chronicle.level", "a vila virou %s.", "a povoação passou a %s.", "the village became a %s."),
+    ("tvilas.chronicle.level", "subimos de nível: agora somos %s.", "subimos de nível: agora somos %s.", "we leveled up: now we are a %s."),
     ("tvilas.chronicle.elected", "%s ganhou as eleições (%s).", "%s ganhou as eleições (%s).", "%s won the election (%s)."),
     ("tvilas.chronicle.festa", "o Prefeito marcou uma festa na Praça.", "o Presidente marcou uma festa na Praça.", "the Mayor called a party at the Plaza."),
     ("tvilas.chronicle.news.done", "acabou a obra: %s.", "acabou a obra: %s.", "a project was finished: %s."),

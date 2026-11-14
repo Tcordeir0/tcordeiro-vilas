@@ -221,7 +221,7 @@ public class Vilas050NoJogoClientTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext ctx) {
-		if (!java.nio.file.Files.exists(Path.of("vilas050.flag"))) return; // só quando se pede (VILAS050=1): as outras versões têm os seus testes
+		if (!java.nio.file.Files.exists(Path.of("vilas050.flag")) || java.nio.file.Files.exists(Path.of("vilas060.flag"))) return; // só quando se pede (VILAS050=1): as outras versões têm os seus testes
 		ctx.runOnClient(mc -> mc.options.getSoundSourceOptionInstance(net.minecraft.sounds.SoundSource.MASTER).set(0.0));
 		ctx.getInput().resizeWindow(1280, 720);
 		ctx.runOnClient(mc -> {

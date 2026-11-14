@@ -498,7 +498,8 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				String setup = sp.getServer().computeOnServer(s -> {
 					ServerLevel l = s.overworld();
 					Village v = village(s);
-					BlockPos at = open(l, BlockPos.containing(spot(s, "plaza")), 6, 20);
+					BlockPos at = open(l, BlockPos.containing(spot(s, "plaza")).offset(0, 0, 50), 0, 20); // no campo, longe das casas
+					for (var g : l.getEntitiesOfClass(net.minecraft.world.entity.animal.golem.IronGolem.class, box(at, 40), x -> true)) g.setNoAi(true); // os golens não roubam o resgate
 					Villager vi = spawn(l, at, VillagerProfession.FARMER, false);
 					var z = EntityTypes.ZOMBIE.create(l, EntitySpawnReason.MOB_SUMMONED);
 					z.snapTo(at.getX() + 3.5, at.getY(), at.getZ() + 0.5, 90, 0);
@@ -512,9 +513,9 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				String[] p = setup.split("\\|");
 				Vec3 at = pos(p[0]);
 				UUID zid = UUID.fromString(p[1]);
-				look(ctx, at.add(0.5, 1.8, 3.6), at.add(1.5, 1.0, 0), 5);
+				look(ctx, sp.getServer().computeOnServer(s -> clear(s.overworld(), at.add(1.5, 1.7, -3.6), at.add(1.5, 1.0, 0))), at.add(1.5, 1.0, 0), 5);
 				filmEvery(ctx, "01_voce_me_salvou", 110, 2, i -> {
-					if (i == 30) sp.getServer().runOnServer(s -> {
+					if (i == 12) sp.getServer().runOnServer(s -> {
 						if (s.overworld().getEntity(zid) instanceof net.minecraft.world.entity.LivingEntity z)
 							z.hurtServer(s.overworld(), s.overworld().damageSources().playerAttack(player(s)), 100f);
 					});
@@ -530,7 +531,11 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				hud(ctx, false);
 				sp.getServer().runOnServer(s -> ((Villager) s.overworld().getEntity(savedVillager)).setNoAi(true));
 				screen(ctx, "03_menu_lembra_se_de_ti", s -> Resident.menu(player(s), s.overworld(), village(s), (Villager) s.overworld().getEntity(savedVillager)));
-				sp.getServer().runOnServer(s -> ((Villager) s.overworld().getEntity(savedVillager)).setNoAi(false));
+				sp.getServer().runOnServer(s -> {
+					((Villager) s.overworld().getEntity(savedVillager)).setNoAi(false);
+					for (var g : s.overworld().getEntitiesOfClass(net.minecraft.world.entity.animal.golem.IronGolem.class, box(BlockPos.containing(spot(s, "plaza")), 80), x -> true))
+						g.setNoAi(false);
+				});
 			}
 			case "chronicle" -> {
 				sp.getServer().runOnServer(s -> {
@@ -590,7 +595,7 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				shot(ctx, "07_obra_pronta");
 				BlockPos sign = sp.getServer().computeOnServer(s -> com.tcordeiro.vilas.life.projects.Projects.lastSign);
 				if (sign != null) {
-					look(ctx, Vec3.atCenterOf(sign).add(0, 0.6, -2.6), Vec3.atCenterOf(sign).add(0, 0.2, 0), 15);
+					camAround(ctx, Vec3.atCenterOf(sign).add(0, 0.2, 0), 2.4, 0.5, 15);
 					shot(ctx, "08_placa_com_os_doadores");
 				}
 			}
@@ -628,7 +633,13 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 					UUID wid = UUID.fromString(w);
 					Vec3 wp = sp.getServer().computeOnServer(s -> s.overworld().getEntity(wid) == null ? null : s.overworld().getEntity(wid).position());
 					if (wp != null) {
-						sp.getServer().runOnServer(s -> ((Villager) s.overworld().getEntity(wid)).setNoAi(true));
+						wp = sp.getServer().computeOnServer(s -> {
+							Villager x = (Villager) s.overworld().getEntity(wid);
+							BlockPos ow = open(s.overworld(), BlockPos.containing(spot(s, "plaza")), 4, 16);
+							x.teleportTo(ow.getX() + 0.5, ow.getY(), ow.getZ() + 0.5);
+							x.setNoAi(true);
+							return Vec3.atBottomCenterOf(ow);
+						});
 						camAround(ctx, wp.add(0, 1.4, 0), 3.8, 0.8, 5);
 						filmEvery(ctx, "03_posse_do_eleito", 90, 2, i -> {
 							if (i == 5) sp.getServer().runOnServer(s -> {
@@ -734,19 +745,21 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				sp.getServer().runCommand("time set 6000");
 				String at = sp.getServer().computeOnServer(s -> {
 					ServerLevel l = s.overworld();
-					BlockPos o = open(l, BlockPos.containing(spot(s, "plaza")), 10, 30);
+					BlockPos o = open(l, BlockPos.containing(spot(s, "plaza")).offset(0, 0, -50), 0, 20); // no campo, longe das casas
 					for (int x = -2; x <= 2; x++)
-						for (int y = 0; y <= 2; y++) l.setBlock(o.offset(x, y, 2), (y == 1 && x == 0 ? Blocks.GLASS_PANE : Blocks.COBBLESTONE).defaultBlockState(), 3);
+						for (int y = 0; y <= 2; y++) l.setBlock(o.offset(x, y, 2), (y == 1 && x == 0 ? Blocks.GLASS_PANE : Blocks.OAK_PLANKS).defaultBlockState(), 3);
 					for (int x = -2; x <= 2; x++) l.setBlock(o.offset(x, 0, -2), Blocks.OAK_FENCE.defaultBlockState(), 3);
 					return str(Vec3.atBottomCenterOf(o));
 				});
 				Vec3 c = pos(at);
-				look(ctx, c.add(0, 4.5, -7.5), c.add(0, 1, 0.5), 10);
+				Vec3 eye = c.add(0, 3.0, -5.0);
+				look(ctx, eye, c.add(0, 1, 1), 10);
 				filmEvery(ctx, "05_creeper_e_reconstrucao", 160, 3, i -> {
+					if (i == 12) look(ctx, eye, c.add(0, 1, 1), 0);
 					if (i == 10) sp.getServer().runOnServer(s -> {
 						var cr = EntityTypes.CREEPER.create(s.overworld(), EntitySpawnReason.MOB_SUMMONED);
 						cr.snapTo(c.x, c.y, c.z + 1, 0, 0);
-						s.overworld().explode(cr, c.x, c.y + 0.5, c.z + 1, 2.2f, net.minecraft.world.level.Level.ExplosionInteraction.MOB);
+						s.overworld().explode(cr, c.x, c.y + 0.5, c.z + 1, 3.0f, net.minecraft.world.level.Level.ExplosionInteraction.MOB);
 					});
 					if (i == 40) sp.getServer().runOnServer(s -> {
 						Village v = village(s);
@@ -791,7 +804,8 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				log("funeral: " + at);
 				if (at == null || at.startsWith("semcampa")) return;
 				BlockPos grave = BlockPos.of(Long.parseLong(at.split("\\|")[0]));
-				camAround(ctx, Vec3.atCenterOf(grave).add(0, 0.6, 0), 3.6, 1.0, 20);
+				Vec3 gc = Vec3.atCenterOf(grave), toPlaza = spot(srv, "plaza").subtract(gc).multiply(1, 0, 1).normalize();
+				look(ctx, sp.getServer().computeOnServer(s -> clear(s.overworld(), gc.add(toPlaza.scale(3.0)).add(0, 2.6, 0), gc)), gc.add(0, 0.2, 0), 20);
 				filmEvery(ctx, "06_funeral_e_luto", 120, 2, null);
 				shot(ctx, "16_campa_e_epitafio");
 			}
