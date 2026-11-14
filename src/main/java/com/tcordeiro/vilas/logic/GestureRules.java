@@ -64,6 +64,11 @@ public final class GestureRules {
 				d[ARMS_Y] = (float) (-env * 2);
 				d[HEAD_X] = (float) (env * (0.35 + Math.sin(t * pi * 12) * 0.12));
 			}
+			case 10 -> { // 0.6 crises — luto: cabeça baixa e os braços juntos à frente, quietos
+				d[HEAD_X] = (float) (env * 0.55);
+				d[ARMS_X] = (float) (-env * 0.35);
+				d[ARMS_SX] = (float) (-env * 0.1);
+			}
 			default -> {}
 		}
 		return d;

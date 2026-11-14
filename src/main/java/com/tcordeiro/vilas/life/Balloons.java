@@ -29,7 +29,9 @@ public final class Balloons {
 			COLD = "cold", ANGRY = "angry", COIN = "coin", NOTE = "note", TALK = "talk", WAVE = "wave", PARTY = "party", HEAL = "heal",
 			REPAIR = "repair", POINT = "point",
 			// 0.5.0: correio, peixe, eleições, esconde-esconde
-			MAIL = "mail", FISH = "fish", VOTE = "vote", HIDE = "hide";
+			MAIL = "mail", FISH = "fish", VOTE = "vote", HIDE = "hide",
+			// 0.6 crises: incêndio, fome e luto
+			FIRE = "fire", HUNGER = "hunger", CANDLE = "candle";
 
 	/**
 	 * 0.5.0 — Um gesto (para o Entity Model Features, variável {@code tvilas_gesture}): o servidor diz «este aldeão acena / festeja /

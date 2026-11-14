@@ -64,6 +64,7 @@ public class MayorDeskBlockEntity extends BlockEntity {
 		alarmTick(sl, v, sl.getGameTime());
 		com.tcordeiro.vilas.life.Life.tick(sl, v); // 0.4.0: a vida dos aldeões (rotina, conversas, festa, guardas, sino)
 		com.tcordeiro.vilas.build.Builders.tick(sl, v, sl.getGameTime()); // 0.2.0: o construtor põe 1 bloco por segundo à vista
+		com.tcordeiro.vilas.life.crisis.Crises.tick(sl, v); // 0.6 crises: reconstrução, crises, funeral
 	}
 
 	/** Invasão ativa perto da Mesa? */

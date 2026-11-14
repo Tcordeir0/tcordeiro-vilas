@@ -1,5 +1,31 @@
 # Changelog
 
+<!-- 0.6 crises (agente C): juntar à secção da 0.6.0 -->
+### 0.6 crises — reconstrução, crises com pedido de ajuda, funeral
+
+- **Reconstrução depois de um ataque**: os blocos partidos por monstros (explosão de creeper, ghast ou wither; zombie que parte uma
+  porta) ou queimados pelo fogo, a 96 blocos da Mesa (`rebuild_radius`) e FORA dos terrenos, ficam registados (até 512 por vila,
+  `rebuild_max_blocks`). Passado o perigo e um minuto sem estragos, o Construtor repõe-nos de baixo para cima (obra «a reconstrução»,
+  à frente das outras), com as regras de obra de sempre: só onde há ar, erva, flores ou neve e nunca num terreno. Nunca uma
+  «fotografia» da vila; TNT de jogador e explosões sem causador não contam; baús, caixas, placas e líquidos não se registam. Os blocos
+  registados não largam item na explosão (o material fica para a obra: repor não duplica).
+- **Crises com pedido de ajuda** (`crises`): **incêndio** (um bloco da vila ardeu: apagar 3 fogos, à mão ou com água; quem acendeu
+  fogo na vila nos últimos 5 minutos não recebe), **fome** (menos de 1 ponto de comida por aldeão nos inventários deles, 2 dias
+  seguidos: trazer N pães, que vão para os aldeões) e **noite perigosa** (6+ monstros na vila de noite, `crisis_night_monsters`:
+  derrotar 4; os de gerador e os dos terrenos não contam). Cada crise aparece no quadro, os aldeões gritam em balões (fogo, pão, «!»)
+  e a recompensa sai da TESOURARIA com a regra A1: uma vez por jogador em cada crise, 3–4 jogadores por crise, o teto do dia das
+  missões e intervalo de dias entre crises do mesmo tipo. `/vila crise entregar` (botão do quadro).
+- **Morte, luto e funeral** (`funerals`): quando morre um aldeão da vila, o Prefeito avisa; no dia seguinte, às 15 h, há funeral na
+  Praça com uma campa (pedra lavrada, vela acesa e placa encerada com o epitáfio: nome ou profissão, dias na vila e a causa) num
+  sítio livre à volta da Praça (nunca num terreno; até 16 campas). Os amigos (opinião ≥ 10; sem amigos, os 3 vizinhos) vão ao
+  funeral e ficam de luto um dia: balão da vela e o gesto novo **luto** (`tvilas_gesture` = 10: cabeça baixa, mãos juntas).
+- **Velhice (opcional)**: `villager_aging` DESLIGADA por omissão; ligada, ao fim de `villager_lifespan_days` (120) dias na vila, no
+  máximo um por dia, e nunca aldeões com trocas trancadas, com nome, o Prefeito ou crianças.
+- Desempenho: tudo por eventos (explosão, fogo, porta, morte) e sensores por vila (noite a cada 10 s, fome 1 vez por dia). Medido no
+  GameTest: explosão de força 10 numa vila (≈140 blocos) leva 9–19 ms com o registo (10–26 ms sem ele, a variação é do servidor); o
+  segundo da vila a seguir, 0,04–0,3 ms.
+- Guia: páginas «Reconstruir», «Crises», «Funeral» e «Velhice (opcional)» (114 no separador Guias). pt-BR, pt-PT e en.
+
 ## 0.5.1 — 13/11/2026
 
 **Gestos dos aldeões a sério** (com o Entity Model Features 3.3.11 e o Fresh Animations): acenar, sim, não, apontar, bater palmas,

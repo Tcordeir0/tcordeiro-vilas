@@ -27,7 +27,8 @@
 			"com.tcordeiro.vilas.test.CivicBuildGameTests",
 			"com.tcordeiro.vilas.test.VillagerRequestGameTests",
 			"com.tcordeiro.vilas.test.LifeGameTests",
-			"com.tcordeiro.vilas.test.TownGameTests"
+			"com.tcordeiro.vilas.test.TownGameTests",
+			"com.tcordeiro.vilas.test.CrisisGameTests"
 		],
 		"fabric-client-gametest": ["com.tcordeiro.vilas.test.Vilas050NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas040NoJogoClientTest", "com.tcordeiro.vilas.test.Vilas030NoJogoClientTest", "com.tcordeiro.vilas.test.VilasNoJogoClientTest"]
 	},

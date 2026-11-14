@@ -151,6 +151,7 @@ public final class TownDialog {
 			if (!doneIt) buttons.add(button(acc ? Component.translatable("tvilas.dialog.festa_deliver") : Component.translatable("tvilas.dialog.festa_accept"),
 					acc ? "/vila missao entregar 4" : "/vila missao aceitar 4"));
 		}
+		com.tcordeiro.vilas.life.crisis.Crises.board(p, level, v, body, buttons, TownDialog::button); // 0.6 crises
 		if (town.election.open(day0)) buttons.add(button(Component.translatable("tvilas.dialog.vote"), "/vila eleicao"));
 		if (myDebt > 0) buttons.add(button(Component.translatable("tvilas.dialog.pay_debt", VillageManager.money(myDebt)), "/vila divida pagar"));
 		if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_BUILDING)

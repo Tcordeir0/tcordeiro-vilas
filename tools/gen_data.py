@@ -552,7 +552,8 @@ def gen_lang_names():
     ]
     from life_040 import T_040
     from life_050 import T_050
-    T += T_020 + T_030 + T_040 + T_050
+    from crises_060 import T_060C  # 0.6 crises
+    T += T_020 + T_030 + T_040 + T_050 + T_060C
     for k, br, pt, en in T:
         tr(k, br, pt, en)
 
@@ -957,6 +958,9 @@ GUIDE[-1:-1] = _life.pages(P)
 import life_050 as _life5  # noqa: E402  (0.5.0: Carteiro, mercado, eleições, pescador, crianças, festa, ajudante)
 
 GUIDE[-1:-1] = _life5.pages(P)
+import crises_060 as _crises  # noqa: E402  (0.6 crises: reconstruir, crises, funeral, velhice)
+
+GUIDE[-1:-1] = _crises.pages(P)
 
 
 def _grid(r):

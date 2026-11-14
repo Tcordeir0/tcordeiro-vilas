@@ -323,6 +323,7 @@ public final class VillageEconomy {
 		com.tcordeiro.vilas.build.CivicWork.commissionNext(level, v); // 0.3.0: Prefeitura/Mercado/Taverna/Praça que faltam
 		Growth.step(level, v); // 0.3.0: o prestígio das missões traz moradores (ou encomenda uma casa)
 		com.tcordeiro.vilas.life.Life.daily(level, v, day); // 0.4.0: guardas (salário), festa na véspera do Mercador
+		com.tcordeiro.vilas.life.crisis.Crises.daily(level, v, day); // 0.6 crises: fome, velhice
 
 		int pop = VillageManager.countPopulation(level, v);
 		int beds = bedsNear(level, v);
