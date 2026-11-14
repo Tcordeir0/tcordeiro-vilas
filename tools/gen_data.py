@@ -530,7 +530,7 @@ def gen_lang_names():
         ("tvilas.dialog.defend_hint", " · só conta numa invasão", " · só conta numa invasão", " · counts only during a raid"),
         ("tvilas.dialog.accept", "Aceitar %s", "Aceitar %s", "Accept %s"),
         ("tvilas.dialog.deliver", "Entregar %s", "Entregar %s", "Hand in %s"),
-        ("tvilas.dialog.buy", "Comprar terreno aqui (%s)", "Comprar terreno aqui (%s)", "Buy lot here (%s)"),
+        ("tvilas.dialog.buy", "Comprar terreno (%s)", "Comprar terreno (%s)", "Buy lot (%s)"),
         ("tvilas.dialog.lot_here", "Você está no terreno de %s.", "Estás no terreno de %s.", "You are on %s's lot."),
         ("tvilas.dialog.lot_info", "Ver este terreno", "Ver este terreno", "View this lot"),
         ("tvilas.dialog.friend_hint", "Amigos no seu terreno: /vila terreno amigo adicionar <jogador>",

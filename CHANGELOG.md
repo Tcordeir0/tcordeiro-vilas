@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1 — 14/11/2026 — botões
+
+- Textos dos botões que ficavam cortados encurtados nas 3 línguas: «Comprar terreno (%s)», «Contratar 1 dia (%s)», «Correio devolvido (%s)».
+
 ## 0.6.0 — 14/11/2026
 
 **A vila lembra-se, vota melhor e enfrenta crises** — tudo só nos aldeões do território de uma Mesa; nada cria dinheiro; tetos em tudo o
