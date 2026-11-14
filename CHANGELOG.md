@@ -82,10 +82,15 @@ que paga, dá itens, dá descontos ou dá reputação; LOD, prazo e plano B como
   («Salvo por Talys», «Amigo de Talys»).
 - As crises pagam como as missões: primeiro do fundo das missões, depois da tesouraria, com os mesmos tetos.
 - A reconstrução volta a ligar as cercas, paredes e painéis de vidro à volta de cada bloco reposto.
-- Revisão de segurança: (1) um fogo com origem de jogador (um jogador a 16 blocos quando nasce, num terreno, perto de um dispensador
-  ou de lava, ou espalhado de um fogo destes) fica marcado no mundo (sobrevive a reinícios) e apagá-lo não paga nada; o «quem
-  acendeu» e o pagamento usam a mesma procura de vila; (2) numa explosão, os blocos registados para a reconstrução saem antes de a
-  explosão os processar, sem largar item (o vanilla junta os itens de várias posições, por isso filtrar ao largar não chegava).
+- Revisão de segurança:
+  - só paga a quem apaga um fogo de causa NATURAL (um raio sem jogador, a bola de fogo ou a explosão de um monstro, ou o espalhar de
+    um destes), fora dos terrenos e sem nenhum jogador a 16 blocos quando nasceu; a causa vem dos mixins (fogo a espalhar-se, raio,
+    bola de fogo, explosão) e tudo o resto (isqueiro, carga de fogo, dispensador, lava, projétil de jogador, comandos) não paga. A lista
+    dos fogos que pagam fica guardada no mundo, tira os que se apagam e, cheia, falha fechada (os novos não pagam). O «quem acendeu»
+    e o pagamento usam a mesma procura de vila;
+  - numa explosão, os blocos registados para a reconstrução (e a outra metade das portas e camas) saem antes de a explosão os
+    processar, de cima para baixo, sem largar item nem avisar os vizinhos (o vanilla junta os itens de várias posições, por isso
+    filtrar ao largar não chegava; tochas, portas e camas apoiadas também não caem como item).
 - Pacote `tvilas_animacoes`: o gesto do luto (10) também no pacote; `sh texturas/montar_pack.sh` volta a gerar o .zip.
 - Guia: 126 páginas no separador Guias; o livro escrito continua com 100 (as primeiras 98, os comandos e «E o resto?»).
 - Config nova: `rebuild`, `rebuild_max_blocks`, `rebuild_radius`, `crises`, `crisis_night_monsters`, `funerals`, `villager_aging`,

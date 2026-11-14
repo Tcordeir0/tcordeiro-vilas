@@ -249,7 +249,7 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 				return;
 			}
 			populate(ctx);
-			String[] scenes = {"rescue", "chronicle", "project", "election"};
+			String[] scenes = {"rescue", "chronicle", "project", "election", "crisis", "rebuild", "funeral"};
 			String only = System.getenv("VILAS060_SCENES");
 			if (only != null && !only.isBlank()) scenes = only.split(",");
 			for (String sc : scenes) {
@@ -699,6 +699,101 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 					shot(ctx, "13_banca_propria_com_nome");
 				}
 				Market.forceActive = null;
+			}
+			case "crisis" -> {
+				sp.getServer().runCommand("time set 6000");
+				String at = sp.getServer().computeOnServer(s -> {
+					ServerLevel l = s.overworld();
+					Village v = village(s);
+					BlockPos o = open(l, BlockPos.containing(spot(s, "plaza")), 8, 24);
+					l.setBlock(o, Blocks.OAK_PLANKS.defaultBlockState(), 3);
+					l.setBlock(o.east(), Blocks.OAK_PLANKS.defaultBlockState(), 3);
+					com.tcordeiro.vilas.life.crisis.Crises.begin(com.tcordeiro.vilas.life.crisis.Crises.Cause.NATURAL, null);
+					l.setBlock(o.above(), Blocks.FIRE.defaultBlockState(), 3);
+					l.setBlock(o.east().above(), Blocks.FIRE.defaultBlockState(), 3);
+					com.tcordeiro.vilas.life.crisis.Crises.end();
+					for (int k = 0; k < 2; k++) spawn(l, o.offset(-3 + k * 6, 0, 3), VillagerProfession.FARMER, false);
+					Life.relist(v);
+					com.tcordeiro.vilas.life.crisis.Crises.onBurn(l, o.north(), Blocks.OAK_PLANKS.defaultBlockState());
+					return str(Vec3.atBottomCenterOf(o));
+				});
+				Vec3 c = pos(at);
+				camAround(ctx, c.add(0.5, 1.2, 1.5), 4.5, 2.0, 10);
+				filmEvery(ctx, "04_crise_incendio", 100, 2, null);
+				log("crise: " + sp.getServer().computeOnServer(s -> {
+					var d = com.tcordeiro.vilas.life.crisis.Crises.data(village(s));
+					return "ativas " + d.crises.size() + (d.active("fire") != null ? " (incêndio: apagar " + d.active("fire").goal + ")" : "");
+				}));
+				boardBoth(ctx, "14_quadro_crise");
+				sp.getServer().runOnServer(s -> {
+					for (BlockPos q : BlockPos.betweenClosed(BlockPos.containing(c).offset(-3, -1, -3), BlockPos.containing(c).offset(3, 3, 3)))
+						if (s.overworld().getBlockState(q).is(net.minecraft.tags.BlockTags.FIRE)) s.overworld().setBlock(q, Blocks.AIR.defaultBlockState(), 3);
+				});
+			}
+			case "rebuild" -> {
+				sp.getServer().runCommand("time set 6000");
+				String at = sp.getServer().computeOnServer(s -> {
+					ServerLevel l = s.overworld();
+					BlockPos o = open(l, BlockPos.containing(spot(s, "plaza")), 10, 30);
+					for (int x = -2; x <= 2; x++)
+						for (int y = 0; y <= 2; y++) l.setBlock(o.offset(x, y, 2), (y == 1 && x == 0 ? Blocks.GLASS_PANE : Blocks.COBBLESTONE).defaultBlockState(), 3);
+					for (int x = -2; x <= 2; x++) l.setBlock(o.offset(x, 0, -2), Blocks.OAK_FENCE.defaultBlockState(), 3);
+					return str(Vec3.atBottomCenterOf(o));
+				});
+				Vec3 c = pos(at);
+				look(ctx, c.add(0, 4.5, -7.5), c.add(0, 1, 0.5), 10);
+				filmEvery(ctx, "05_creeper_e_reconstrucao", 160, 3, i -> {
+					if (i == 10) sp.getServer().runOnServer(s -> {
+						var cr = EntityTypes.CREEPER.create(s.overworld(), EntitySpawnReason.MOB_SUMMONED);
+						cr.snapTo(c.x, c.y, c.z + 1, 0, 0);
+						s.overworld().explode(cr, c.x, c.y + 0.5, c.z + 1, 2.2f, net.minecraft.world.level.Level.ExplosionInteraction.MOB);
+					});
+					if (i == 40) sp.getServer().runOnServer(s -> {
+						Village v = village(s);
+						var d = com.tcordeiro.vilas.life.crisis.Crises.data(v);
+						com.tcordeiro.vilas.life.crisis.Rebuild.tick(s.overworld(), v, d, false, d.lastBroken + com.tcordeiro.vilas.life.crisis.CrisisRules.CALM_TICKS);
+					});
+				});
+				String r = sp.getServer().computeOnServer(s -> {
+					Village v = village(s);
+					int items = s.overworld().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, box(BlockPos.containing(c), 8)).size();
+					for (int n = 0; n < 4 && !v.extra.projects.isEmpty(); n++) com.tcordeiro.vilas.build.Builders.overnight(s.overworld(), v);
+					return "itens no chão " + items + "; reconstruídos " + com.tcordeiro.vilas.life.crisis.Rebuild.recordedCount + " registados no total; obras " + v.extra.projects.size();
+				});
+				log("reconstrução: " + r);
+				ctx.waitTicks(10);
+				shot(ctx, "15_reconstruido");
+			}
+			case "funeral" -> {
+				sp.getServer().runCommand("time set 9000");
+				String at = sp.getServer().computeOnServer(s -> {
+					ServerLevel l = s.overworld();
+					Village v = village(s);
+					BlockPos o = open(l, BlockPos.containing(spot(s, "plaza")), 3, 12);
+					Villager dead = spawn(l, o, VillagerProfession.FISHERMAN, false);
+					Villager friend = spawn(l, o.offset(2, 0, 1), VillagerProfession.FARMER, false);
+					Life.relist(v);
+					v.civic.life.setOpinion(dead.getUUID(), friend.getUUID(), 40);
+					if (savedVillager != null) com.tcordeiro.vilas.life.memory.Memories.remember(v, dead.getUUID(), com.tcordeiro.vilas.life.memory.Memories.SAVED,
+							player(s).getUUID(), player(s).getGameProfile().name(), com.tcordeiro.vilas.village.VillageEconomy.day(l));
+					dead.hurtServer(l, l.damageSources().generic(), 1000);
+					var d = com.tcordeiro.vilas.life.crisis.Crises.data(v);
+					if (d.deaths.isEmpty()) return null;
+					var x = d.deaths.get(d.deaths.size() - 1);
+					var y = new com.tcordeiro.vilas.life.crisis.CrisisData.Death(x.villager, x.name, x.profession, x.days, x.day - 1, x.cause);
+					y.friends.addAll(x.friends);
+					d.deaths.set(d.deaths.size() - 1, y);
+					com.tcordeiro.vilas.life.crisis.Funeral.forceTime = com.tcordeiro.vilas.life.crisis.CrisisRules.FUNERAL_TIME;
+					com.tcordeiro.vilas.life.crisis.Crises.tick(l, v);
+					com.tcordeiro.vilas.life.crisis.Funeral.forceTime = null;
+					return y.grave == Long.MIN_VALUE ? "semcampa" : y.grave + "|" + friend.getUUID();
+				});
+				log("funeral: " + at);
+				if (at == null || at.startsWith("semcampa")) return;
+				BlockPos grave = BlockPos.of(Long.parseLong(at.split("\\|")[0]));
+				camAround(ctx, Vec3.atCenterOf(grave).add(0, 0.6, 0), 3.6, 1.0, 20);
+				filmEvery(ctx, "06_funeral_e_luto", 120, 2, null);
+				shot(ctx, "16_campa_e_epitafio");
 			}
 			default -> {}
 		}
