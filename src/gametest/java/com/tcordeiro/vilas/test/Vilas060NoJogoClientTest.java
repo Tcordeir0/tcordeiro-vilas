@@ -537,7 +537,7 @@ public class Vilas060NoJogoClientTest implements FabricClientGameTest {
 					ServerLevel l = s.overworld();
 					Village v = village(s);
 					com.tcordeiro.vilas.life.Talk.fact(l, v, null, "festa");
-					com.tcordeiro.vilas.life.Talk.fact(l, v, null, "level", "#tvilas.level.1");
+					com.tcordeiro.vilas.life.Talk.fact(l, v, null, "level", "#tvilas.level.vila");
 				});
 				screen(ctx, "04_cronica_da_vila", s -> com.tcordeiro.vilas.life.memory.Chronicle.open(player(s), village(s)));
 				String b = sp.getServer().computeOnServer(s -> {
