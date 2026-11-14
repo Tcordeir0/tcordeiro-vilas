@@ -67,6 +67,9 @@ public final class VilaCommand {
 				.then(Commands.literal("eleicao").executes(VilaCommand::election))
 				.then(Commands.literal("votar").then(Commands.argument("n", IntegerArgumentType.integer(1, 3)).executes(VilaCommand::vote)))
 				.then(Commands.literal("reuniao").executes(VilaCommand::meeting))
+				// 0.6.0: crónica da vila e obra comunitária
+				.then(Commands.literal("cronica").executes(c -> chronicle(c, false)).then(Commands.literal("livro").executes(c -> chronicle(c, true))))
+				.then(Commands.literal("obra").then(Commands.literal("doar").executes(VilaCommand::donate)))
 				.then(Commands.literal("terreno")
 						.then(Commands.literal("comprar").executes(c -> result(c, VillageManager.buyLot(c.getSource().getPlayerOrException()))))
 						.then(Commands.literal("info").executes(VilaCommand::lotInfo))
@@ -126,6 +129,22 @@ public final class VilaCommand {
 		Village v = here(p);
 		if (v == null) return 0;
 		return result(c, com.tcordeiro.vilas.life.Life.callMeeting(p, v));
+	}
+
+	private static int chronicle(CommandContext<CommandSourceStack> c, boolean book) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		if (book) return result(c, com.tcordeiro.vilas.life.memory.Chronicle.book(p, v));
+		com.tcordeiro.vilas.life.memory.Chronicle.open(p, v);
+		return 1;
+	}
+
+	private static int donate(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		ServerPlayer p = c.getSource().getPlayerOrException();
+		Village v = here(p);
+		if (v == null) return 0;
+		return result(c, com.tcordeiro.vilas.life.projects.Projects.donate(p, v));
 	}
 
 	private static int election(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

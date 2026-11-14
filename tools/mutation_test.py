@@ -431,6 +431,25 @@ MUTATIONS = [
      "if (crop != null && crop.asLong() == h.tryPos && now - h.trySince > HARVEST_TIMEOUT) {", "if (false) {", "runGametest"),
     ("0.5.0 «!»: volta a mexer no nome", J + "village/VillagerRequests.java",
      "boolean nameTag = VilasConfig.get().request_name_tag;", "boolean nameTag = true;", "runGametest"),
+    # 0.6.0 — memória, resgate e cartas, obras com doações
+    ("0.6.0 memória: sem teto de recordações", J + "logic/LoreRules.java",
+     "if (now.length < MEMORY_SLOTS) return -1;", "if (true) return -1;", "test"),
+    ("0.6.0 resgate: reputação sem teto por dia (regra)", J + "logic/LoreRules.java",
+     "return lastRewardDay != today;", "return true;", "test"),
+    ("0.6.0 resgate: reputação sem teto por dia (no jogo)", J + "life/memory/Rescue.java",
+     "if (LoreRules.mayRewardSave(l.saved.getOrDefault(k, Long.MIN_VALUE), day)) {", "if (true) {", "runGametest"),
+    ("0.6.0 cartas: presente sem teto por semana", J + "logic/LoreRules.java",
+     "return lastLetterWeek != week;", "return true;", "runGametest"),
+    ("0.6.0 cartas: o presente pode ser dinheiro", J + "life/memory/Rescue.java",
+     "if (!s.isEmpty() && !s.is(Items.EMERALD)) return s;", "if (true) return new ItemStack(Items.EMERALD);", "runGametest"),
+    ("0.6.0 doações: tira mais do que falta", J + "logic/LoreRules.java",
+     "return Math.max(0, Math.min(offered, needed - have));", "return Math.max(0, offered);", "runGametest"),
+    ("0.6.0 doações: reputação sem teto", J + "logic/LoreRules.java",
+     "return Math.max(0, Math.min(rep, DONATION_REP_DAY - repToday));", "return rep;", "test"),
+    ("0.6.0 obras: partem blocos de alguém", J + "build/Ground.java",
+     "return WallRules.mayReplace(s.isAir(), grassOrFlower(s), s.is(Blocks.SNOW), inLot);", "return true;", "runGametest"),
+    ("0.6.0 crónica: o livro sai sem gastar um livro", J + "life/memory/Chronicle.java",
+     "VillageManager.take(p.getInventory(), Items.BOOK, 1);", "", "runGametest"),
 ]
 
 

@@ -91,6 +91,9 @@ public final class Resident {
 		int given = v.civic.life.gifts.getOrDefault(giftKey(p.getUUID(), vi.getUUID(), LifeRules.week(VillageEconomy.day(level))), 0);
 		body.add(new PlainMessage(Component.translatable("tvilas.resident.gifts", given, LifeRules.GIFTS_PER_VILLAGER_WEEK).withStyle(ChatFormatting.GRAY), 300));
 		body.add(new PlainMessage(Component.translatable("tvilas.resident.hint." + (HINTS.contains(prof) ? prof : "none")).withStyle(ChatFormatting.GRAY), 300));
+		// 0.6.0: o que ele se lembra de ti (gerado agora a partir da recordação)
+		var mem = com.tcordeiro.vilas.life.memory.Memories.about(v, vi.getUUID(), p.getUUID());
+		if (mem != null) body.add(new PlainMessage(Component.literal("💭 ").append(com.tcordeiro.vilas.life.memory.Memories.line(mem)).withStyle(ChatFormatting.LIGHT_PURPLE), 300));
 		body.add(new PlainMessage(Component.translatable("tvilas.resident.howto").withStyle(ChatFormatting.DARK_GRAY), 300));
 		List<ActionButton> buttons = new ArrayList<>();
 		String id = vi.getUUID().toString();
@@ -199,6 +202,8 @@ public final class Resident {
 		List<LifeData.Fact> facts = Talk.known(v, vi.getUUID(), day);
 		Component line = facts.isEmpty() || level.getRandom().nextInt(4) == 0 ? Talk.smallTalk(level, vi, level.getRandom())
 				: Talk.factLine(facts.get(level.getRandom().nextInt(facts.size())));
+		var mem = com.tcordeiro.vilas.life.memory.Memories.about(v, vi.getUUID(), p.getUUID()); // 0.6.0: às vezes fala do que se lembra
+		if (mem != null && level.getRandom().nextInt(2) == 0) line = com.tcordeiro.vilas.life.memory.Memories.line(mem);
 		if (LifeRules.villagerTier(vi.getPlayerReputation(p)) == LifeRules.TIER_DISTRUST) {
 			line = Component.translatable("tvilas.talk.distrust");
 			Gestures.no(vi);
@@ -306,6 +311,8 @@ public final class Resident {
 		Balloons.show(vi, taste == Taste.LOVED ? Balloons.HEART : taste == Taste.LIKED ? Balloons.NOTE : Balloons.TALK, 60);
 		if (taste != Taste.NEUTRAL) level.sendParticles(ParticleTypes.HEART, vi.getX(), vi.getY() + 2.1, vi.getZ(), taste == Taste.LOVED ? 5 : 2, 0.3, 0.2, 0.3, 0);
 		Talk.fact(level, v, vi.blockPosition(), "gift", p.getGameProfile().name(), prof);
+		if (taste != Taste.NEUTRAL) com.tcordeiro.vilas.life.memory.Memories.remember(level, v, vi, com.tcordeiro.vilas.life.memory.Memories.GIFT, p.getUUID(),
+				p.getGameProfile().name()); // 0.6.0
 		p.sendSystemMessage(Component.literal(taste == Taste.LOVED ? "♥ " : "✔ ").append(Component.translatable("tvilas.gift." + taste.name().toLowerCase(), name, rep)),
 				true);
 		VillageData.get(level).changed();

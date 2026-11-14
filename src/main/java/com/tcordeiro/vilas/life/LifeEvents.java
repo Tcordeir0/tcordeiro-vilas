@@ -33,12 +33,17 @@ public final class LifeEvents {
 			if (by == null) return;
 			Village v = VillageManager.villageAt(level, vi.blockPosition());
 			if (v == null || v.alarm.on) return;
+			if (by instanceof Enemy) com.tcordeiro.vilas.life.memory.Rescue.hit(by, vi, level.getGameTime()); // 0.6.0: «você me salvou»
 			if (by instanceof Enemy) Care.panic(level, v, Life.places(level, v), vi, by);
 			else if (by instanceof ServerPlayer p) hit(level, v, vi, p);
 		});
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
 			if (entity instanceof Villager vi) Life.cleanup(vi);
 			return true;
+		});
+		// 0.6.0: quem mata o monstro que atacava um aldeão salvou-o
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (VilasConfig.get().villager_life) com.tcordeiro.vilas.life.memory.Rescue.onDeath(entity, source);
 		});
 		ServerEntityEvents.ENTITY_LOAD.register((e, level) -> {
 			if (e instanceof Villager vi && Props.holding(vi)) Props.clear(vi);
@@ -56,5 +61,6 @@ public final class LifeEvents {
 				Balloons.show(o, Balloons.ANGRY, 40);
 			}
 		Talk.fact(level, v, victim.blockPosition(), "hit", p.getGameProfile().name());
+		com.tcordeiro.vilas.life.memory.Memories.remember(level, v, victim, com.tcordeiro.vilas.life.memory.Memories.HIT, p.getUUID(), p.getGameProfile().name()); // 0.6.0
 	}
 }

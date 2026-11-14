@@ -701,6 +701,7 @@ public final class Life {
 		if (v.extra.merchantNext == day + 1) Festa.schedule(level, v, day + 1, "merchant");
 		Market.daily(level, v, day); // 0.5.0: mercado semanal (aviso na véspera)
 		Election.daily(level, v, day); // 0.5.0: eleições (contar os votos de ontem, abrir as de hoje)
+		com.tcordeiro.vilas.life.projects.Projects.daily(level, v, day); // 0.6.0: obra comunitária com doações
 		VillageData.get(level).changed();
 	}
 

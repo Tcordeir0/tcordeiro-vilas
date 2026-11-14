@@ -169,6 +169,7 @@ public final class Builders {
 			case LIGHTING -> v.extra.poles = LightingWork.finish(level, v, p);
 			case TOWN_HALL, MARKET, TAVERN, PLAZA -> CivicWork.finish(level, v, p);
 			case HOUSE -> com.tcordeiro.vilas.village.Growth.step(level, v); // a casa tem cama: chega o morador
+			case COMMUNITY -> com.tcordeiro.vilas.life.projects.Projects.finish(level, v, p); // 0.6.0: a placa com os doadores
 		}
 		VillageNews.announce(level, v, VillageNews.DONE, "tvilas.news.done", Component.translatable(p.kind.key()));
 		if (v.extra.projects.isEmpty()) dismiss(level, v);

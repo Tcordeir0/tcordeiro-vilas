@@ -104,8 +104,9 @@ public final class LifeData {
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("last_seen", Map.of()).forGetter(d -> d.lastSeen),
 			Codec.LONG.optionalFieldOf("last_chime", -1L).forGetter(d -> d.lastChime),
 			Codec.LONG.optionalFieldOf("meeting_day", -1L).forGetter(d -> d.meetingDay),
-			TownData.CODEC.optionalFieldOf("town").forGetter(d -> java.util.Optional.of(d.town)))
-			.apply(i, (fa, fc, op, gi, gr, th, td, ap, fe, gu, gd, ls, lc, md, tw) -> {
+			TownData.CODEC.optionalFieldOf("town").forGetter(d -> java.util.Optional.of(d.town)),
+			com.tcordeiro.vilas.life.memory.Lore.CODEC.optionalFieldOf("lore").forGetter(d -> java.util.Optional.of(d.lore))) // 0.6.0 (16.º campo: o máximo)
+			.apply(i, (fa, fc, op, gi, gr, th, td, ap, fe, gu, gd, ls, lc, md, tw, lo) -> {
 				LifeData d = new LifeData();
 				for (Fact f : fa) if (d.facts.size() < MAX_FACTS) d.facts.add(f);
 				d.factCounter = fc;
@@ -122,6 +123,7 @@ public final class LifeData {
 				d.lastChime = lc;
 				d.meetingDay = md;
 				d.town = tw.orElseGet(TownData::new);
+				d.lore = lo.orElseGet(com.tcordeiro.vilas.life.memory.Lore::new);
 				return d;
 			}));
 
@@ -155,6 +157,8 @@ public final class LifeData {
 	public long meetingDay = -1;
 	/** 0.5.0: correio, mercado, eleições, ajudantes, missão da festa, peixe. */
 	public TownData town = new TownData();
+	/** 0.6.0: memória dos aldeões, crónica da vila, cartas dos aldeões e obra comunitária. */
+	public com.tcordeiro.vilas.life.memory.Lore lore = new com.tcordeiro.vilas.life.memory.Lore();
 
 	public static String pair(UUID a, UUID b) {
 		return a.compareTo(b) < 0 ? a + "|" + b : b + "|" + a;

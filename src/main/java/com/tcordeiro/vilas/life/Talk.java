@@ -40,6 +40,7 @@ public final class Talk {
 		BlockPos at = where != null ? where : v.center;
 		for (Villager w : Life.villagers(level, v))
 			if (w.blockPosition().closerThan(at, WITNESS_RADIUS) || com.tcordeiro.vilas.village.VillageManager.isMayor(w)) f.learn(w.getUUID());
+		com.tcordeiro.vilas.life.memory.Chronicle.fromTalk(level, v, key, args); // 0.6.0: os factos importantes ficam na crónica
 		VillageData.get(level).changed();
 		return f;
 	}

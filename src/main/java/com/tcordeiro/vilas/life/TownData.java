@@ -33,12 +33,14 @@ public final class TownData {
 				ITEMS.optionalFieldOf("items", List.of()).forGetter(p -> p.items),
 				Codec.INT.optionalFieldOf("tries", 0).forGetter(p -> p.tries),
 				Codec.BOOL.optionalFieldOf("returned", false).forGetter(p -> p.returned),
-				Codec.LONG.optionalFieldOf("day", 0L).forGetter(p -> p.day))
-				.apply(i, (id, f, fn, t, tn, b, it, tr, re, d) -> {
+				Codec.LONG.optionalFieldOf("day", 0L).forGetter(p -> p.day),
+				Codec.BOOL.optionalFieldOf("npc", false).forGetter(p -> p.npc)) // 0.6.0: carta de um aldeão
+				.apply(i, (id, f, fn, t, tn, b, it, tr, re, d, npc) -> {
 					Parcel p = new Parcel(id, f, fn, t, tn, b, d);
 					for (ItemStack s : it) if (p.items.size() < com.tcordeiro.vilas.logic.TownRules.MAIL_SLOTS && !s.isEmpty()) p.items.add(s);
 					p.tries = tr;
 					p.returned = re;
+					p.npc = npc;
 					return p;
 				}));
 
@@ -48,6 +50,8 @@ public final class TownData {
 		public final List<ItemStack> items = new ArrayList<>();
 		public int tries;
 		public boolean returned;
+		/** 0.6.0: carta de um aldeão (o «from» é o aldeão): se não se entregar, perde-se — os itens nunca foram de um jogador. */
+		public boolean npc;
 
 		public Parcel(long id, UUID from, String fromName, UUID to, String toName, long box, long day) {
 			this.id = id;

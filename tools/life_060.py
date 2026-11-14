@@ -1,0 +1,96 @@
+"""Vilas 0.6.0 — textos (pt_br, pt_pt, en) da memória dos aldeões, da crónica, do «você me salvou» (cartas) e das obras
+comunitárias com doações, e as páginas novas do guia. Importado por gen_data.py."""
+
+KINDS = {
+    "fountain": ("Chafariz", "Chafariz", "Fountain"),
+    "bandstand": ("Coreto", "Coreto", "Bandstand"),
+    "lighthouse": ("Farol", "Farol", "Lighthouse"),
+    "bridge": ("Ponte", "Ponte", "Bridge"),
+}
+
+T_060 = [
+    # memória (frases geradas ao abrir: %1$s = nome, %2$s = dia)
+    ("tvilas.memory.saved", "Nunca vou esquecer o dia %2$s, quando %1$s me salvou!", "Nunca vou esquecer o dia %2$s, quando %1$s me salvou!",
+     "I'll never forget day %2$s, when %1$s saved me!"),
+    ("tvilas.memory.gift", "%1$s me deu um presente no dia %2$s. Que gentileza!", "%1$s deu-me um presente no dia %2$s. Que simpatia!",
+     "%1$s gave me a gift on day %2$s. How kind!"),
+    ("tvilas.memory.hit", "%1$s me bateu no dia %2$s. Não esqueço.", "%1$s bateu-me no dia %2$s. Não me esqueço.", "%1$s hit me on day %2$s. I won't forget."),
+    ("tvilas.memory.letter", "Escrevi uma carta para %1$s no dia %2$s.", "Escrevi uma carta a %1$s no dia %2$s.", "I wrote %1$s a letter on day %2$s."),
+    ("tvilas.memory.donated", "%1$s ajudou a nossa obra no dia %2$s.", "%1$s ajudou a nossa obra no dia %2$s.", "%1$s helped our project on day %2$s."),
+    # crónica
+    ("tvilas.chronicle.title", "Crônica da vila", "Crónica da povoação", "Village chronicle"),
+    ("tvilas.chronicle.day", "Dia %s:", "Dia %s:", "Day %s:"),
+    ("tvilas.chronicle.empty", "A crônica ainda está em branco.", "A crónica ainda está em branco.", "The chronicle is still blank."),
+    ("tvilas.chronicle.count", "%s acontecimentos registrados.", "%s acontecimentos registados.", "%s events recorded."),
+    ("tvilas.chronicle.book_button", "Livro da vila (custa 1 livro)", "Livro da povoação (custa 1 livro)", "Village book (costs 1 book)"),
+    ("tvilas.chronicle.book", "Livro da Vila", "Livro da Povoação", "Village Book"),
+    ("tvilas.chronicle.need_book", "Traga um livro: a crônica é copiada nele.", "Traz um livro: a crónica é copiada para ele.",
+     "Bring a book: the chronicle is copied into it."),
+    ("tvilas.chronicle.book_given", "📖 A crônica foi copiada no livro.", "📖 A crónica foi copiada para o livro.", "📖 The chronicle was copied into the book."),
+    ("tvilas.chronicle.level", "a vila virou %s.", "a povoação passou a %s.", "the village became a %s."),
+    ("tvilas.chronicle.elected", "%s ganhou as eleições (%s).", "%s ganhou as eleições (%s).", "%s won the election (%s)."),
+    ("tvilas.chronicle.festa", "o Prefeito marcou uma festa na Praça.", "o Presidente marcou uma festa na Praça.", "the Mayor called a party at the Plaza."),
+    ("tvilas.chronicle.news.done", "acabou a obra: %s.", "acabou a obra: %s.", "a project was finished: %s."),
+    ("tvilas.chronicle.news.newcomer", "chegou um morador novo.", "chegou um morador novo.", "a new resident arrived."),
+    ("tvilas.chronicle.saved", "%s salvou o %s de um monstro.", "%s salvou o %s de um monstro.", "%s saved the %s from a monster."),
+    ("tvilas.chronicle.project_proposed", "a vila propôs uma obra: %s.", "a povoação propôs uma obra: %s.", "the village proposed a project: %s."),
+    ("tvilas.chronicle.project_started", "com as doações, começou a obra: %s.", "com as doações, começou a obra: %s.", "with the donations, work began: %s."),
+    ("tvilas.chronicle.project_done", "ficou pronta a obra %s, com a ajuda de %s.", "ficou pronta a obra %s, com a ajuda de %s.", "the %s was finished, thanks to %s."),
+    # «você me salvou»
+    ("tvilas.rescue.thanks", "Obrigado, %s! Você me salvou!", "Obrigado, %s! Salvaste-me!", "Thank you, %s! You saved me!"),
+    ("tvilas.rescue.letter_coming", "%s vai mandar uma carta pelo Carteiro.", "%s vai mandar-te uma carta pelo Carteiro.", "%s will send you a letter by the Postman."),
+    ("tvilas.rescue.gift", "%s agradece por você o ter salvado e deu um presente.", "%s agradece por o teres salvado e deu-te um presente.",
+     "%s thanks you for saving them and gave you a gift."),
+    ("tvilas.rescue.letter_name", "Carta de %s", "Carta de %s", "Letter from %s"),
+    ("tvilas.rescue.letter_text", "Querido(a) %s,\n\nno dia %s você me salvou de um monstro. Nunca vou esquecer.\n\nAqui vai um presentinho.\n\nCom carinho,\n%s",
+     "Querido(a) %s,\n\nno dia %s salvaste-me de um monstro. Nunca me vou esquecer.\n\nAqui vai um presentinho.\n\nCom carinho,\n%s",
+     "Dear %s,\n\non day %s you saved me from a monster. I'll never forget it.\n\nHere's a little gift.\n\nWith love,\n%s"),
+    # obras comunitárias
+    ("tvilas.project060.proposed", "A vila quer construir: %s. Doe materiais no quadro!", "A povoação quer construir: %s. Doa materiais no quadro!",
+     "The village wants to build: %s. Donate materials on the board!"),
+    ("tvilas.project060.none", "Não há nenhuma obra recebendo doações.", "Não há nenhuma obra a receber doações.", "No project is taking donations."),
+    ("tvilas.project060.nothing", "Você não tem nenhum dos materiais que faltam.", "Não tens nenhum dos materiais que faltam.", "You have none of the missing materials."),
+    ("tvilas.project060.donated", "🧱 Doou %s itens para a obra (+%s de reputação).", "🧱 Doaste %s itens para a obra (+%s de reputação).",
+     "🧱 You donated %s items to the project (+%s reputation)."),
+    ("tvilas.project060.done", "Ficou pronta a obra %s! Obrigado: %s.", "Ficou pronta a obra %s! Obrigado: %s.", "The %s is finished! Thank you: %s."),
+    ("tvilas.project060.more", "e mais %s", "e mais %s", "and %s more"),
+    ("tvilas.project060.board", "🧱 Obra da vila: %s", "🧱 Obra da povoação: %s", "🧱 Village project: %s"),
+    ("tvilas.project060.building", " — em obra!", " — em obra!", " — being built!"),
+    ("tvilas.dialog.donate", "🧱 Doar materiais", "🧱 Doar materiais", "🧱 Donate materials"),
+    ("tvilas.dialog.chronicle", "📜 Crônica", "📜 Crónica", "📜 Chronicle"),
+    ("tvilas.project.community", "Obra comunitária", "Obra comunitária", "Community project"),
+] + [(f"tvilas.project060.{k}", *v) for k, v in KINDS.items()]
+
+
+def pages(P):
+    """As páginas 0.6.0 do guia (memória, crónica, resgate e cartas, obras com doações): 1 assunto por página, sem fórmulas."""
+    return [
+        P("v060_memory", None,
+          ("Memória", "Cada aldeão guarda umas 6 recordações: quem o salvou, quem lhe deu um presente, quem lhe bateu.\n\nNo menu do morador (Shift+clique) aparece o que ele lembra de você."),
+          ("Memória", "Cada aldeão guarda umas 6 recordações: quem o salvou, quem lhe deu um presente, quem lhe bateu.\n\nNo menu do morador (Shift+clique) aparece o que ele se lembra de ti."),
+          ("Villager memory", "Each villager keeps about 6 memories: who saved them, who gave a gift, who hit them.\n\nThe resident menu (Shift+click) shows what they remember about you.")),
+        P("v060_chronicle", None,
+          ("Crônica", "No quadro, «Crônica» mostra o que aconteceu: níveis, eleições, festas, obras, resgates.\n\nCom um livro no inventário você leva uma cópia: o Livro da Vila."),
+          ("Crónica", "No quadro, «Crónica» mostra o que aconteceu: níveis, eleições, festas, obras, resgates.\n\nCom um livro no inventário levas uma cópia: o Livro da Povoação."),
+          ("Village chronicle", "On the board, «Chronicle» shows what happened: levels, elections, parties, projects, rescues.\n\nWith a book in your inventory you get a copy: the Village Book.")),
+        P("v060_rescue", None,
+          ("Você me salvou", "Mate o monstro que está atacando um aldeão: ele agradece, gosta mais de você e não esquece.\n\nA reputação vem uma vez por dia."),
+          ("Salvaste-me", "Mata o monstro que está a atacar um aldeão: ele agradece, gosta mais de ti e não se esquece.\n\nA reputação vem uma vez por dia."),
+          ("You saved me", "Kill the monster attacking a villager: they thank you, like you more and never forget.\n\nThe reputation comes once a day.")),
+        P("v060_letters", None,
+          ("Cartas", "Quem foi salvo manda uma carta com um presente da profissão. Com o Móveis, o Carteiro leva-a à caixa de correio do seu terreno.\n\nSem ele, chega na hora. Uma por semana."),
+          ("Cartas", "Quem foi salvo manda uma carta com um presente da profissão. Com o Móveis, o Carteiro leva-a à caixa do correio do teu terreno.\n\nSem ele, chega logo. Uma por semana."),
+          ("Villager letters", "A rescued villager sends a letter with a gift from their trade. With Móveis, the Postman takes it to your lot's mailbox.\n\nWithout it, it arrives at once. One per week.")),
+        P("v060_projects", None,
+          ("Obras", "De vez em quando a vila propõe uma obra: chafariz, coreto, farol ou ponte.\n\nO quadro mostra o que falta."),
+          ("Obras", "De vez em quando a povoação propõe uma obra: chafariz, coreto, farol ou ponte.\n\nO quadro mostra o que falta."),
+          ("Village projects", "Now and then the village proposes a project: fountain, bandstand, lighthouse or bridge.\n\nThe board shows what's missing.")),
+        P("v060_donate", None,
+          ("Doar materiais", "No quadro, «Doar materiais» tira do inventário só o que ainda falta.\n\nDoar dá reputação, com teto por dia. Nunca dá dinheiro."),
+          ("Doar materiais", "No quadro, «Doar materiais» tira do inventário só o que ainda falta.\n\nDoar dá reputação, com teto por dia. Nunca dá dinheiro."),
+          ("Donating", "On the board, «Donate materials» takes from your inventory only what's still missing.\n\nDonating gives reputation, capped per day. Never money.")),
+        P("v060_plaque", None,
+          ("A placa", "Com tudo doado, o Construtor faz a obra sem partir nada.\n\nNo fim fica uma placa com os nomes de quem mais ajudou."),
+          ("A placa", "Com tudo doado, o Construtor faz a obra sem partir nada.\n\nNo fim fica uma placa com os nomes de quem mais ajudou."),
+          ("The plaque", "Once everything is donated, the Builder makes it without breaking anything.\n\nThen a sign shows the names of the top donors.")),
+    ]

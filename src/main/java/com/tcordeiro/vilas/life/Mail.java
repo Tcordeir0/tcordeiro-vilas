@@ -325,6 +325,11 @@ public final class Mail {
 	/** A carta não se entregou ao fim de 3 tentativas: volta para quem a mandou (levanta-a no Carteiro). */
 	static void bounce(ServerLevel level, Village v, TownData.Parcel parcel) {
 		if (parcel.returned) return;
+		if (parcel.npc) { // 0.6.0: carta de um aldeão que não se entregou: sai da fila (nunca vai parar a um jogador que não a mandou)
+			v.civic.life.town.mail.remove(parcel);
+			VillageData.get(level).changed();
+			return;
+		}
 		parcel.returned = true;
 		returned++;
 		ServerPlayer from = level.getServer().getPlayerList().getPlayer(parcel.from);

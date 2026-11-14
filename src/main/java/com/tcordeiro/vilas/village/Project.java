@@ -22,7 +22,9 @@ public final class Project {
 		/** 0.3.0: os edifícios cívicos que faltam a uma vila antiga ({@link com.tcordeiro.vilas.build.CivicWork}). */
 		TOWN_HALL, MARKET, TAVERN, PLAZA,
 		/** 0.3.0: uma casa simples (sem cama livre, para o morador que o prestígio traz). */
-		HOUSE;
+		HOUSE,
+		/** 0.6.0: obra comunitária com doações (ponte, chafariz, farol, coreto). */
+		COMMUNITY;
 
 		/** 0.3.0 (M14): nomes desconhecidos dão erro ao ler (a obra é ignorada) em vez de rebentar o carregamento do mundo. */
 		public static final Codec<Kind> CODEC = Codec.STRING.comapFlatMap(s -> {

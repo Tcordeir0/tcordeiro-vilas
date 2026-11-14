@@ -120,6 +120,9 @@ public final class TownDialog {
 		if (town.activeHelpers() > 0)
 			body.add(new PlainMessage(Component.translatable("tvilas.dialog.helpers", town.activeHelpers(), com.tcordeiro.vilas.logic.TownRules.HELPERS_PER_VILLAGE)
 					.withStyle(ChatFormatting.GRAY), 300));
+		// 0.6.0: a obra comunitária (doações) e a crónica
+		var proj = life.lore.project;
+		if (proj != null) body.add(new PlainMessage(com.tcordeiro.vilas.life.projects.Projects.progress(proj).withStyle(ChatFormatting.DARK_AQUA), 300));
 		if (civic.mayorTaken) body.add(new PlainMessage(Component.translatable("tvilas.dialog.mayor_taken").withStyle(ChatFormatting.RED), 300));
 		List<ActionButton> buttons = new ArrayList<>();
 		for (int i = 0; i < v.missions.size(); i++) {
@@ -152,6 +155,9 @@ public final class TownDialog {
 					acc ? "/vila missao entregar 4" : "/vila missao aceitar 4"));
 		}
 		if (town.election.open(day0)) buttons.add(button(Component.translatable("tvilas.dialog.vote"), "/vila eleicao"));
+		if (proj != null && proj.state == com.tcordeiro.vilas.life.projects.Community.COLLECTING)
+			buttons.add(button(Component.translatable("tvilas.dialog.donate"), "/vila obra doar"));
+		buttons.add(button(Component.translatable("tvilas.dialog.chronicle"), "/vila cronica"));
 		if (myDebt > 0) buttons.add(button(Component.translatable("tvilas.dialog.pay_debt", VillageManager.money(myDebt)), "/vila divida pagar"));
 		if (v.extra.wall == com.tcordeiro.vilas.village.Village.Extra.WALL_BUILDING)
 			buttons.add(button(Component.translatable("tvilas.dialog.wall_cancel"), "/vila muralha cancelar"));
