@@ -124,13 +124,16 @@ public final class VillageEconomy {
 		charge(level, v, p.getUUID(), tax);
 		com.tcordeiro.vilas.life.Festa.onTrade(p, v, offer); // 0.4.0: reembolso da festa (da tesouraria)
 		com.tcordeiro.vilas.life.Market.onTrade(p, v, where, offer); // 0.5.0: reembolso nas bancas do mercado (da tesouraria)
+		com.tcordeiro.vilas.life.election.VoteBonus.onTrade(p, v, offer); // 0.6 eleições: −5 % do apoiador e extra VIP da festa (da tesouraria)
 	}
 
 	/** Venda entre jogadores (CubCoin) no território: 2 % do preço, pago pelo vendedor (que acabou de receber). */
 	public static void onPlayerSale(ServerLevel level, BlockPos where, UUID seller, long priceCents) {
 		Village v = VillageManager.villageAt(level, where);
 		if (v == null) return;
-		charge(level, v, seller, TreasuryRules.tradeTax(priceCents, taxRate(v).percent()));
+		long tax = TreasuryRules.tradeTax(priceCents, taxRate(v).percent());
+		tax = com.tcordeiro.vilas.life.election.VoteBonus.saleTax(level, v, where, seller, tax); // 0.6 eleições: banca própria no mercado
+		charge(level, v, seller, tax);
 	}
 
 	/** A taxa das trocas em vigor nesta vila (o Prefeito ajusta-a: {@link com.tcordeiro.vilas.logic.TaxRules}). */
@@ -312,7 +315,8 @@ public final class VillageEconomy {
 		if (v.civic.meta.real) // revisão de segurança: só numa vila de verdade
 			v.civic.missionFund = com.tcordeiro.vilas.logic.FundRules.topUp(v.civic.missionFund, days, cf.mission_fund_daily_cents, cf.mission_fund_cap_cents);
 		long perBed = VilasConfig.get().bed_tax_cents;
-		for (Lot lot : VillageManager.lotsOf(level, v)) charge(level, v, lot.owner, TreasuryRules.bedTax(bedsIn(level, lot), days, perBed));
+		for (Lot lot : VillageManager.lotsOf(level, v)) // 0.6 eleições: −20 % no terreno de quem votou em «imposto menor»
+			charge(level, v, lot.owner, com.tcordeiro.vilas.life.election.VoteBonus.lotTax(v, lot.owner, TreasuryRules.bedTax(bedsIn(level, lot), days, perBed)));
 		for (UUID who : new ArrayList<>(e.debts.keySet())) settle(level, v, who);
 		Debts.daily(level, v, day);
 		// a noite passou: o que ficou por construir aparece agora

@@ -558,6 +558,7 @@ public final class Life {
 			LifeData.putCapped(d.lastSeen, p.getUUID(), day);
 			VillageData.get(level).changed();
 		}
+		if (!v.civic.life.town.election.mandate.pending.isEmpty()) com.tcordeiro.vilas.life.election.VoteBonus.deliver(level, v, p); // 0.6 eleições: bolo e broche guardados
 		boolean armed = weapon(p.getMainHandItem());
 		boolean armored = p.getArmorValue() >= 15;
 		boolean thanked = false;

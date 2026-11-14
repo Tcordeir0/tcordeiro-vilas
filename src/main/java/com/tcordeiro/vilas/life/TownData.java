@@ -112,8 +112,9 @@ public final class TownData {
 				Codec.string(0, 48).optionalFieldOf("mayor_name", "").forGetter(e -> e.mayorName),
 				Codec.LONG.optionalFieldOf("last", -1L).forGetter(e -> e.last),
 				Codec.INT.optionalFieldOf("held", 0).forGetter(e -> e.held),
-				Codec.BOOL.optionalFieldOf("festa_done", false).forGetter(e -> e.festaDone))
-				.apply(i, (d, c, vo, p, mn, la, he, fd) -> {
+				Codec.BOOL.optionalFieldOf("festa_done", false).forGetter(e -> e.festaDone),
+				com.tcordeiro.vilas.life.election.Mandate.CODEC.optionalFieldOf("mandate").forGetter(e -> Optional.of(e.mandate))) // 0.6 eleições
+				.apply(i, (d, c, vo, p, mn, la, he, fd, md) -> {
 					Election e = new Election();
 					e.day = d;
 					for (Candidate x : c) if (e.candidates.size() < 3) e.candidates.add(x);
@@ -123,6 +124,7 @@ public final class TownData {
 					e.last = la;
 					e.held = he;
 					e.festaDone = fd;
+					e.mandate = md.orElseGet(com.tcordeiro.vilas.life.election.Mandate::new); // 0.6 eleições
 					return e;
 				}));
 
@@ -133,9 +135,12 @@ public final class TownData {
 		public int held;
 		/** A política «mais festas» já deu a sua festa extra neste mandato? */
 		public boolean festaDone;
+		/** 0.6 eleições: o mandato em vigor e os bónus do voto. */
+		public com.tcordeiro.vilas.life.election.Mandate mandate = new com.tcordeiro.vilas.life.election.Mandate();
 
+		/** A votação está aberta hoje? (0.6 eleições: dura {@link com.tcordeiro.vilas.life.election.VoteRules#VOTE_DAYS} dias) */
 		public boolean open(long today) {
-			return day == today && !candidates.isEmpty();
+			return com.tcordeiro.vilas.life.election.VoteRules.open(day, today) && !candidates.isEmpty();
 		}
 	}
 

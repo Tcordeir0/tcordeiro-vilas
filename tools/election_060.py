@@ -1,0 +1,62 @@
+"""Vilas 0.6 eleições — textos (pt_br, pt_pt, en) dos bónus do voto, das promessas e do broche «Eu votei», e as páginas novas do guia.
+Importado por gen_data.py (as páginas «Eleições» e «Votar» da 0.5 foram revistas em life_050.py)."""
+
+T_060 = [
+    ("item.tvilas.i_voted", "Broche «Eu votei»", "Broche «Eu votei»", "«I Voted» Pin"),
+    ("tvilas.vote.badge.town", "Vila: %s (Mesa em %s, %s)", "Povoação: %s (Mesa em %s, %s)", "Village: %s (Desk at %s, %s)"),
+    ("tvilas.vote.badge.elected", "Eleito: %s", "Eleito: %s", "Elected: %s"),
+    ("tvilas.vote.badge.term", "Eleição n.º %s", "Eleição n.º %s", "Election #%s"),
+    ("tvilas.vote.left", "%s d %s h", "%s d %s h", "%s d %s h"),
+    ("tvilas.vote.closes_in", "A votação fecha daqui a %s.", "A votação fecha daqui a %s.", "Voting closes in %s."),
+    ("tvilas.vote.supporter", "Você apoiou %s, que ganhou: −5 %% nas trocas da vila até a próxima eleição.",
+     "Apoiaste %s, que ganhou: −5 %% nas trocas da povoação até à próxima eleição.",
+     "You backed %s, who won: −5 %% on village trades until the next election."),
+    ("tvilas.vote.vip_invite", "Convite VIP: nas festas deste mandato a tesouraria devolve mais 5 %%.",
+     "Convite VIP: nas festas deste mandato a tesouraria devolve mais 5 %%.", "VIP invite: at this term's parties the treasury refunds 5 %% more."),
+    ("tvilas.vote.delivered", "A vila guardou %s presente(s) para você: veja o inventário.", "A povoação guardou %s presente(s) para ti: vê o inventário.",
+     "The village kept %s gift(s) for you: check your inventory."),
+    ("tvilas.vote.rebate", "Apoiador: a tesouraria devolveu %s.", "Apoiador: a tesouraria devolveu %s.", "Supporter: the treasury refunded %s."),
+    ("tvilas.vote.vip_rebate", "Convite VIP: a tesouraria devolveu mais %s.", "Convite VIP: a tesouraria devolveu mais %s.", "VIP invite: the treasury refunded %s more."),
+    ("tvilas.vote.stall", "Banca de %s", "Banca de %s", "%s's stall"),
+    ("tvilas.vote.reserved", "Pedido exclusivo: o %s tem um «!» só para você.", "Pedido exclusivo: o %s tem um «!» só para ti.",
+     "Exclusive request: the %s has a «!» just for you."),
+    ("tvilas.vote.reserved_other", "Este pedido é exclusivo de outro apoiador.", "Este pedido é exclusivo de outro apoiador.",
+     "This request is reserved for another supporter."),
+    ("tvilas.vote.you_support", "Você apoia %s: −5 %% nas trocas com os aldeões da vila e um pedido «!» exclusivo por lote.",
+     "Apoias %s: −5 %% nas trocas com os aldeões da povoação e um pedido «!» exclusivo por lote.",
+     "You back %s: −5 %% on trades with village villagers and one exclusive «!» request per batch."),
+    ("tvilas.vote.promise.tax", "Promessa: −20 %% no imposto do seu terreno.", "Promessa: −20 %% no imposto do teu terreno.",
+     "Promise: −20 %% on your lot tax."),
+    ("tvilas.vote.promise.guards", "Promessa: o posto de guarda novo fica perto do seu terreno.", "Promessa: o posto de guarda novo fica perto do teu terreno.",
+     "Promise: the new guard post is near your lot."),
+    ("tvilas.vote.promise.market", "Promessa: banca própria no mercado semanal (sem taxa nas vendas lá).",
+     "Promessa: banca própria no mercado semanal (sem taxa nas vendas lá).", "Promise: your own stall at the weekly market (no tax on sales there)."),
+    ("tvilas.vote.promise.festas", "Promessa: convite VIP nas festas (+5 %% de reembolso, dentro dos tetos).",
+     "Promessa: convite VIP nas festas (+5 %% de reembolso, dentro dos tetos).", "Promise: VIP invite to parties (+5 %% refund, within the caps)."),
+]
+
+
+def pages(P):
+    """As páginas 0.6 das eleições (1 assunto por página, sem fórmulas)."""
+    return [
+        P("vote_bonus", None,
+          ("Bônus do voto", "Votar dá reputação com os aldeões da vila, uma vez por eleição.\n\nQuem votou no vencedor ganha um bolo na posse e, até a eleição seguinte, 5 % de volta nas trocas com os aldeões da vila."),
+          ("Bónus do voto", "Votar dá reputação com os aldeões da povoação, uma vez por eleição.\n\nQuem votou no vencedor ganha um bolo na posse e, até à eleição seguinte, 5 % de volta nas trocas com os aldeões da povoação."),
+          ("Voting bonus", "Voting earns reputation with the villagers, once per election.\n\nWhoever backed the winner gets a cake at the swearing-in and, until the next election, 5 % back on trades with the villagers.")),
+        P("vote_requests", None,
+          ("Pedido exclusivo", "Os apoiadores do vencedor têm um pedido «!» só seu em cada lote de missões.\n\nOs outros jogadores não o podem entregar. O dinheiro sai da tesouraria, como sempre."),
+          ("Pedido exclusivo", "Os apoiadores do vencedor têm um pedido «!» só seu em cada lote de missões.\n\nOs outros jogadores não o podem entregar. O dinheiro sai da tesouraria, como sempre."),
+          ("Exclusive request", "The winner's supporters get a «!» request of their own in each mission batch.\n\nOther players can't hand it in. The money comes from the treasury, as always.")),
+        P("promises", None,
+          ("Promessas", "Para quem votou na proposta que ganhou:\n\nImposto menor: menos 20 % no terreno.\nMais guardas: posto perto do terreno.\nMercado maior: banca própria.\nMais festas: convite VIP."),
+          ("Promessas", "Para quem votou na proposta que ganhou:\n\nImposto menor: menos 20 % no terreno.\nMais guardas: posto perto do terreno.\nMercado maior: banca própria.\nMais festas: convite VIP."),
+          ("Promises", "Backing the winning promise gives more:\n\nLower tax: 20 % less lot tax.\nMore guards: the new post near your lot.\nBigger market: your own stall.\nMore parties: a VIP invite.")),
+        P("promise_extras", None,
+          ("Banca e convite", "A banca própria aparece na Praça no dia de mercado, com o seu nome; as suas vendas lá não pagam taxa.\n\nO convite VIP dá mais 5 % de volta nas festas, dentro dos mesmos tetos."),
+          ("Banca e convite", "A banca própria aparece na Praça no dia de mercado, com o teu nome; as tuas vendas lá não pagam taxa.\n\nO convite VIP dá mais 5 % de volta nas festas, dentro dos mesmos tetos."),
+          ("Stall and invite", "Your own stall shows up at the Plaza on market day, with your name; your sales there pay no tax.\n\nThe VIP invite gives 5 % more back at parties, within the same caps.")),
+        P("i_voted", None,
+          ("Eu votei", "Quem vota recebe o broche «Eu votei», com o nome da vila e do eleito.\n\nNão vale dinheiro: é uma lembrança. Se estiver longe, a vila guarda-o até você voltar."),
+          ("Eu votei", "Quem vota recebe o broche «Eu votei», com o nome da povoação e do eleito.\n\nNão vale dinheiro: é uma lembrança. Se estiveres longe, a povoação guarda-o até voltares."),
+          ("I voted", "Voters get the «I Voted» pin, with the village and the winner's names.\n\nIt's not worth money: it's a keepsake. If you're away, the village keeps it until you're back.")),
+    ]

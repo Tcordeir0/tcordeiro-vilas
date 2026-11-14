@@ -133,6 +133,7 @@ public final class Market {
 			if (apart && level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir() && level.getBlockState(p.above(2)).isAir()) spots.add(p);
 		}
 		if (spots.isEmpty()) spots.add(plaza.center.offset(2, 0, 0));
+		com.tcordeiro.vilas.life.election.VoteBonus.marketStalls(level, v, r.stalls, plaza); // 0.6 eleições: bancas próprias dos apoiadores de «mercado maior»
 		for (BlockPos p : spots) {
 			double dx = plaza.center.getX() - p.getX(), dz = plaza.center.getZ() - p.getZ();
 			float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));

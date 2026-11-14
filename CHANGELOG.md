@@ -26,6 +26,28 @@
   doações sem teto, obra que parte blocos, livro da crónica sem gastar um livro): todas mortas.
 - Guia: 7 páginas novas no separador Guias (124 no total com as das eleições e das crises); o livro escrito continua com 100.
 - Comandos: `/vila cronica`, `/vila cronica livro`, `/vila obra doar` (botões do quadro).
+<!-- 0.6 eleições: secção do agente B (branch vilas-060-eleicoes); o principal junta-a à entrada da 0.6.0 -->
+### 0.6 — Eleições revistas e bónus do voto
+
+- **Votação de 3 dias**: as eleições continuam a cada 8 dias, mas a votação dura 3 dias de jogo e conta-se no fim do 3.º; o quadro e
+  o ecrã de votar mostram quanto falta («2 d 5 h»).
+- **Empate**: ganha o candidato mais querido pela vila (as opiniões dos aldeões sobre ele, das conversas, mais a reputação de quem
+  votou nele); se persistir, fica a proposta em vigor; se não houver nenhuma, sorteio com semente (a mesma eleição dá sempre o
+  mesmo resultado).
+- **Bónus do voto** (nunca dinheiro novo: o que se devolve sai da tesouraria, com tetos):
+  - votar dá 5 de reputação com os aldeões da vila, uma vez por eleição;
+  - **apoiador** (votou no vencedor), até à eleição seguinte: um **bolo** na posse (item), **−5 % em todas as trocas** com os
+    aldeões da vila (reembolso da tesouraria, onde já se aplica o da festa; teto de 20 CB por jogador e 100 CB por mandato, nunca
+    mais que a tesouraria) e um **pedido «!» exclusivo** por lote de missões (no máximo 3 por vila; os outros não o entregam);
+  - **promessas** para quem votou na proposta vencedora: imposto menor → −20 % no imposto do terreno dele; mais guardas → o posto
+    novo fica perto do terreno dele; mercado maior → **banca própria** no mercado semanal, com o nome dele (as vendas entre
+    jogadores lá não pagam a taxa); mais festas → **convite VIP** (+5 % de reembolso na festa, dentro dos tetos da festa);
+  - **broche «Eu votei»** (item novo, textura 16×16 em estilo vanilla) para todos os que votaram, com a vila e o eleito na
+    descrição. Quem estiver desligado recebe os itens quando voltar ao território.
+- Testes: 9 GameTests novos (`ElectionGameTests`) nos 3 modos, JUnit `VoteRulesTest` e 34 mutações («0.6 eleições» em
+  `tools/mutation_test.py`).
+- Guia: «Eleições» e «Votar» revistas; novas «Bônus do voto», «Pedido exclusivo», «Promessas», «Banca e convite» e «Eu votei»
+  (pt-BR, pt-PT e en).
 
 ## 0.5.1 — 13/11/2026
 

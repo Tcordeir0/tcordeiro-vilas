@@ -94,7 +94,7 @@ public final class VillagerRequests {
 	}
 
 	/** Os aldeões da vila que podem pedir (com profissão que pede, sem nome dado por jogadores, que não sejam Prefeito nem Construtor). */
-	static List<Villager> candidates(ServerLevel level, Village v) {
+	public static List<Villager> candidates(ServerLevel level, Village v) { // 0.6 eleições: público (pedidos exclusivos)
 		return level.getEntitiesOfClass(Villager.class, VillageManager.box(v, level), e -> e.isAlive() && v.covers(e.getBlockX(), e.getBlockZ())
 				&& !e.isBaby() && !VillageManager.isMayor(e) && !com.tcordeiro.vilas.build.Builders.isBuilder(e)
 				&& !e.getVillagerData().profession().is(VillagerProfession.NONE) && !e.getVillagerData().profession().is(VillagerProfession.NITWIT)
@@ -180,6 +180,10 @@ public final class VillagerRequests {
 		if (hand != InteractionHand.MAIN_HAND || p.isShiftKeyDown() || !vi.entityTags().contains(TAG)) return InteractionResult.PASS;
 		Village v = villageOf(level, vi.getUUID());
 		if (v == null || v.civic.batch.done.contains(Batch.key(p.getUUID(), vi.getUUID()))) return InteractionResult.PASS;
+		if (!com.tcordeiro.vilas.life.election.VoteBonus.mayTake(v, vi.getUUID(), p.getUUID())) { // 0.6 eleições: pedido exclusivo de um apoiador
+			VillageNews.tell(p, "🗳", "tvilas.vote.reserved_other");
+			return InteractionResult.PASS;
+		}
 		open(p, level, v, vi);
 		return InteractionResult.SUCCESS;
 	}
@@ -228,6 +232,7 @@ public final class VillagerRequests {
 		Village v = villageOf(level, id);
 		Mission m = v == null ? null : v.civic.batch.requests.get(id);
 		if (m == null) return VillageManager.Result.fail("tvilas.request.none");
+		if (!com.tcordeiro.vilas.life.election.VoteBonus.mayTake(v, id, p.getUUID())) return VillageManager.Result.fail("tvilas.vote.reserved_other"); // 0.6 eleições
 		int have = VillageManager.count(p.getInventory(), VillageManager.item(m.target()));
 		if (have < m.count()) return VillageManager.Result.fail("tvilas.mission.not_done", have, m.count());
 		String key = Batch.key(p.getUUID(), id);
