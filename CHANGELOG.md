@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.6.0 — 14/11/2026
+
+**A vila lembra-se** — tudo só nos aldeões do território de uma Mesa; nada cria dinheiro; tetos em tudo o que dá itens ou reputação.
+
+- **Memória dos aldeões**: cada aldeão guarda até 6 recordações (quem o salvou, quem lhe deu um presente de que gostou, quem lhe bateu,
+  quem doou para a obra); a mais fraca sai quando entra uma mais forte e o peso decai devagar (como no Dwarf Fortress). Guarda-se só o
+  facto; a frase gera-se ao abrir, na língua de quem lê. O menu do morador mostra o que ele se lembra de ti («💭»), e às vezes conta-o
+  na conversa.
+- **Crónica da vila**: subidas de nível, eleições, festas, obras acabadas, recém-chegados, resgates e obras comunitárias ficam numa
+  crónica (até 200 entradas). No quadro, «📜 Crónica» mostra as últimas 12; «Livro da Vila» copia-a para um livro escrito (gasta um
+  livro do inventário: nada se cria do nada).
+- **«Você me salvou»**: quem mata o monstro que estava a atacar um aldeão (era o alvo dele, ou bateu-lhe há menos de 10 s) é lembrado
+  por ele: coração, aceno, «Obrigado, Talys!», mexericos vanilla e +3 de reputação na vila (uma vez por dia por aldeão). E manda uma
+  **carta**: com o Móveis, pelo Carteiro até à caixa de correio do teu terreno (um livro escrito com o agradecimento e um presente da
+  profissão); sem o Móveis ou sem caixa, uma mensagem e o presente na hora. Uma por jogador por semana; o presente vem dos presentes
+  vanilla do Herói da Aldeia, sem esmeraldas. Uma carta de aldeão que não se entrega perde-se (nunca vai parar a outro jogador).
+- **Obras comunitárias com doações**: a cada 6 dias sem obra a vila propõe uma — **chafariz**, **coreto**, **farol** ou **ponte**
+  (sobre um rio de 3 a 12 blocos perto do centro) — no primeiro sítio que couber. O quadro mostra o que falta; «🧱 Doar materiais»
+  tira do inventário só o que ainda falta e dá reputação (1 por 8 itens, até 12 por dia; nunca dinheiro). Com tudo doado, o Construtor
+  faz a obra pela fila de obras (à vista ou de noite), só em ar, erva, flores e neve fora dos terrenos — nunca parte nada — e no fim
+  põe uma **placa** com os nomes de quem mais doou. A obra fica na crónica.
+- Testes: 5 GameTests novos nos 3 modos (com os mods, `-PnoCubcoin`, `-PnoMods`), JUnit das regras (`LoreRules`) e 9 mutações novas
+  (memória sem teto, reputação do resgate sem teto, cartas sem teto, presente em dinheiro, doação que tira a mais, reputação das
+  doações sem teto, obra que parte blocos, livro da crónica sem gastar um livro): todas mortas.
+- Guia: 7 páginas novas no separador Guias (124 no total com as das eleições e das crises); o livro escrito continua com 100.
+- Comandos: `/vila cronica`, `/vila cronica livro`, `/vila obra doar` (botões do quadro).
+
 ## 0.5.1 — 13/11/2026
 
 **Gestos dos aldeões a sério** (com o Entity Model Features 3.3.11 e o Fresh Animations): acenar, sim, não, apontar, bater palmas,
