@@ -37,16 +37,23 @@ cliente precisa do mod para as texturas, os nomes e (0.4.0) os balões de emoç�
   vendedor de fora, reembolso da tesouraria), eleições (donos de terreno votam; o vencedor vira Prefeito com a sua proposta),
   pescador que pesca (boia própria), crianças a brincar, missão «decorar a festa», ajudante por um dia (só nos teus terrenos), «!» dos
   pedidos em balão e variáveis de gesto para o EMF.
+- **0.6.0** — memória dos aldeões (6 recordações) e crónica da vila (quadro e Livro da Vila), «você me salvou» com carta e presente
+  pelo Carteiro, obras comunitárias com doações (chafariz, coreto, farol, ponte) e placa dos doadores; eleições com votação de 3 dias,
+  desempate pela estima da vila e bónus para quem vota (reputação, presente do Prefeito, −5 % nas trocas, promessas, broche «Eu
+  votei»); reconstrução depois de ataques (só blocos partidos por monstros, explosões ou fogo, fora dos terrenos), crises de incêndio,
+  fome e noite perigosa com missão relâmpago, funeral com campa e luto (velhice opcional, desligada).
 
 Configuração: `config/tvilas.json` (`territory_radius`, `trade_tax_percent`, `bed_tax_cents`, `emerald_value_cents`,
 `tax_per_structure_percent`, `tax_cap_percent`, `treasury_full_cents`, `debt_freeze_days`, `debt_min_cents`,
 `merchant_every_days`, `merchant_stay_days`, `wall`, `cubcoin_trades`, `mission_daily_cap_cents`, `mission_daily_per_player`,
 `civic_buildings`, `mission_batch_days`, `prestige_per_resident`, `population_cap`, `mission_fund_daily_cents`,
 `mission_fund_cap_cents`, 0.4.0: `villager_life`, `guard_wage_cents`, 0.5.0: `market_every_days`, `election_every_days`,
-`helper_price_cents`, `request_name_tag`).
+`helper_price_cents`, `request_name_tag`, 0.6.0: `rebuild`, `rebuild_max_blocks`, `rebuild_radius`, `crises`, `crisis_night_monsters`,
+`funerals`, `villager_aging`, `villager_lifespan_days`).
 Comandos: `/vila`, `/vila info`, `/vila missao aceitar|entregar <1-3>`, `/vila terreno comprar|info`,
 `/vila terreno amigo adicionar <jogador>`, `/vila terreno amigo remover <nome>` (também desligado), `/vila divida pagar`, `/vila muralha cancelar|retomar`, `/vila reuniao`, `/vila morador <aldeão> trocar|conversar|pedido|caminho <sítio>` (botões do menu), 0.5.0: `/vila eleicao`,
-`/vila votar <1-3>`, `/vila missao aceitar|entregar 4` (missão da festa), `/vila morador <aldeão> correio|carta|devolvido|contratar|bolsa|dispensar`.
+`/vila votar <1-3>`, `/vila missao aceitar|entregar 4` (missão da festa), `/vila morador <aldeão> correio|carta|devolvido|contratar|bolsa|dispensar`,
+0.6.0: `/vila cronica`, `/vila cronica livro`, `/vila obra doar`, `/vila crise entregar`.
 
 ## Desenvolvimento
 

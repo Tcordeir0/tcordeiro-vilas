@@ -1,6 +1,6 @@
 # Pacote de recursos «tvilas_animacoes» (gestos dos aldeões)
 
-Gestos dos aldeões do Vilas 0.5.1 (acenar, festejar, encolher os ombros, sim, não, apontar, bater palmas, martelar, comer) POR CIMA do Fresh Animations.
+Gestos dos aldeões do Vilas 0.5.1 e 0.6.0 (acenar, festejar, encolher os ombros, sim, não, apontar, bater palmas, martelar, comer e, na 0.6.0, o luto: cabeça baixa e braços quietos à frente) POR CIMA do Fresh Animations.
 O mod manda os gestos e regista no Entity Model Features as variáveis `tvilas_gesture` e `tvilas_gesture_time`; este pacote usa-as.
 
 - Aqui (público) só está o que é nosso: `tvilas_animacoes/pack.mcmeta` e `tvilas_animacoes/gestos.json`.

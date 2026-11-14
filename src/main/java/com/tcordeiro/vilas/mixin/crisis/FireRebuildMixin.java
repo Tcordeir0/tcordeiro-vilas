@@ -39,4 +39,15 @@ public abstract class FireRebuildMixin {
 		if (level.getBlockState(pos) == before) return; // não ardeu
 		Crises.onBurn(sl, pos, before);
 	}
+
+	/** Revisão de segurança: o que nasce durante o tick de um fogo (espalhar-se, arder) tem a causa «espalhado deste fogo». */
+	@Inject(method = "tick", at = @At("HEAD"))
+	private void tvilas$spreadBegin(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
+		Crises.begin(Crises.Cause.SPREAD, pos);
+	}
+
+	@Inject(method = "tick", at = @At("RETURN"))
+	private void tvilas$spreadEnd(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
+		Crises.end();
+	}
 }

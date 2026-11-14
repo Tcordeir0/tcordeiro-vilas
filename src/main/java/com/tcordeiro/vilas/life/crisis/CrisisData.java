@@ -118,7 +118,7 @@ public final class CrisisData {
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.LONG).optionalFieldOf("first_seen", Map.of()).forGetter(d -> d.firstSeen),
 			Codec.LONG.optionalFieldOf("counter", 0L).forGetter(d -> d.counter),
 			Codec.LONG.optionalFieldOf("aging_day", -1L).forGetter(d -> d.agingDay),
-			Codec.LONG.listOf().optionalFieldOf("tainted", List.of()).forGetter(d -> List.copyOf(d.tainted))) // revisão: fogos de jogador
+			Codec.LONG.listOf().optionalFieldOf("natural", List.of()).forGetter(d -> List.copyOf(d.natural))) // revisão: fogos que pagam
 			.apply(i, (br, lb, cr, ld, hd, hc, de, gr, mo, fs, co, ag, ta) -> {
 				CrisisData d = new CrisisData();
 				for (Broken b : br) if (d.broken.size() < CrisisRules.REBUILD_MAX * 2) d.broken.add(b); // folga: config maior
@@ -133,7 +133,7 @@ public final class CrisisData {
 				capPut(d.firstSeen, fs, MAX_MAP);
 				d.counter = co;
 				d.agingDay = ag;
-				for (Long t : ta) if (d.tainted.size() < 512) d.tainted.add(t); // MAX_TAINTED
+				for (Long t : ta) if (d.natural.size() < 512) d.natural.add(t); // MAX_NATURAL
 				return d;
 			}));
 
@@ -162,11 +162,18 @@ public final class CrisisData {
 	public final Map<UUID, Long> firstSeen = new HashMap<>();
 	public long counter, agingDay = -1;
 	/**
-	 * Revisão de segurança: os fogos (BlockPos.asLong) com origem de jogador — acesos com um jogador a 16 blocos, num terreno, perto de
-	 * um dispensador ou de lava, ou espalhados de um fogo destes. Apagá-los não paga nada. Guardado no mundo (sobrevive a reinícios).
+	 * Revisão de segurança (falha FECHADA): os fogos (BlockPos.asLong) que PODEM pagar a quem os apaga — nascidos de uma causa natural
+	 * (raio sem jogador, bola de fogo ou explosão de um monstro, ou espalhados de um fogo destes), fora dos terrenos e sem nenhum jogador
+	 * a 16 blocos. Tudo o resto (isqueiro, dispensador, lava, projéteis de jogador, causa desconhecida) não paga. Cheia, os fogos novos
+	 * não entram (não pagam). Guardado no mundo (sobrevive a reinícios); as entradas saem quando o fogo se apaga.
 	 */
-	public static final int MAX_TAINTED = 512;
-	public final java.util.Set<Long> tainted = new java.util.LinkedHashSet<>();
+	public static final int MAX_NATURAL = 512;
+	public final java.util.Set<Long> natural = new java.util.LinkedHashSet<>();
+
+	/** A lista dos fogos que pagam está cheia: os novos não pagam (falha fechada). */
+	public boolean saturated() {
+		return natural.size() >= MAX_NATURAL;
+	}
 
 	public boolean recorded(long pos) {
 		if (brokenAt == null) {

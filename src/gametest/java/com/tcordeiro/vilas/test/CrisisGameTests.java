@@ -68,6 +68,18 @@ public class CrisisGameTests {
 		h.getLevel().explode(source, c.x, c.y, c.z, 2.0f, Level.ExplosionInteraction.TNT);
 	}
 
+	/** Um fogo de causa natural (um raio), sem contar com os jogadores dos testes vizinhos. */
+	static void naturalFire(GameTestHelper h, BlockPos rel) {
+		Crises.testIgnorePlayers = true;
+		Crises.begin(Crises.Cause.NATURAL, null);
+		try {
+			h.setBlock(rel, Blocks.FIRE);
+		} finally {
+			Crises.end();
+			Crises.testIgnorePlayers = false;
+		}
+	}
+
 	static int items(GameTestHelper h) {
 		return h.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(h.absolutePos(new BlockPos(0, 0, 0))).inflate(10)).size();
 	}
@@ -99,6 +111,32 @@ public class CrisisGameTests {
 		Builders.overnight(level, v);
 		for (BlockPos p : wall) h.assertBlockPresent(Blocks.OAK_PLANKS, p);
 		h.assertTrue(v.extra.projects.stream().noneMatch(p -> p.kind == Project.Kind.REBUILD), "obra acabada");
+		h.succeed();
+	}
+
+	@GameTest(maxTicks = 60)
+	public void creeperNextToTorchDoorAndBedDropsNothingAndRebuildsBothHalves(GameTestHelper h) {
+		Village v = village(h);
+		ServerLevel level = h.getLevel();
+		h.setBlock(new BlockPos(4, 1, 2), Blocks.OAK_PLANKS);
+		h.setBlock(new BlockPos(4, 1, 3), Blocks.WALL_TORCH.defaultBlockState().setValue(net.minecraft.world.level.block.WallTorchBlock.FACING, net.minecraft.core.Direction.SOUTH));
+		var door = Blocks.OAK_DOOR.defaultBlockState();
+		h.setBlock(new BlockPos(5, 1, 4), door);
+		h.setBlock(new BlockPos(5, 2, 4), door.setValue(net.minecraft.world.level.block.DoorBlock.HALF, net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER));
+		var bed = Blocks.BED.pick(net.minecraft.world.item.DyeColor.RED).defaultBlockState().setValue(net.minecraft.world.level.block.BedBlock.FACING, net.minecraft.core.Direction.SOUTH);
+		h.setBlock(new BlockPos(3, 1, 4), bed.setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.FOOT));
+		h.setBlock(new BlockPos(3, 1, 5), bed.setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.HEAD));
+		explode(h, creeper(h), 4, 4);
+		h.assertValueEqual(items(h), 0, "tocha, porta e cama não largam nada (repor duplicava)");
+		CrisisData d = data(v);
+		Rebuild.tick(level, v, d, false, d.lastBroken + CrisisRules.CALM_TICKS);
+		for (int i = 0; i < 3 && !v.extra.projects.isEmpty(); i++) Builders.overnight(level, v);
+		h.assertBlockPresent(Blocks.OAK_DOOR, new BlockPos(5, 1, 4));
+		h.assertBlockPresent(Blocks.OAK_DOOR, new BlockPos(5, 2, 4));
+		h.assertBlockPresent(Blocks.BED.pick(net.minecraft.world.item.DyeColor.RED), new BlockPos(3, 1, 4));
+		h.assertBlockPresent(Blocks.BED.pick(net.minecraft.world.item.DyeColor.RED), new BlockPos(3, 1, 5));
+		h.assertBlockPresent(Blocks.WALL_TORCH, new BlockPos(4, 1, 3));
+		h.assertValueEqual(items(h), 0, "e a reconstrução também não larga nada");
 		h.succeed();
 	}
 
@@ -165,8 +203,7 @@ public class CrisisGameTests {
 		h.setBlock(new BlockPos(7, 1, 7), Blocks.OAK_PLANKS);
 		TestUtil.useOnTop(h, arsonist, new ItemStack(Items.FLINT_AND_STEEL), new BlockPos(7, 2, 7));
 		BlockPos[] fires = {new BlockPos(2, 1, 4), new BlockPos(3, 1, 4), new BlockPos(5, 1, 4), new BlockPos(6, 1, 4), new BlockPos(4, 1, 6)};
-		for (BlockPos f : fires) h.setBlock(f, Blocks.FIRE);
-		data(v).tainted.clear(); // como se fossem fogos de um raio: no teste nasceram com jogadores perto (esses têm o seu teste)
+		for (BlockPos f : fires) naturalFire(h, f); // como fogos de um raio (os fogos de jogador têm o seu teste)
 		Crises.onBurn(level, h.absolutePos(new BlockPos(4, 1, 4)), Blocks.OAK_PLANKS.defaultBlockState());
 		CrisisData.Crisis c = data(v).active(CrisisRules.FIRE);
 		h.assertTrue(c != null, "um bloco da vila ardeu: crise do incêndio");
@@ -181,10 +218,9 @@ public class CrisisGameTests {
 		h.assertValueEqual(v.economy.treasury, treasury - reward, "o dinheiro sai da tesouraria");
 		h.assertValueEqual(TestUtil.money(hero) - money, reward, "e vai para o jogador");
 		// mais fogo: não recebe outra vez nesta crise
-		h.setBlock(new BlockPos(2, 1, 2), Blocks.FIRE);
-		h.setBlock(new BlockPos(2, 1, 3), Blocks.FIRE);
-		h.setBlock(new BlockPos(3, 1, 2), Blocks.FIRE);
-		data(v).tainted.clear();
+		naturalFire(h, new BlockPos(2, 1, 2));
+		naturalFire(h, new BlockPos(2, 1, 3));
+		naturalFire(h, new BlockPos(3, 1, 2));
 		for (BlockPos f : new BlockPos[] {new BlockPos(2, 1, 2), new BlockPos(2, 1, 3), new BlockPos(3, 1, 2)}) hero.gameMode.destroyBlock(h.absolutePos(f));
 		h.assertValueEqual(v.economy.treasury, treasury - reward, "uma vez por jogador em cada crise");
 		h.assertValueEqual(TestUtil.money(hero) - money, reward, "uma vez por jogador em cada crise");
@@ -198,8 +234,14 @@ public class CrisisGameTests {
 		ServerPlayer hero = TestUtil.playerAt(h, new BlockPos(1, 1, 1));
 		hero.getInventory().clearContent();
 		BlockPos[] fires = {new BlockPos(2, 1, 4), new BlockPos(3, 1, 4), new BlockPos(5, 1, 4)};
-		for (BlockPos f : fires) h.setBlock(f, Blocks.FIRE); // com um jogador a 16 blocos (o do teste)
-		for (BlockPos f : fires) h.assertTrue(!Crises.payable(v, h.absolutePos(f)), "fogo nascido com um jogador perto: marcado");
+		h.setBlock(fires[0], Blocks.FIRE); // causa desconhecida (isqueiro, comando, dispensador, lava…)
+		Crises.begin(Crises.Cause.PLAYER, null); // projétil ou explosão de jogador
+		h.setBlock(fires[1], Blocks.FIRE);
+		Crises.end();
+		Crises.begin(Crises.Cause.NATURAL, null); // natural, mas com o jogador do teste a 16 blocos
+		h.setBlock(fires[2], Blocks.FIRE);
+		Crises.end();
+		for (BlockPos f : fires) h.assertTrue(!Crises.payable(v, h.absolutePos(f)), "não paga: " + f.toShortString());
 		Crises.onBurn(level, h.absolutePos(new BlockPos(4, 1, 4)), Blocks.OAK_PLANKS.defaultBlockState());
 		CrisisData.Crisis c = data(v).active(CrisisRules.FIRE);
 		long treasury = v.economy.treasury, money = TestUtil.money(hero);
@@ -207,13 +249,36 @@ public class CrisisGameTests {
 		h.assertTrue(c == null || !c.paid.contains(hero.getUUID()), "apagar fogos de jogador não paga");
 		h.assertValueEqual(v.economy.treasury, treasury, "nada sai da tesouraria");
 		h.assertValueEqual(TestUtil.money(hero), money, "nada criado");
-		// espalhar-se de um fogo marcado também fica marcado; e o estado sobrevive a um reinício (codec)
-		data(v).tainted.clear();
-		data(v).tainted.add(h.absolutePos(new BlockPos(6, 1, 6)).asLong());
-		h.assertTrue(Crises.playerOrigin(level, data(v), h.absolutePos(new BlockPos(7, 1, 7))), "espalhado de um fogo marcado");
+		// espalhar-se: de um fogo natural continua natural; de um fogo de jogador não
+		naturalFire(h, new BlockPos(6, 1, 6));
+		h.assertTrue(Crises.payable(v, h.absolutePos(new BlockPos(6, 1, 6))), "fogo de raio: paga");
+		Crises.testIgnorePlayers = true;
+		Crises.begin(Crises.Cause.SPREAD, h.absolutePos(new BlockPos(6, 1, 6)));
+		h.setBlock(new BlockPos(7, 1, 6), Blocks.FIRE);
+		Crises.end();
+		h.setBlock(new BlockPos(1, 1, 6), Blocks.FIRE);
+		Crises.begin(Crises.Cause.SPREAD, h.absolutePos(new BlockPos(1, 1, 6)));
+		h.setBlock(new BlockPos(1, 1, 7), Blocks.FIRE);
+		Crises.end();
+		Crises.testIgnorePlayers = false;
+		h.assertTrue(Crises.payable(v, h.absolutePos(new BlockPos(7, 1, 6))), "espalhado de um fogo natural: paga");
+		h.assertTrue(!Crises.payable(v, h.absolutePos(new BlockPos(1, 1, 7))), "espalhado de um fogo de jogador: não paga");
+		// o estado sobrevive a um reinício (codec)
 		var enc = CrisisData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, data(v)).getOrThrow();
 		var back = CrisisData.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, enc).getOrThrow();
-		h.assertTrue(back.tainted.contains(h.absolutePos(new BlockPos(6, 1, 6)).asLong()), "fica guardado no mundo");
+		h.assertTrue(back.natural.contains(h.absolutePos(new BlockPos(6, 1, 6)).asLong()), "fica guardado no mundo");
+		// apagado: sai da lista (e a limpeza tira os que já não são fogo)
+		h.setBlock(new BlockPos(6, 1, 6), Blocks.AIR);
+		Crises.pruneNatural(level, data(v));
+		h.assertTrue(!Crises.payable(v, h.absolutePos(new BlockPos(6, 1, 6))), "o fogo apagado sai da lista");
+		// cheia: falha fechada — os fogos novos não pagam e os antigos não saem
+		CrisisData d = data(v);
+		long first = d.natural.iterator().next();
+		for (long k = 0; !d.saturated(); k++) d.natural.add(Long.MIN_VALUE / 2 + k);
+		naturalFire(h, new BlockPos(7, 1, 2));
+		h.assertTrue(!Crises.payable(v, h.absolutePos(new BlockPos(7, 1, 2))), "lista cheia: o fogo novo não paga");
+		h.assertTrue(d.natural.contains(first), "e nenhum antigo foi tirado para lhe dar lugar");
+		d.natural.clear();
 		h.succeed();
 	}
 

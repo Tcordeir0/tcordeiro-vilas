@@ -158,36 +158,71 @@ public final class Crises {
 		Village area = Rebuild.areaOf(level, pos);
 		if (area == null) return;
 		CrisisData ad = data(area);
-		if (!ad.tainted.contains(pos.asLong()) && playerOrigin(level, ad, pos)) {
-			if (ad.tainted.size() >= CrisisData.MAX_TAINTED) ad.tainted.remove(ad.tainted.iterator().next());
-			ad.tainted.add(pos.asLong());
-			VillageData.get(level).changed();
-		}
+		boolean was = ad.natural.remove(pos.asLong()); // um fogo novo no mesmo sítio volta a ser avaliado
+		if (naturalOrigin(level, ad, pos)) {
+			if (ad.saturated()) saturatedFires++; // falha fechada: cheia, o fogo novo não paga
+			else {
+				ad.natural.add(pos.asLong());
+				VillageData.get(level).changed();
+			}
+		} else if (was) VillageData.get(level).changed();
 		Village v = villageFor(level, pos);
 		if (v == null) return;
 		Rt r = rt(v);
 		if (r.fires.size() < MAX_FIRES) r.fires.add(pos.asLong());
 	}
 
-	/**
-	 * REGRA DE SEGURANÇA (revisão): este fogo tem origem de jogador? Um jogador a {@link CrisisRules#ORIGIN_RADIUS} blocos, num terreno,
-	 * um dispensador ou lava perto, ou um fogo vizinho já marcado (o fogo espalhou-se dele).
-	 */
-	public static boolean playerOrigin(ServerLevel level, CrisisData d, BlockPos pos) {
-		if (VillageManager.lotAt(level, pos.getX(), pos.getZ()) != null) return true;
-		for (ServerPlayer p : level.players())
-			if (!p.isSpectator() && p.blockPosition().closerThan(pos, CrisisRules.ORIGIN_RADIUS)) return true;
-		for (BlockPos q : BlockPos.betweenClosed(pos.offset(-2, -2, -2), pos.offset(2, 2, 2))) {
-			if (d.tainted.contains(q.asLong())) return true;
-			var s = level.getBlockState(q);
-			if (s.is(net.minecraft.world.level.block.Blocks.DISPENSER) || s.getFluidState().is(net.minecraft.tags.FluidTags.LAVA)) return true;
-		}
-		return false;
+	// ---------------------------------------------------------------- origem do fogo (revisão de segurança)
+
+	/** A causa da ignição, passada pelos mixins (raio, bola de fogo, explosão, o fogo a espalhar-se). Sem causa = desconhecida. */
+	public enum Cause { NATURAL, PLAYER, SPREAD }
+
+	record Ignition(Cause cause, long from) {}
+
+	static final java.util.ArrayDeque<Ignition> CAUSES = new java.util.ArrayDeque<>();
+
+	public static void begin(Cause cause, BlockPos from) {
+		CAUSES.push(new Ignition(cause, from == null ? Long.MIN_VALUE : from.asLong()));
 	}
 
-	/** Este fogo pode render a quem o apaga? (nasceu sem jogador por perto e sem origem de jogador) */
+	public static void end() {
+		if (!CAUSES.isEmpty()) CAUSES.pop();
+	}
+
+	/** Só para os GameTests: ignora os jogadores a 16 blocos (os jogadores dos testes vizinhos estão sempre perto). */
+	public static boolean testIgnorePlayers;
+	public static int saturatedFires;
+
+	/**
+	 * REGRA DE SEGURANÇA (revisão, falha FECHADA): este fogo nasceu de uma causa natural? Só um raio sem jogador, uma bola de fogo ou
+	 * explosão de um monstro, ou o espalhar de um fogo que já era natural — fora dos terrenos e sem jogador a
+	 * {@link CrisisRules#ORIGIN_RADIUS} blocos. Causa desconhecida (isqueiro, carga de fogo, dispensador, lava, projétil de jogador,
+	 * comandos) = não natural.
+	 */
+	public static boolean naturalOrigin(ServerLevel level, CrisisData d, BlockPos pos) {
+		Ignition ig = CAUSES.peek();
+		if (ig == null || ig.cause() == Cause.PLAYER) return false;
+		if (ig.cause() == Cause.SPREAD && !d.natural.contains(ig.from())) return false;
+		if (VillageManager.lotAt(level, pos.getX(), pos.getZ()) != null) return false;
+		if (!testIgnorePlayers)
+			for (ServerPlayer p : level.players())
+				if (!p.isSpectator() && p.blockPosition().closerThan(pos, CrisisRules.ORIGIN_RADIUS)) return false;
+		return true;
+	}
+
+	/** Este fogo pode render a quem o apaga? (está na lista dos fogos naturais) */
 	public static boolean payable(Village v, BlockPos pos) {
-		return !data(v).tainted.contains(pos.asLong());
+		return data(v).natural.contains(pos.asLong());
+	}
+
+	/** Tira da lista os fogos que já não são fogo (chamado a cada 30 s). Devolve quantos saíram. */
+	public static int pruneNatural(ServerLevel level, CrisisData d) {
+		int before = d.natural.size();
+		d.natural.removeIf(l -> {
+			BlockPos q = BlockPos.of(l);
+			return level.isLoaded(q) && !level.getBlockState(q).is(BlockTags.FIRE);
+		});
+		return before - d.natural.size();
 	}
 
 	static void extinguished(ServerLevel level, ServerPlayer p, BlockPos pos) {
@@ -195,7 +230,7 @@ public final class Crises {
 		if (v == null) return;
 		rt(v).fires.remove(pos.asLong());
 		boolean pay = payable(v, pos);
-		data(v).tainted.remove(pos.asLong());
+		data(v).natural.remove(pos.asLong());
 		if (pay) credit(level, v, p, data(v).active(CrisisRules.FIRE));
 	}
 
@@ -305,6 +340,7 @@ public final class Crises {
 		if (now >= r.nextSeen) {
 			r.nextSeen = now + 600; // a cada 30 s: os aldeões novos ficam com o dia em que chegaram
 			Funeral.seen(level, v, d);
+			if (pruneNatural(level, d) > 0) VillageData.get(level).changed(); // revisão: fogos apagados saem da lista
 		}
 		Funeral.tick(level, v, d, now);
 		r.lighters.values().removeIf(t -> now - t > CrisisRules.LIGHTER_TICKS);
@@ -328,7 +364,7 @@ public final class Crises {
 			if (s.is(BlockTags.FIRE)) continue;
 			it.remove();
 			boolean pay = payable(v, pos);
-			d.tainted.remove(pos.asLong());
+			d.natural.remove(pos.asLong());
 			if (pay && c != null && !s.getFluidState().isEmpty()) { // apagado com água: o jogador mais perto
 				ServerPlayer p = nearest(level, pos, 6);
 				if (p != null) credit(level, v, p, c);

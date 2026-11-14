@@ -2,7 +2,10 @@
 
 ## 0.6.0 — 14/11/2026
 
-**A vila lembra-se** — tudo só nos aldeões do território de uma Mesa; nada cria dinheiro; tetos em tudo o que dá itens ou reputação.
+**A vila lembra-se, vota melhor e enfrenta crises** — tudo só nos aldeões do território de uma Mesa; nada cria dinheiro; tetos em tudo o
+que paga, dá itens, dá descontos ou dá reputação; LOD, prazo e plano B como antes.
+
+### Memória, crónica, «você me salvou» e obras com doações
 
 - **Memória dos aldeões**: cada aldeão guarda até 6 recordações (quem o salvou, quem lhe deu um presente de que gostou, quem lhe bateu,
   quem doou para a obra); a mais fraca sai quando entra uma mais forte e o peso decai devagar (como no Dwarf Fortress). Guarda-se só o
@@ -24,10 +27,10 @@
 - Testes: 5 GameTests novos nos 3 modos (com os mods, `-PnoCubcoin`, `-PnoMods`), JUnit das regras (`LoreRules`) e 9 mutações novas
   (memória sem teto, reputação do resgate sem teto, cartas sem teto, presente em dinheiro, doação que tira a mais, reputação das
   doações sem teto, obra que parte blocos, livro da crónica sem gastar um livro): todas mortas.
-- Guia: 7 páginas novas no separador Guias (124 no total com as das eleições e das crises); o livro escrito continua com 100.
+- Guia: 7 páginas novas no separador Guias.
 - Comandos: `/vila cronica`, `/vila cronica livro`, `/vila obra doar` (botões do quadro).
-<!-- 0.6 eleições: secção do agente B (branch vilas-060-eleicoes); o principal junta-a à entrada da 0.6.0 -->
-### 0.6 — Eleições revistas e bónus do voto
+
+### Eleições revistas e bónus do voto
 
 - **Votação de 3 dias**: as eleições continuam a cada 8 dias, mas a votação dura 3 dias de jogo e conta-se no fim do 3.º; o quadro e
   o ecrã de votar mostram quanto falta («2 d 5 h»).
@@ -48,8 +51,8 @@
   `tools/mutation_test.py`).
 - Guia: «Eleições» e «Votar» revistas; novas «Bônus do voto», «Pedido exclusivo», «Promessas», «Banca e convite» e «Eu votei»
   (pt-BR, pt-PT e en).
-<!-- 0.6 crises (agente C): juntar à secção da 0.6.0 -->
-### 0.6 crises — reconstrução, crises com pedido de ajuda, funeral
+
+### Reconstrução, crises com pedido de ajuda e funeral
 
 - **Reconstrução depois de um ataque**: os blocos partidos por monstros (explosão de creeper, ghast ou wither; zombie que parte uma
   porta) ou queimados pelo fogo, a 96 blocos da Mesa (`rebuild_radius`) e FORA dos terrenos, ficam registados (até 512 por vila,
@@ -72,7 +75,21 @@
 - Desempenho: tudo por eventos (explosão, fogo, porta, morte) e sensores por vila (noite a cada 10 s, fome 1 vez por dia). Medido no
   GameTest: explosão de força 10 numa vila (≈140 blocos) leva 9–19 ms com o registo (10–26 ms sem ele, a variação é do servidor); o
   segundo da vila a seguir, 0,04–0,3 ms.
-- Guia: páginas «Reconstruir», «Crises», «Funeral» e «Velhice (opcional)» (114 no separador Guias). pt-BR, pt-PT e en.
+- Guia: páginas «Reconstruir», «Crises», «Funeral» e «Velhice (opcional)». pt-BR, pt-PT e en.
+
+### Junção e revisão
+- A crónica regista mortes, funerais, crises e a reconstrução; o epitáfio da campa usa a recordação mais forte do aldeão
+  («Salvo por Talys», «Amigo de Talys»).
+- As crises pagam como as missões: primeiro do fundo das missões, depois da tesouraria, com os mesmos tetos.
+- A reconstrução volta a ligar as cercas, paredes e painéis de vidro à volta de cada bloco reposto.
+- Revisão de segurança: (1) um fogo com origem de jogador (um jogador a 16 blocos quando nasce, num terreno, perto de um dispensador
+  ou de lava, ou espalhado de um fogo destes) fica marcado no mundo (sobrevive a reinícios) e apagá-lo não paga nada; o «quem
+  acendeu» e o pagamento usam a mesma procura de vila; (2) numa explosão, os blocos registados para a reconstrução saem antes de a
+  explosão os processar, sem largar item (o vanilla junta os itens de várias posições, por isso filtrar ao largar não chegava).
+- Pacote `tvilas_animacoes`: o gesto do luto (10) também no pacote; `sh texturas/montar_pack.sh` volta a gerar o .zip.
+- Guia: 126 páginas no separador Guias; o livro escrito continua com 100 (as primeiras 98, os comandos e «E o resto?»).
+- Config nova: `rebuild`, `rebuild_max_blocks`, `rebuild_radius`, `crises`, `crisis_night_monsters`, `funerals`, `villager_aging`,
+  `villager_lifespan_days`. Comandos novos: `/vila cronica`, `/vila cronica livro`, `/vila obra doar`, `/vila crise entregar`.
 
 ## 0.5.1 — 13/11/2026
 

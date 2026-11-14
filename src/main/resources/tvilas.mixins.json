@@ -25,6 +25,9 @@
 		"crisis.ExplosionRebuildMixin",
 		"crisis.FireRebuildMixin",
 		"crisis.BaseFireRebuildMixin",
+		"crisis.LightningFireMixin",
+		"crisis.SmallFireballFireMixin",
+		"crisis.ExplosionFireMixin",
 		"crisis.BreakDoorRebuildMixin"
 	],
 	"injectors": {

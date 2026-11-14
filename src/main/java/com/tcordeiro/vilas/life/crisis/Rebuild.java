@@ -65,6 +65,15 @@ public final class Rebuild {
 	}
 
 	/** Um bloco partido por um monstro/explosão/fogo: regista-o (e a outra metade de uma porta ou cama). Devolve true se ficou registado. */
+	/** Revisão: esta posição já está registada para a reconstrução (na vila que a cobre)? */
+	public static boolean recorded(ServerLevel level, BlockPos pos) {
+		Village v = areaOf(level, pos);
+		if (v == null) return false;
+		long l = pos.asLong();
+		for (CrisisData.Broken b : Crises.data(v).broken) if (b.pos() == l) return true;
+		return false;
+	}
+
 	public static boolean record(ServerLevel level, BlockPos pos, BlockState state) {
 		if (!enabled() || VillageData.get(level).villages.isEmpty()) return false;
 		Village v = areaOf(level, pos);

@@ -29,6 +29,22 @@ public abstract class ExplosionRebuildMixin {
 	@Unique
 	private Set<BlockPos> tvilas$kept;
 
+	/** Tirar sem largar itens, sem atualizar a forma dos vizinhos nem os avisar: UPDATE_CLIENTS | UPDATE_KNOWN_SHAPE | UPDATE_SUPPRESS_DROPS. */
+	@Unique
+	private static final int CLEAR_FLAGS = net.minecraft.world.level.block.Block.UPDATE_CLIENTS | net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE
+			| net.minecraft.world.level.block.Block.UPDATE_SUPPRESS_DROPS;
+
+	/** A outra metade de uma porta/planta alta ou de uma cama (ou null). */
+	@Unique
+	private static BlockPos tvilas$partner(net.minecraft.world.level.block.state.BlockState s, BlockPos pos) {
+		if (s.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF))
+			return s.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF)
+					== net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER ? pos.above() : pos.below();
+		if (s.getBlock() instanceof net.minecraft.world.level.block.BedBlock)
+			return pos.relative(net.minecraft.world.level.block.BedBlock.getConnectedDirection(s));
+		return null;
+	}
+
 	@Inject(method = "interactWithBlocks", at = @At("HEAD"))
 	private void tvilas$recordBroken(List<BlockPos> targets, CallbackInfo ci) {
 		tvilas$kept = null;
@@ -44,7 +60,15 @@ public abstract class ExplosionRebuildMixin {
 		if (kept.isEmpty()) return;
 		tvilas$kept = kept;
 		// revisão de segurança: o vanilla junta os itens de várias posições antes de os largar, por isso filtrar no popResource
-		// deixava passar duplicados. Os blocos registados saem JÁ, sem largar nada; a explosão depois só vê ar.
-		for (BlockPos pos : kept) level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+		// deixava passar duplicados. Os blocos registados (e a outra metade das portas e camas, que o registo também guarda) saem JÁ,
+		// de cima para baixo, SEM largar nada e sem avisar os vizinhos (tochas, portas e camas apoiadas não caem como item); a
+		// explosão depois só vê ar.
+		for (BlockPos pos : new java.util.ArrayList<>(kept)) {
+			BlockPos other = tvilas$partner(level.getBlockState(pos), pos);
+			if (other != null && Rebuild.recorded(level, other)) kept.add(other.immutable());
+		}
+		java.util.List<BlockPos> order = new java.util.ArrayList<>(kept);
+		order.sort((a, b) -> Integer.compare(b.getY(), a.getY()));
+		for (BlockPos pos : order) level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), CLEAR_FLAGS);
 	}
 }
